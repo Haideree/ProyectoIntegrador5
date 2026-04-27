@@ -1,0 +1,219 @@
+/* ===== RESET ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ===== BODY ===== */
+body {
+    background: #f2f2f2;
+}
+
+/* ===== LAYOUT ===== */
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 230px;
+    background: #6b0000; /* rojo oscuro */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* LOGO */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+
+.logo i {
+    font-size: 20px;
+}
+
+.logo h2 {
+    font-size: 16px;
+}
+
+/* NAV */
+nav {
+    display: flex;
+    flex-direction: column;
+}
+
+nav a {
+    padding: 14px 20px;
+    text-decoration: none;
+    color: white;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    transition: 0.3s;
+}
+
+/* HOVER */
+nav a:hover {
+    background: #8b0000;
+}
+
+/* ACTIVO */
+nav a.active {
+    background: #8b0000;
+    font-weight: bold;
+}
+
+/* LOGOUT */
+.logout a {
+    padding: 15px 20px;
+    color: white;
+    display: flex;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.logout a:hover {
+    background: #8b0000;
+}
+
+/* ===== MAIN ===== */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER */
+.header {
+    height: 60px;
+    background: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+}
+
+/* ===== CONTENT ===== */
+.content {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* ===== TABLA ===== */
+.table-section {
+    flex: 2;
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+/* CONTROLES */
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.table-controls input,
+.table-controls select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+/* TABLA */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #8b0000;
+    color: white;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+/* FILAS */
+tbody tr {
+    transition: 0.3s;
+}
+
+tbody tr:hover {
+    background: #f3f3f3;
+}
+
+/* ESTADO */
+.pending {
+    color: #8b0000;
+    font-weight: bold;
+}
+
+/* ===== GRAFICOS ===== */
+.charts {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* TARJETAS */
+.chart-card {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.chart-card:hover {
+    transform: translateY(-5px);
+}
+
+/* CIRCULOS */
+.circle {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    margin: 15px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-weight: bold;
+}
+
+/* TEXTO CENTRO */
+.circle span {
+    position: absolute;
+}
+
+/* COLORES */
+.blue {
+    background: conic-gradient(#007bff 70%, #ddd 0%);
+}
+
+.green {
+    background: conic-gradient(#28a745 85%, #ddd 0%);
+}
