@@ -268,11 +268,51 @@ const createSolicitud = (req, res) => {
 const getSolicitudesByProductor = (req, res) => {
   const { productor_id } = req.params;
   dbInspecciones.query(
-    `SELECT * FROM SolicitudInspeccion WHERE productor_id = ? ORDER BY fechaSolicitud DESC`,
+    `SELECT s.* FROM solicitudinspeccion s WHERE s.productor_id = ? ORDER BY s.fechaSolicitud DESC`,
     [productor_id],
-    (err, results) => {
+    (err, solicitudes) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json(results);
+      if (solicitudes.length === 0) return res.json([]);
+
+      const predioIds = [...new Set(solicitudes.map(s => s.predio_id))];
+
+      dbPredial.query(
+        `SELECT p.id, p.nombre, lp.nombre AS lugarProduccion
+         FROM predio p
+         JOIN lugarproduccion lp ON p.lugarProduccion_id = lp.id
+         WHERE p.id IN (?)`,
+        [predioIds],
+        (err, predios) => {
+          if (err) return res.status(500).json({ error: err.message });
+
+          dbPredial.query(
+            `SELECT l.id, l.nombre, l.area, l.estado, l.predio_id,
+             GROUP_CONCAT(c.nombre SEPARATOR ', ') AS cultivos
+             FROM lote l
+             LEFT JOIN lotecultivo lc ON l.id = lc.lote_id
+             LEFT JOIN cultivo c ON lc.cultivo_id = c.id
+             WHERE l.predio_id IN (?)
+             GROUP BY l.id`,
+            [predioIds],
+            (err, lotes) => {
+              if (err) return res.status(500).json({ error: err.message });
+
+              const resultado = solicitudes.map(s => {
+                const predio = predios.find(p => p.id === s.predio_id) || {};
+                const lotesDelPredio = lotes.filter(l => l.predio_id === s.predio_id);
+                return {
+                  ...s,
+                  nombrePredio: predio.nombre || `Predio #${s.predio_id}`,
+                  lugarProduccion: predio.lugarProduccion || '',
+                  lotes: lotesDelPredio
+                };
+              });
+
+              res.json(resultado);
+            }
+          );
+        }
+      );
     }
   );
 };

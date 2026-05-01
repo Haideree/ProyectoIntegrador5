@@ -354,17 +354,39 @@ function ModalInspeccion({ ins, onClose }) {
     if (!ins) return null;
     return (
         <Overlay onClose={onClose}>
-        <ModalShell titulo={`Solicitud #${ins.id}`} subtitulo="Detalle de solicitud" onClose={onClose} ancho={440}>
+        <ModalShell titulo={`Solicitud #${ins.id}`} subtitulo="Detalle de solicitud" onClose={onClose} ancho={480}>
             <div style={{ display: "grid", gap: 14 }}>
-            <FilaInfo label="Predio ID" valor={`Predio #${ins.predio_id}`} />
+            <FilaInfo label="Lugar de producción" valor={ins.lugarProduccion} />
+            <FilaInfo label="Predio" valor={ins.nombrePredio} />
             <FilaInfo label="Fecha de solicitud" valor={new Date(ins.fechaSolicitud).toLocaleDateString('es-CO')} />
-            <FilaInfo label="Fecha sugerida" valor={ins.fechaSugerida ? new Date(ins.fechaSugerida).toLocaleDateString('es-CO') : 'No indicada'} />
             <FilaInfo label="Observaciones" valor={ins.observaciones || 'Sin observaciones'} />
             <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Estado</div>
-                <Badge estado={ins.estado === 'pendiente' ? 'Pendiente' : ins.estado === 'asignada' ? 'En revisión' : ins.estado} />
+                <Badge estado={ins.estado === 'pendiente' ? 'Pendiente' : ins.estado === 'asignada' ? 'En revisión' : ins.estado === 'aprobada' ? 'Aprobada' : ins.estado} />
             </div>
             </div>
+
+            {ins.lotes && ins.lotes.length > 0 && (
+            <>
+                <Divider />
+                <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Lotes del predio</div>
+                <div style={{ display: "grid", gap: 8 }}>
+                {ins.lotes.map(l => (
+                    <div key={l.id} style={{ background: C.verdePastel, borderRadius: 10, padding: "12px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: C.verde }}>{l.nombre}</div>
+                        <div style={{ fontSize: 11, color: C.textoMuted }}>{l.area} ha</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 11, color: C.textoMuted }}>Cultivos</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: C.texto }}>{l.cultivos || 'Sin cultivos'}</div>
+                    </div>
+                    </div>
+                ))}
+                </div>
+            </>
+            )}
+
             <div style={{ marginTop: 20 }}><BtnGris onClick={onClose} style={{ width: "100%", textAlign: "center" }}>Cerrar</BtnGris></div>
         </ModalShell>
         </Overlay>
@@ -474,11 +496,7 @@ function ModalSolicitar({ onClose, onSolicitudEnviada }) {
                     style={{ width: "100%", border: `1px solid ${errores.fecha ? C.rojo : C.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 13, color: C.texto, boxSizing: "border-box" }} />
                   {errores.fecha && <span style={{ fontSize: 11, color: C.rojo, marginTop: 4, display: "block" }}>{errores.fecha}</span>}
                 </div>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Observaciones (opcional)</label>
-                  <textarea value={form.obs} onChange={e => set("obs", e.target.value)} placeholder="Detalles relevantes..."
-                    style={{ width: "100%", border: `1px solid ${C.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 13, color: C.texto, minHeight: 80, resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }} />
-                </div>
+               
               </div>
             )}
 
@@ -704,7 +722,7 @@ function PaginaInspecciones() {
                 </div>
             ) : inspecciones.map((ins, i) => (
                 <div key={ins.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1.2fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: C.texto }}>Predio #{ins.predio_id}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.texto }}>{ins.nombrePredio}</span>
                 <span style={{ fontSize: 12, color: C.textoMuted }}>{new Date(ins.fechaSolicitud).toLocaleDateString('es-CO')}</span>
                 <span style={{ fontSize: 12, color: C.textoMuted }}>{ins.fechaSugerida ? new Date(ins.fechaSugerida).toLocaleDateString('es-CO') : 'No indicada'}</span>
                 <Badge estado={ins.estado === 'pendiente' ? 'Pendiente' : ins.estado === 'asignada' ? 'En revisión' : ins.estado} />
