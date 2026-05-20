@@ -6,7 +6,7 @@ const inputBase = {
   outline: "none", width: "100%", fontFamily: "inherit", boxSizing: "border-box",
 };
 
-const labelStyle = { fontSize: 12, fontWeight: 500, color: "#607D8B", marginBottom: 4, display: "block" };
+const labelStyle = { fontSize: 14, fontWeight: 500, color: "#607D8B", marginBottom: 4, display: "block" };
 
 function Field({ label, id, type = "text", placeholder, value, onChange, error, required }) {
   return (
@@ -17,7 +17,7 @@ function Field({ label, id, type = "text", placeholder, value, onChange, error, 
         value={value} onChange={onChange}
         style={{ ...inputBase, borderColor: error ? "#E24B4A" : "#CFD8DC" }}
       />
-      {error && <span style={{ fontSize: 11, color: "#E24B4A" }}>{error}</span>}
+      {error && <span style={{ fontSize: 15, color: "#E24B4A" }}>{error}</span>}
     </div>
   );
 }
@@ -40,7 +40,7 @@ function PwField({ label, id, placeholder, value, onChange, error, required }) {
           </svg>
         </button>
       </div>
-      {error && <span style={{ fontSize: 11, color: "#E24B4A" }}>{error}</span>}
+      {error && <span style={{ fontSize: 15, color: "#E24B4A" }}>{error}</span>}
     </div>
   );
 }
@@ -48,7 +48,7 @@ function PwField({ label, id, placeholder, value, onChange, error, required }) {
 function SectionLabel({ children }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 0 10px" }}>
-      <span style={{ fontSize: 11, fontWeight: 500, color: "#607D8B", letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{children}</span>
+      <span style={{ fontSize: 15, fontWeight: 500, color: "#607D8B", letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{children}</span>
       <div style={{ flex: 1, height: 0.5, background: "#CFD8DC" }} />
     </div>
   );
@@ -248,7 +248,7 @@ const handleSubmit = async () => {
             <svg width="24" height="24" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 21H5.5c.5-1.5 1.5-4 3.5-5.5C10 16 9 18 9 21h2c0-3 1.5-7 6-9.5V21h2V8h-2z" fill="white"/></svg>
           </div>
           <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 500, margin: "0 0 4px" }}>Registro de productor</h2>
-          <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, margin: 0 }}>Registra tus datos para unirte</p>
+          <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, margin: 0 }}>Registra tus datos para unirte</p>
         </div>
 
         {/* Body */}
@@ -269,7 +269,7 @@ const handleSubmit = async () => {
                 <option value="nit">NIT</option>
                 <option value="pasaporte">Pasaporte</option>
               </select>
-              {errors.tipoId && <span style={{ fontSize: 11, color: "#E24B4A" }}>{errors.tipoId}</span>}
+              {errors.tipoId && <span style={{ fontSize: 15, color: "#E24B4A" }}>{errors.tipoId}</span>}
             </div>
             <Field label="Número de Identificación" placeholder="1234567890" value={form.numeroId} onChange={handleChange("numeroId")} error={errors.numeroId} required />
           </div>
@@ -291,7 +291,7 @@ const handleSubmit = async () => {
         <option key={d.id} value={d.id}>{d.nombre}</option>
       ))}
     </select>
-    {errors.departamento && <span style={{ fontSize: 11, color: "#E24B4A" }}>{errors.departamento}</span>}
+    {errors.departamento && <span style={{ fontSize: 15, color: "#E24B4A" }}>{errors.departamento}</span>}
   </div>
   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
     <label style={labelStyle}>Municipio <span style={{ color: "#E24B4A" }}>*</span></label>
@@ -303,7 +303,7 @@ const handleSubmit = async () => {
         <option key={m.id} value={m.id}>{m.nombre}</option>
       ))}
     </select>
-    {errors.municipio && <span style={{ fontSize: 11, color: "#E24B4A" }}>{errors.municipio}</span>}
+    {errors.municipio && <span style={{ fontSize: 15, color: "#E24B4A" }}>{errors.municipio}</span>}
   </div>
 </div>
 <div style={grid1}>
@@ -322,7 +322,7 @@ const handleSubmit = async () => {
           </div>
 
           {errors.general && (
-  <div style={{ background: "#FFEBEE", color: "#C62828", borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 8 }}>
+  <div style={{ background: "#FFEBEE", color: "#C62828", borderRadius: 8, padding: "10px 14px", fontSize: 15, marginBottom: 8 }}>
     ⚠️ {errors.general}
   </div>
 )}
@@ -332,7 +332,7 @@ const handleSubmit = async () => {
   onMouseOut={e => e.currentTarget.style.background = "#2E7D32"}>
   Crear cuenta
 </button>
-          <p style={{ textAlign: "center", fontSize: 13, color: "#607D8B", marginTop: 14 }}>
+          <p style={{ textAlign: "center", fontSize: 15, color: "#607D8B", marginTop: 14 }}>
             ¿Ya tienes cuenta? <a href="#" style={{ color: "#2E7D32", textDecoration: "none", fontWeight: 500 }}>Inicia sesión</a>
           </p>
         </div>

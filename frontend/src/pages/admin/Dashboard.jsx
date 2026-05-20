@@ -151,7 +151,7 @@ function BarraAfectacion({ valor }) {
       <div style={{ flex: 1, height: 8, background: COLORES.grisPastel, borderRadius: 4, overflow: "hidden" }}>
         <div style={{ width: `${valor}%`, height: "100%", background: color, borderRadius: 4 }} />
       </div>
-      <span style={{ fontSize: 12, fontWeight: 700, minWidth: 36, textAlign: "right", color: valor >= 70 ? COLORES.rojo : valor >= 50 ? COLORES.naranja : COLORES.textoMuted }}>{valor}%</span>
+      <span style={{ fontSize: 14, fontWeight: 700, minWidth: 36, textAlign: "right", color: valor >= 70 ? COLORES.rojo : valor >= 50 ? COLORES.naranja : COLORES.textoMuted }}>{valor}%</span>
     </div>
   );
 }
@@ -161,7 +161,7 @@ function Tarjeta({ icono, titulo, valor, colorTexto, colorFondo }) {
     <div style={{ background: COLORES.blanco, borderRadius: 14, border: `1px solid ${COLORES.borde}`, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ width: 42, height: 42, borderRadius: 10, background: colorFondo, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{icono}</div>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>{titulo}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>{titulo}</div>
         <div style={{ fontSize: 28, fontWeight: 800, color: colorTexto, lineHeight: 1 }}>{valor}</div>
       </div>
     </div>
@@ -171,7 +171,7 @@ function Tarjeta({ icono, titulo, valor, colorTexto, colorFondo }) {
 function FilaInfo({ label, valor }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <span style={{ fontSize: 11, color: COLORES.textoMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
+      <span style={{ fontSize: 15, color: COLORES.textoMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
       <span style={{ fontSize: 14, color: COLORES.texto, fontWeight: 500 }}>{valor}</span>
     </div>
   );
@@ -179,7 +179,7 @@ function FilaInfo({ label, valor }) {
 
 function SeccionTitulo({ children }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.verde, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+    <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.verde, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
       <div style={{ width: 3, height: 14, background: COLORES.verde, borderRadius: 2 }} />
       {children}
     </div>
@@ -187,18 +187,12 @@ function SeccionTitulo({ children }) {
 }
 
 // ── MODAL SOLICITUD ───────────────────────────────────────────────────────────
-function ModalSolicitud({ sol, tecnicos, onClose, onAprobar, onRechazar, onAsignarTecnico }) {function ModalSolicitud({ sol, tecnicos, onClose, onAprobar, onRechazar, onAsignarTecnico }) {
+function ModalSolicitud({ sol, tecnicos, onClose, onRechazar, onAsignarTecnico }) {
   const [tecnicoSel, setTecnicoSel] = useState("");
 
   if (!sol) return null;
 
   const esPendiente = sol.estado === "Sin asignar" || sol.estado === "pendiente";
-
-  const coloresCultivo = [
-    ["#F3E5F5", "#6A1B9A"],
-    ["#E3F2FD", "#1565C0"],
-    ["#FFF3E0", "#E65100"],
-  ];
 
   const handleAsignar = () => {
     if (tecnicoSel) {
@@ -208,6 +202,10 @@ function ModalSolicitud({ sol, tecnicos, onClose, onAprobar, onRechazar, onAsign
     }
   };
 
+  const ubicacionQuery = encodeURIComponent(
+    `${sol.ubicacion?.departamento || ''} ${sol.ubicacion?.municipio || ''} ${sol.vereda || ''} Colombia`
+  );
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
       <div style={{ background: COLORES.blanco, borderRadius: 16, width: 520, maxWidth: "100%", maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
@@ -215,14 +213,14 @@ function ModalSolicitud({ sol, tecnicos, onClose, onAprobar, onRechazar, onAsign
         {/* Cabecera */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORES.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
               Solicitud #{sol.id} · {new Date(sol.fechaSolicitud).toLocaleDateString('es-CO')}
             </div>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: COLORES.texto }}>{sol.predio}</h2>
             <div style={{ marginTop: 6 }}>
-              {esPendiente && <span style={{ background: COLORES.rojoPastel, color: COLORES.rojo, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>⚠ Sin asignar</span>}
-              {sol.estado === "asignada" && sol.resultado !== "Completada" && <span style={{ background: COLORES.amarilloPastel, color: "#B7770D", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>🕐 En proceso</span>}
-              {sol.resultado === "Completada" && <span style={{ background: "#C8E6C9", color: "#1B5E20", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>✓ Completada</span>}
+              {esPendiente && <span style={{ background: COLORES.rojoPastel, color: COLORES.rojo, fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>⚠ Sin asignar</span>}
+              {sol.estado === "asignada" && sol.resultado !== "Completada" && <span style={{ background: COLORES.amarilloPastel, color: "#B7770D", fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>🕐 En proceso</span>}
+              {sol.resultado === "Completada" && <span style={{ background: "#C8E6C9", color: "#1B5E20", fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>✓ Completada</span>}
             </div>
           </div>
           <button onClick={onClose} style={{ background: COLORES.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: COLORES.gris }}>×</button>
@@ -231,29 +229,45 @@ function ModalSolicitud({ sol, tecnicos, onClose, onAprobar, onRechazar, onAsign
         {/* Productor */}
         <SeccionTitulo>Productor responsable</SeccionTitulo>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 18 }}>
-          <FilaInfo label="Nombre"    valor={sol.productor?.nombre || ''} />
-          <FilaInfo label="Teléfono"  valor={sol.productor?.telefono || ''} />
-          <FilaInfo label="Correo"    valor={sol.productor?.correo || ''} />
+          <FilaInfo label="Nombre"   valor={sol.productor?.nombre || ''} />
+          <FilaInfo label="Teléfono" valor={sol.productor?.telefono || ''} />
+          <FilaInfo label="Correo"   valor={sol.productor?.correo || ''} />
         </div>
         <hr style={{ border: "none", borderTop: `1px solid ${COLORES.borde}`, margin: "18px 0" }} />
 
-        {/* Ubicación */}
+        {/* Ubicación + Mapa */}
         <SeccionTitulo>Ubicación del predio</SeccionTitulo>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 10 }}>
-          <FilaInfo label="Vereda" valor={sol.vereda || ''} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+          <FilaInfo label="Vereda"       valor={sol.vereda || 'Sin información'} />
+          <FilaInfo label="Municipio"    valor={sol.municipio || 'Sin información'} />
+          <FilaInfo label="Departamento" valor={sol.departamento || 'Sin información'} />
         </div>
-        <div style={{ background: "#EAF3DE", borderRadius: 8, padding: "9px 14px", fontSize: 12, color: "#3B6D11", marginBottom: 18 }}>
-          📍 {sol.vereda || 'Sin ubicación'}
+        <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${COLORES.borde}`, marginBottom: 8 }}>
+          <iframe
+            title="mapa-ubicacion"
+            width="100%"
+            height="180"
+            style={{ border: 0, display: "block" }}
+            loading="lazy"
+            allowFullScreen
+            src={`https://maps.google.com/maps?q=${ubicacionQuery}&output=embed`}
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: COLORES.textoMuted, marginBottom: 18 }}>
+          <span>📍</span>
+          <span>{sol.departamento} · {sol.municipio} · {sol.vereda}</span>
         </div>
         <hr style={{ border: "none", borderTop: `1px solid ${COLORES.borde}`, margin: "18px 0" }} />
 
         {/* Cultivos */}
         <SeccionTitulo>Cultivos registrados</SeccionTitulo>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-          {(sol.cultivos || '').split(',').map((c, i) => {
+          {(sol.cultivos || 'Sin cultivos').split(',').map((c, i) => {
+            const coloresCultivo = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"]];
             const [bg, col] = coloresCultivo[i % 3];
             return (
-              <div key={i} style={{ background: bg, borderRadius: 10, padding: "13px 16px" }}>
+              <div key={i} style={{ background: bg, borderRadius: 10, padding: "13px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>🌱</span>
                 <span style={{ fontWeight: 700, fontSize: 14, color: col }}>{c.trim()}</span>
               </div>
             );
@@ -263,155 +277,38 @@ function ModalSolicitud({ sol, tecnicos, onClose, onAprobar, onRechazar, onAsign
 
         {/* Técnico asignado */}
         <SeccionTitulo>Técnico asignado</SeccionTitulo>
-        <div style={{ background: sol.tecnicoAsignado ? "#C8E6C9" : COLORES.rojoPastel, borderRadius: 8, padding: "11px 14px", fontSize: 13, fontWeight: 600, color: sol.tecnicoAsignado ? "#1B5E20" : COLORES.rojo, marginBottom: esPendiente ? 16 : 24 }}>
+        <div style={{ background: sol.tecnicoAsignado ? "#C8E6C9" : COLORES.rojoPastel, borderRadius: 8, padding: "11px 14px", fontSize: 14, fontWeight: 600, color: sol.tecnicoAsignado ? "#1B5E20" : COLORES.rojo, marginBottom: esPendiente ? 16 : 24 }}>
           {sol.tecnicoAsignado ? `✓ ${sol.tecnicoAsignado}` : "⚠ Sin técnico asignado"}
         </div>
 
-        {/* Selector de técnico */}
+        {/* Selector técnico + Rechazar */}
         {esPendiente && (
-          <div style={{ background: COLORES.azulPastel, borderRadius: 10, padding: "14px 16px", marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.azul, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
-              Asignar técnico
-            </div>
-            <select
-              value={tecnicoSel}
-              onChange={e => setTecnicoSel(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: `1px solid ${COLORES.borde}`, fontSize: 13, color: COLORES.texto, background: COLORES.blanco, marginBottom: 10 }}
-            >
-              <option value="">Seleccionar técnico...</option>
-              {(tecnicos || []).map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.nombre}
-                </option>
-              ))}
-            </select>
-            <button
-              disabled={!tecnicoSel}
-              onClick={handleAsignar}
-              style={{ width: "100%", background: tecnicoSel ? COLORES.azul : COLORES.grisPastel, color: tecnicoSel ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: tecnicoSel ? "pointer" : "not-allowed" }}
-            >
-              Confirmar asignación
-            </button>
-          </div>
-        )}
-
-        {/* Acciones */}
-        {esPendiente ? (
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => onRechazar(sol.id)} style={{ flex: 1, background: COLORES.rojoPastel, color: COLORES.rojo, border: `1px solid ${COLORES.rojo}`, borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-              ✕ Rechazar
-            </button>
-            <button onClick={() => onAprobar(sol.id)} style={{ flex: 1, background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-              ✓ Aprobar
-            </button>
-          </div>
-        ) : (
-          <button onClick={onClose} style={{ width: "100%", background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-            Cerrar
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-  const [tecnicoSel, setTecnicoSel] = useState("");
-
-  if (!sol) return null;
-
-  const esPendiente = sol.estado === "Sin asignar" || sol.estado === "pendiente";
-
-  const coloresCultivo = [
-    ["#F3E5F5", "#6A1B9A"],
-    ["#E3F2FD", "#1565C0"],
-    ["#FFF3E0", "#E65100"],
-  ];
-
-  const handleAsignar = () => {
-    if (tecnicoSel) {
-      const tecnico = tecnicos.find(t => t.id === parseInt(tecnicoSel));
-      onAsignarTecnico(sol.id, tecnicoSel, tecnico?.nombre || '');
-      setTecnicoSel("");
-    }
-  };
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
-      <div style={{ background: COLORES.blanco, borderRadius: 16, width: 520, maxWidth: "100%", maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
-
-        {/* Cabecera */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-              Solicitud #{sol.id} · {new Date(sol.fechaSolicitud).toLocaleDateString('es-CO')}
-            </div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: COLORES.texto }}>{sol.predio}</h2>
-            <div style={{ marginTop: 6 }}>
-              {esPendiente && <span style={{ background: COLORES.rojoPastel, color: COLORES.rojo, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>⚠ Sin asignar</span>}
-              {sol.estado === "asignada" && sol.resultado !== "Completada" && <span style={{ background: COLORES.amarilloPastel, color: "#B7770D", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>🕐 En proceso</span>}
-              {sol.resultado === "Completada" && <span style={{ background: "#C8E6C9", color: "#1B5E20", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>✓ Completada</span>}
-            </div>
-          </div>
-          <button onClick={onClose} style={{ background: COLORES.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: COLORES.gris }}>×</button>
-        </div>
-
-        {/* Productor */}
-        <SeccionTitulo>Productor responsable</SeccionTitulo>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 18 }}>
-          <FilaInfo label="Nombre"    valor={sol.productor?.nombre || ''} />
-          <FilaInfo label="Teléfono"  valor={sol.productor?.telefono || ''} />
-          <FilaInfo label="Correo"    valor={sol.productor?.correo || ''} />
-        </div>
-        <hr style={{ border: "none", borderTop: `1px solid ${COLORES.borde}`, margin: "18px 0" }} />
-
-        <SeccionTitulo>Ubicación del predio</SeccionTitulo>
-        <div style={{ background: "#EAF3DE", borderRadius: 8, padding: "9px 14px", fontSize: 12, color: "#3B6D11", marginBottom: 18 }}>
-          📍 {sol.vereda || 'Sin ubicación'}
-        </div>
-        <hr style={{ border: "none", borderTop: `1px solid ${COLORES.borde}`, margin: "18px 0" }} />
-
-        <SeccionTitulo>Cultivos registrados</SeccionTitulo>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-          {(sol.cultivos || '').split(',').map((c, i) => {
-            const coloresCultivo = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"]];
-            const [bg, col] = coloresCultivo[i % 3];
-            return (
-              <div key={i} style={{ background: bg, borderRadius: 10, padding: "13px 16px" }}>
-                <span style={{ fontWeight: 700, fontSize: 14, color: col }}>{c.trim()}</span>
-              </div>
-            );
-          })}
-        </div>
-        <hr style={{ border: "none", borderTop: `1px solid ${COLORES.borde}`, margin: "18px 0" }} />
-
-        <SeccionTitulo>Técnico asignado</SeccionTitulo>
-        <div style={{ background: sol.tecnicoAsignado ? "#C8E6C9" : COLORES.rojoPastel, borderRadius: 8, padding: "11px 14px", fontSize: 13, fontWeight: 600, color: sol.tecnicoAsignado ? "#1B5E20" : COLORES.rojo, marginBottom: esPendiente ? 16 : 24 }}>
-          {sol.tecnicoAsignado ? `✓ ${sol.tecnicoAsignado}` : "⚠ Sin técnico asignado"}
-        </div>
-
-        {esPendiente && (
-          <div style={{ background: COLORES.azulPastel, borderRadius: 10, padding: "14px 16px", marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.azul, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Asignar técnico</div>
+          <div style={{ background: COLORES.azulPastel, borderRadius: 10, padding: "14px 16px", marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORES.azul, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Asignar técnico</div>
             <select value={tecnicoSel} onChange={e => setTecnicoSel(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: `1px solid ${COLORES.borde}`, fontSize: 13, color: COLORES.texto, background: COLORES.blanco, marginBottom: 10 }}>
+              style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: `1px solid ${COLORES.borde}`, fontSize: 14, color: COLORES.texto, background: COLORES.blanco, marginBottom: 10 }}>
               <option value="">Seleccionar técnico...</option>
               {(tecnicos || []).map(t => (
                 <option key={t.id} value={t.id}>{t.nombre}</option>
               ))}
             </select>
-            <button disabled={!tecnicoSel} onClick={handleAsignar}
-              style={{ width: "100%", background: tecnicoSel ? COLORES.azul : COLORES.grisPastel, color: tecnicoSel ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: tecnicoSel ? "pointer" : "not-allowed" }}>
-              Confirmar asignación
-            </button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => onRechazar(sol.id)}
+                style={{ flex: 1, background: COLORES.rojoPastel, color: COLORES.rojo, border: `1px solid ${COLORES.rojo}`, borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                ✕ Rechazar
+              </button>
+              <button disabled={!tecnicoSel} onClick={handleAsignar}
+                style={{ flex: 2, background: tecnicoSel ? COLORES.azul : COLORES.grisPastel, color: tecnicoSel ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: tecnicoSel ? "pointer" : "not-allowed" }}>
+                ✓ Confirmar asignación
+              </button>
+            </div>
           </div>
         )}
 
-        {esPendiente ? (
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => onRechazar(sol.id)} style={{ flex: 1, background: COLORES.rojoPastel, color: COLORES.rojo, border: `1px solid ${COLORES.rojo}`, borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>✕ Rechazar</button>
-            <button onClick={() => onAprobar(sol.id)} style={{ flex: 1, background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>✓ Aprobar</button>
-          </div>
-        ) : (
-          <button onClick={onClose} style={{ width: "100%", background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cerrar</button>
+        {!esPendiente && (
+          <button onClick={onClose} style={{ width: "100%", background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+            Cerrar
+          </button>
         )}
       </div>
     </div>
@@ -429,16 +326,16 @@ function TablaSeccion({ titulo, accentColor, accentBg, icono, items, columnas, h
       >
         <span style={{ fontSize: 16 }}>{icono}</span>
         <span style={{ fontSize: 14, fontWeight: 700, color: accentColor }}>{titulo}</span>
-        <span style={{ marginLeft: 8, background: accentColor, color: "#fff", fontSize: 11, fontWeight: 800, padding: "1px 8px", borderRadius: 10 }}>{items.length}</span>
+        <span style={{ marginLeft: 8, background: accentColor, color: "#fff", fontSize: 15, fontWeight: 800, padding: "1px 8px", borderRadius: 10 }}>{items.length}</span>
         <span style={{ marginLeft: "auto", fontSize: 16, color: accentColor, fontWeight: 700 }}>{abierto ? "▲" : "▼"}</span>
       </button>
       {abierto && (
         <div style={{ background: COLORES.blanco, borderRadius: "0 0 12px 12px", border: `1px solid ${accentColor}33`, borderTop: "none", overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: columnas, gap: 8, padding: "10px 20px", background: accentBg, fontSize: 11, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: 0.5 }}>
+          <div style={{ display: "grid", gridTemplateColumns: columnas, gap: 8, padding: "10px 20px", background: accentBg, fontSize: 15, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: 0.5 }}>
             {headerCols.map(h => <span key={h}>{h}</span>)}
           </div>
           {items.length === 0
-            ? <div style={{ padding: "32px 20px", textAlign: "center", color: COLORES.textoMuted, fontSize: 13 }}>{emptyMsg}</div>
+            ? <div style={{ padding: "32px 20px", textAlign: "center", color: COLORES.textoMuted, fontSize: 15 }}>{emptyMsg}</div>
             : items.map((s, i) => renderRow(s, i))
           }
         </div>
@@ -521,25 +418,25 @@ function PaginaSolicitudes() {
   const rowSinAsignar = (s, i) => (
     <div key={s.id} style={{ display: "grid", gridTemplateColumns: colsSin, gap: 8, alignItems: "center", padding: "13px 20px", borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: COLORES.texto }}>{s.predio}</div>
-        <div style={{ fontSize: 11, color: COLORES.textoMuted, marginTop: 2 }}>#{s.id} · {new Date(s.fechaSolicitud).toLocaleDateString('es-CO')}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{s.predio}</div>
+        <div style={{ fontSize: 15, color: COLORES.textoMuted, marginTop: 2 }}>#{s.id} · {new Date(s.fechaSolicitud).toLocaleDateString('es-CO')}</div>
       </div>
-      <div style={{ fontSize: 12, color: COLORES.texto }}>{s.productor?.nombre}</div>
-      <div style={{ fontSize: 12, color: COLORES.textoMuted }}>{s.vereda}</div>
-      <button onClick={() => setSeleccionada(s)} style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Ver info</button>
+      <div style={{ fontSize: 14, color: COLORES.texto }}>{s.productor?.nombre}</div>
+      <div style={{ fontSize: 14, color: COLORES.textoMuted }}>{s.vereda}</div>
+      <button onClick={() => setSeleccionada(s)} style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Ver info</button>
     </div>
   );
 
   const rowConTecnico = (s, i) => (
     <div key={s.id} style={{ display: "grid", gridTemplateColumns: colsConTecnico, gap: 8, alignItems: "center", padding: "13px 20px", borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: COLORES.texto }}>{s.predio}</div>
-        <div style={{ fontSize: 11, color: COLORES.textoMuted, marginTop: 2 }}>#{s.id} · {new Date(s.fechaSolicitud).toLocaleDateString('es-CO')}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{s.predio}</div>
+        <div style={{ fontSize: 15, color: COLORES.textoMuted, marginTop: 2 }}>#{s.id} · {new Date(s.fechaSolicitud).toLocaleDateString('es-CO')}</div>
       </div>
-      <div style={{ fontSize: 12, color: COLORES.texto }}>{s.productor?.nombre}</div>
-      <div style={{ fontSize: 12, color: COLORES.textoMuted }}>{s.tecnicoAsignado || "Sin asignar"}</div>
-      <div style={{ fontSize: 12, color: COLORES.textoMuted }}>{s.vereda}</div>
-      <button onClick={() => setSeleccionada(s)} style={{ background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Ver info</button>
+      <div style={{ fontSize: 14, color: COLORES.texto }}>{s.productor?.nombre}</div>
+      <div style={{ fontSize: 14, color: COLORES.textoMuted }}>{s.tecnicoAsignado || "Sin asignar"}</div>
+      <div style={{ fontSize: 14, color: COLORES.textoMuted }}>{s.vereda}</div>
+      <button onClick={() => setSeleccionada(s)} style={{ background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Ver info</button>
     </div>
   );
 
@@ -548,7 +445,7 @@ function PaginaSolicitudes() {
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
         <div style={{ width: 4, height: 24, background: COLORES.verde, borderRadius: 2 }} />
         <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: COLORES.texto }}>Solicitudes de inspección</h1>
-        <span style={{ marginLeft: 8, background: COLORES.grisPastel, color: COLORES.gris, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 10 }}>
+        <span style={{ marginLeft: 8, background: COLORES.grisPastel, color: COLORES.gris, fontSize: 14, fontWeight: 700, padding: "3px 10px", borderRadius: 10 }}>
           {solicitudes.length} en total
         </span>
       </div>
@@ -577,13 +474,12 @@ function PaginaSolicitudes() {
 
       {seleccionada && (
         <ModalSolicitud
-          sol={seleccionada}
-          tecnicos={tecnicos}
-          onClose={() => setSeleccionada(null)}
-          onAprobar={handleAprobar}
-          onRechazar={handleRechazar}
-          onAsignarTecnico={handleAsignarTecnico}
-        />
+  sol={seleccionada}
+  tecnicos={tecnicos}
+  onClose={() => setSeleccionada(null)}
+  onRechazar={handleRechazar}
+  onAsignarTecnico={handleAsignarTecnico}
+/>
       )}
     </div>
   );
@@ -601,7 +497,7 @@ function ModalUsuario({ usuario, onClose, onAceptar, onRechazar, esPendiente }) 
               {usuario.tipo === "Productor" ? "🌾" : "⚙️"}
             </div>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>
                 {usuario.tipo || "Técnico"} {usuario.enviadoPorIca && <span style={{ background: COLORES.azulPastel, color: COLORES.azul, padding: "1px 8px", borderRadius: 10, fontSize: 10, marginLeft: 4 }}>ICA</span>}
               </div>
               <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700, color: COLORES.texto }}>{usuario.nombre} {usuario.apellido}</h2>
@@ -617,23 +513,23 @@ function ModalUsuario({ usuario, onClose, onAceptar, onRechazar, esPendiente }) 
           <FilaInfo label="Fecha de registro"        valor={usuario.fechaRegistro} />
           {usuario.enviadoPorIca && usuario.tarjetaProfesional && (
             <div style={{ background: COLORES.azulPastel, borderRadius: 10, padding: "12px 14px" }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: COLORES.azul, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 4 }}>Tarjeta profesional ICA</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: COLORES.azul, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 4 }}>Tarjeta profesional ICA</span>
               <span style={{ fontSize: 15, fontWeight: 700, color: COLORES.azul }}>{usuario.tarjetaProfesional}</span>
             </div>
           )}
           {!usuario.tarjetaProfesional && (
             <div style={{ background: COLORES.grisPastel, borderRadius: 10, padding: "10px 14px" }}>
-              <span style={{ fontSize: 12, color: COLORES.textoMuted }}>Sin tarjeta profesional ICA registrada</span>
+              <span style={{ fontSize: 14, color: COLORES.textoMuted }}>Sin tarjeta profesional ICA registrada</span>
             </div>
           )}
         </div>
         {esPendiente ? (
           <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={onRechazar} style={{ flex: 1, background: COLORES.rojoPastel, color: COLORES.rojo, border: `1px solid ${COLORES.rojo}`, borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>✕ Rechazar</button>
-            <button onClick={onAceptar}  style={{ flex: 1, background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>✓ Aceptar</button>
+            <button onClick={onRechazar} style={{ flex: 1, background: COLORES.rojoPastel, color: COLORES.rojo, border: `1px solid ${COLORES.rojo}`, borderRadius: 8, padding: "10px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>✕ Rechazar</button>
+            <button onClick={onAceptar}  style={{ flex: 1, background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>✓ Aceptar</button>
           </div>
         ) : (
-          <button onClick={onClose} style={{ width: "100%", background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cerrar</button>
+          <button onClick={onClose} style={{ width: "100%", background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Cerrar</button>
         )}
       </div>
     </div>
@@ -667,9 +563,9 @@ function PaginaUsuarios() {
   );
 
   const TabBtn = ({ id, label, count }) => (
-    <button onClick={() => setTabActiva(id)} style={{ padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", background: tabActiva === id ? COLORES.verde : COLORES.blanco, color: tabActiva === id ? COLORES.blanco : COLORES.gris, display: "flex", alignItems: "center", gap: 8 }}>
+    <button onClick={() => setTabActiva(id)} style={{ padding: "9px 20px", borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: "pointer", border: "none", background: tabActiva === id ? COLORES.verde : COLORES.blanco, color: tabActiva === id ? COLORES.blanco : COLORES.gris, display: "flex", alignItems: "center", gap: 8 }}>
       {label}
-      {count > 0 && <span style={{ background: tabActiva === id ? "rgba(255,255,255,0.25)" : COLORES.verdePastel, color: tabActiva === id ? COLORES.blanco : COLORES.verde, fontSize: 11, fontWeight: 800, padding: "1px 7px", borderRadius: 10 }}>{count}</span>}
+      {count > 0 && <span style={{ background: tabActiva === id ? "rgba(255,255,255,0.25)" : COLORES.verdePastel, color: tabActiva === id ? COLORES.blanco : COLORES.verde, fontSize: 15, fontWeight: 800, padding: "1px 7px", borderRadius: 10 }}>{count}</span>}
     </button>
   );
 
@@ -689,7 +585,7 @@ function PaginaUsuarios() {
           <div style={{ padding: "14px 20px", background: COLORES.amarilloPastel, borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 16 }}>⏳</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto }}>Técnicos pendientes de aprobación</span>
-            <span style={{ marginLeft: "auto", background: COLORES.amarillo, color: COLORES.blanco, fontSize: 12, fontWeight: 700, padding: "2px 10px", borderRadius: 10 }}>{pendientes.length}</span>
+            <span style={{ marginLeft: "auto", background: COLORES.amarillo, color: COLORES.blanco, fontSize: 14, fontWeight: 700, padding: "2px 10px", borderRadius: 10 }}>{pendientes.length}</span>
           </div>
           {pendientes.length === 0 ? (
             <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}>
@@ -698,7 +594,7 @@ function PaginaUsuarios() {
             </div>
           ) : (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr auto", gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 11, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr auto", gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 15, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
                 <span>Nombre</span><span>Correo</span><span>Identificación</span><span>Fecha registro</span><span>Acción</span>
               </div>
               {pendientes.map((u, i) => (
@@ -706,14 +602,14 @@ function PaginaUsuarios() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 34, height: 34, borderRadius: "50%", background: COLORES.verdePastel, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>⚙️</div>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: COLORES.texto }}>{u.nombre} {u.apellido}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{u.nombre} {u.apellido}</div>
                       {u.enviadoPorIca && <span style={{ fontSize: 10, background: COLORES.azulPastel, color: COLORES.azul, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>ICA</span>}
                     </div>
                   </div>
-                  <span style={{ fontSize: 12, color: COLORES.textoMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.correo}</span>
-                  <span style={{ fontSize: 13, color: COLORES.texto, fontWeight: 500 }}>{u.identificacion}</span>
-                  <span style={{ fontSize: 12, color: COLORES.textoMuted }}>{u.fechaRegistro}</span>
-                  <button onClick={() => abrirModal(u, true)} style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Ver info</button>
+                  <span style={{ fontSize: 14, color: COLORES.textoMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.correo}</span>
+                  <span style={{ fontSize: 15, color: COLORES.texto, fontWeight: 500 }}>{u.identificacion}</span>
+                  <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{u.fechaRegistro}</span>
+                  <button onClick={() => abrirModal(u, true)} style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Ver info</button>
                 </div>
               ))}
             </>
@@ -727,12 +623,12 @@ function PaginaUsuarios() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 16 }}>✅</span>
               <span style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto }}>Técnicos y productores registrados</span>
-              <span style={{ background: COLORES.verdePastel, color: COLORES.verde, fontSize: 12, fontWeight: 700, padding: "2px 10px", borderRadius: 10 }}>{registradosFiltrados.length}</span>
+              <span style={{ background: COLORES.verdePastel, color: COLORES.verde, fontSize: 14, fontWeight: 700, padding: "2px 10px", borderRadius: 10 }}>{registradosFiltrados.length}</span>
             </div>
             <input placeholder="Buscar usuario..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
-              style={{ border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, outline: "none", width: 200, color: COLORES.texto }} />
+              style={{ border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 15, outline: "none", width: 200, color: COLORES.texto }} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.5fr 1fr 1fr auto", gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 11, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.5fr 1fr 1fr auto", gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 15, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
             <span>Nombre</span><span>Tipo</span><span>Correo</span><span>Identificación</span><span>Fecha registro</span><span>Info</span>
           </div>
           {registradosFiltrados.length === 0 ? (
@@ -744,15 +640,15 @@ function PaginaUsuarios() {
                   {u.tipo === "Técnico" ? "⚙️" : "🌾"}
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: COLORES.texto }}>{u.nombre} {u.apellido}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{u.nombre} {u.apellido}</div>
                   {u.enviadoPorIca && <span style={{ fontSize: 10, background: COLORES.azulPastel, color: COLORES.azul, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>ICA</span>}
                 </div>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 12, whiteSpace: "nowrap", background: u.tipo === "Técnico" ? COLORES.verdePastel : COLORES.azulPastel, color: u.tipo === "Técnico" ? COLORES.verde : COLORES.azul }}>{u.tipo}</span>
-              <span style={{ fontSize: 12, color: COLORES.textoMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.correo}</span>
-              <span style={{ fontSize: 13, color: COLORES.texto }}>{u.identificacion}</span>
-              <span style={{ fontSize: 12, color: COLORES.textoMuted }}>{u.fechaRegistro}</span>
-              <button onClick={() => abrirModal(u, false)} style={{ background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Ver info</button>
+              <span style={{ fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 12, whiteSpace: "nowrap", background: u.tipo === "Técnico" ? COLORES.verdePastel : COLORES.azulPastel, color: u.tipo === "Técnico" ? COLORES.verde : COLORES.azul }}>{u.tipo}</span>
+              <span style={{ fontSize: 14, color: COLORES.textoMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.correo}</span>
+              <span style={{ fontSize: 15, color: COLORES.texto }}>{u.identificacion}</span>
+              <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{u.fechaRegistro}</span>
+              <button onClick={() => abrirModal(u, false)} style={{ background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Ver info</button>
             </div>
           ))}
         </div>
@@ -787,22 +683,22 @@ export default function DashboardAdmin() {
   return (
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", minHeight: "100vh", background: COLORES.grisPastel, display: "flex", flexDirection: "column" }}>
 
-      {/* HEADER */}
-      <header style={{ background: COLORES.verde, color: COLORES.blanco, padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <button onClick={() => setMenuAbierto(!menuAbierto)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 36, height: 36, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, flexShrink: 0 }}>
-            {[0, 1, 2].map(i => <span key={i} style={{ display: "block", width: 18, height: 2, background: COLORES.blanco, borderRadius: 2 }} />)}
-          </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 30, height: 30, background: "rgba(255,255,255,0.2)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🌱</div>
-            <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: -0.5 }}>Proyecto ICA</span>
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 13, opacity: 0.85 }}>Juan Pérez</span>
-          <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>👤</div>
-        </div>
-      </header>
+  {/* HEADER */}
+<header style={{ background: COLORES.verde, color: COLORES.blanco, padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+    <button onClick={() => setMenuAbierto(!menuAbierto)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 36, height: 36, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, flexShrink: 0 }}>
+      {[0, 1, 2].map(i => <span key={i} style={{ display: "block", width: 18, height: 2, background: COLORES.blanco, borderRadius: 2 }} />)}
+    </button>
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
+      <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: -0.5 }}>Proyecto ICA</span>
+    </div>
+  </div>
+  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <span style={{ fontSize: 15, opacity: 0.85 }}>Juan Pérez</span>
+    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>👤</div>
+  </div>
+</header>
 
       <div style={{ display: "flex", flex: 1 }}>
 
@@ -810,13 +706,13 @@ export default function DashboardAdmin() {
 <aside style={{ width: menuAbierto ? 230 : 62, minWidth: menuAbierto ? 230 : 62, background: COLORES.blanco, borderRight: `1px solid ${COLORES.borde}`, flexShrink: 0, transition: "width 0.25s ease, min-width 0.25s ease", overflow: "hidden", display: "flex", flexDirection: "column", height: "calc(100vh - 56px)", position: "sticky", top: 56 }}>
   <div style={{ flex: 1, overflow: "hidden" }}>
     <div style={{ padding: "14px 20px", background: "#A5D6A7", borderBottom: `1px solid ${COLORES.borde}`, whiteSpace: "nowrap", minWidth: 230 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 1 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 1 }}>
         {menuAbierto ? "ADMINISTRADOR" : "ADM"}
       </div>
     </div>
     <nav style={{ padding: "12px 0" }}>
       {navItems.map(item => (
-        <button key={item.id} onClick={() => setPaginaActual(item.id)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: menuAbierto ? "13px 16px" : "13px 0", justifyContent: menuAbierto ? "flex-start" : "center", border: "none", background: paginaActual === item.id ? "#C8E6C9" : "transparent", color: paginaActual === item.id ? COLORES.verde : COLORES.gris, cursor: "pointer", fontWeight: paginaActual === item.id ? 700 : 500, fontSize: 12, textAlign: "left", whiteSpace: "nowrap", borderLeft: menuAbierto ? (paginaActual === item.id ? `3px solid ${COLORES.verde}` : "3px solid transparent") : "none", transition: "all 0.15s" }}>
+        <button key={item.id} onClick={() => setPaginaActual(item.id)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: menuAbierto ? "13px 16px" : "13px 0", justifyContent: menuAbierto ? "flex-start" : "center", border: "none", background: paginaActual === item.id ? "#C8E6C9" : "transparent", color: paginaActual === item.id ? COLORES.verde : COLORES.gris, cursor: "pointer", fontWeight: paginaActual === item.id ? 700 : 500, fontSize: 14, textAlign: "left", whiteSpace: "nowrap", borderLeft: menuAbierto ? (paginaActual === item.id ? `3px solid ${COLORES.verde}` : "3px solid transparent") : "none", transition: "all 0.15s" }}>
           <span style={{ fontSize: 17, flexShrink: 0 }}>{item.icono}</span>
           {menuAbierto && <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</span>}
         </button>
@@ -830,7 +726,7 @@ export default function DashboardAdmin() {
      localStorage.removeItem('usuario')
     navigate('/', { replace: true })
 }}
-      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 20px", border: "none", background: "transparent", color: COLORES.rojo, cursor: "pointer", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap" }}>
+      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 20px", border: "none", background: "transparent", color: COLORES.rojo, cursor: "pointer", fontWeight: 600, fontSize: 15, whiteSpace: "nowrap" }}>
       <span style={{ fontSize: 17, flexShrink: 0 }}>🚪</span>
       {menuAbierto && <span>Cerrar sesión</span>}
     </button>
@@ -859,11 +755,11 @@ export default function DashboardAdmin() {
                     <span style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto }}>Predios</span>
                   </div>
                   <input type="text" placeholder="Buscar predio..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
-                    style={{ border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, outline: "none", width: 200, color: COLORES.texto }} />
+                    style={{ border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 15, outline: "none", width: 200, color: COLORES.texto }} />
                 </div>
                 <div style={{ padding: "12px 20px", borderBottom: `1px solid ${COLORES.borde}`, display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {["Predios", "Lugares de producción", "Más afectados", "Menos afectados"].map(f => (
-                    <button key={f} onClick={() => setFiltro(f)} style={{ padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: `1px solid ${filtro === f ? COLORES.verde : COLORES.borde}`, background: filtro === f ? COLORES.verdePastel : COLORES.blanco, color: filtro === f ? COLORES.verde : COLORES.textoMuted }}>{f}</button>
+                    <button key={f} onClick={() => setFiltro(f)} style={{ padding: "5px 14px", borderRadius: 20, fontSize: 14, fontWeight: 600, cursor: "pointer", border: `1px solid ${filtro === f ? COLORES.verde : COLORES.borde}`, background: filtro === f ? COLORES.verdePastel : COLORES.blanco, color: filtro === f ? COLORES.verde : COLORES.textoMuted }}>{f}</button>
                   ))}
                 </div>
                 <div style={{ overflowX: "auto" }}>
@@ -871,27 +767,27 @@ export default function DashboardAdmin() {
                     <thead>
                       <tr style={{ background: "#A5D6A7" }}>
                         {["Nombre", "Ubicación", "Afectación"].map(h => (
-                          <th key={h} style={{ padding: "11px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>{h}</th>
+                          <th key={h} style={{ padding: "11px 20px", textAlign: "left", fontSize: 15, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {prediosFiltrados.map((p, i) => (
                         <tr key={i} style={{ borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
-                          <td style={{ padding: "13px 20px", fontSize: 13, fontWeight: 600, color: COLORES.texto }}>{p.nombre}</td>
+                          <td style={{ padding: "13px 20px", fontSize: 15, fontWeight: 600, color: COLORES.texto }}>{p.nombre}</td>
                           <td style={{ padding: "13px 20px" }}>
-                            <span style={{ background: COLORES.grisPastel, color: COLORES.gris, padding: "2px 10px", borderRadius: 12, fontSize: 12, fontWeight: 500 }}>{p.ubicacion}</span>
+                            <span style={{ background: COLORES.grisPastel, color: COLORES.gris, padding: "2px 10px", borderRadius: 12, fontSize: 14, fontWeight: 500 }}>{p.ubicacion}</span>
                           </td>
                           <td style={{ padding: "13px 20px", minWidth: 200 }}><BarraAfectacion valor={p.afectacion} /></td>
                         </tr>
                       ))}
                       {prediosFiltrados.length === 0 && (
-                        <tr><td colSpan={3} style={{ padding: "24px 20px", textAlign: "center", color: COLORES.textoMuted, fontSize: 13 }}>No se encontraron predios</td></tr>
+                        <tr><td colSpan={3} style={{ padding: "24px 20px", textAlign: "center", color: COLORES.textoMuted, fontSize: 15 }}>No se encontraron predios</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
-                <div style={{ padding: "10px 20px", borderTop: `1px solid ${COLORES.borde}`, fontSize: 12, color: COLORES.textoMuted, textAlign: "right" }}>
+                <div style={{ padding: "10px 20px", borderTop: `1px solid ${COLORES.borde}`, fontSize: 14, color: COLORES.textoMuted, textAlign: "right" }}>
                   {prediosFiltrados.length} predios encontrados
                 </div>
               </div>

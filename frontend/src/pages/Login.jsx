@@ -59,12 +59,19 @@ else if (data.usuario.rol === 'productor') navigate('/productor', { replace: tru
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: COLORES.grisPastel }}>
-      <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 40, width: 380, maxWidth: '90vw', boxShadow: '0 8px 40px rgba(0,0,0,0.12)' }}>
-        
+  <div style={{ 
+    minHeight: '100vh', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    backgroundImage: 'linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(/fondo-login.jpg)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  }}>
+    <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 40, width: 380, maxWidth: '90vw', boxShadow: '0 8px 40px rgba(0,0,0,0.12)' }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 60, height: 60, background: COLORES.verde, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 12px' }}>🌱</div>
+          <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 100, height: 100, borderRadius: 16, objectFit: 'cover', margin: '0 auto 12px', display: 'block' }} />
           <h1 style={{ fontSize: 22, fontWeight: 700, color: COLORES.texto, margin: 0 }}>Bienvenido</h1>
           <p style={{ fontSize: 13, color: COLORES.textoMuted, margin: '6px 0 0' }}>Sistema de Inspecciones Sanitarias</p>
         </div>

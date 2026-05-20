@@ -200,28 +200,48 @@ const getSolicitudesCompletas = (req, res) => {
         (err, predios) => {
           if (err) return res.status(500).json({ error: err.message });
 
-          dbUsuarios.query(
-            `SELECT id, nombre, correo, telefono FROM usuario WHERE id IN (?)`,
-            [productorIds],
-            (err, productores) => {
+          // Query de cultivos por predio
+          dbPredial.query(
+            `SELECT DISTINCT l.predio_id, c.nombre AS cultivo
+             FROM lote l
+             JOIN lotecultivo lc ON l.id = lc.lote_id
+             JOIN cultivo c ON lc.cultivo_id = c.id
+             WHERE l.predio_id IN (?)`,
+            [predioIds],
+            (err, cultivos) => {
               if (err) return res.status(500).json({ error: err.message });
 
-              const resultado = solicitudes.map(s => {
-                const predio = predios.find(p => p.id === s.predio_id) || {};
-                const productor = productores.find(p => p.id === s.productor_id) || {};
-                return {
-                  ...s,
-                  predio: predio.nombre || 'Sin nombre',
-                  vereda: predio.vereda || '',
-                  productor: {
-                    nombre: productor.nombre || '',
-                    correo: productor.correo || '',
-                    telefono: productor.telefono || ''
-                  }
-                };
-              });
+              dbUsuarios.query(
+                `SELECT id, nombre, correo, telefono FROM usuario WHERE id IN (?)`,
+                [productorIds],
+                (err, productores) => {
+                  if (err) return res.status(500).json({ error: err.message });
 
-              res.json(resultado);
+                  const resultado = solicitudes.map(s => {
+                    const predio = predios.find(p => p.id === s.predio_id) || {};
+                    const productor = productores.find(p => p.id === s.productor_id) || {};
+                    const cultivosDelPredio = [...new Set(
+                      cultivos
+                        .filter(c => c.predio_id === s.predio_id)
+                        .map(c => c.cultivo)
+                    )].join(', ');
+
+                    return {
+                      ...s,
+                      predio: predio.nombre || 'Sin nombre',
+                      vereda: predio.vereda || '',
+                      cultivos: cultivosDelPredio || 'Sin cultivos',
+                      productor: {
+                        nombre: productor.nombre || '',
+                        correo: productor.correo || '',
+                        telefono: productor.telefono || ''
+                      }
+                    };
+                  });
+
+                  res.json(resultado);
+                }
+              );
             }
           );
         }

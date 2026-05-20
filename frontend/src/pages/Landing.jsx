@@ -101,7 +101,7 @@ export default function Landing() {
           {stats.map((s, i) => (
             <div key={i} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '20px 16px', textAlign: 'center', color: COLORES.blanco }}>
               <div style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>{s.valor}</div>
-              <div style={{ fontSize: 12, opacity: 0.85 }}>{s.label}</div>
+              <div style={{ fontSize: 14, opacity: 0.85 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -126,7 +126,7 @@ export default function Landing() {
               <div key={i} style={{ background: COLORES.blanco, borderRadius: 14, padding: 28, boxShadow: '0 2px 12px rgba(0,0,0,0.07)', borderTop: `4px solid ${COLORES.verde}` }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>{r.icono}</div>
                 <h3 style={{ fontSize: 17, fontWeight: 700, color: COLORES.texto, marginBottom: 10 }}>{r.titulo}</h3>
-                <p style={{ fontSize: 13, color: COLORES.textoMuted, lineHeight: 1.7 }}>{r.descripcion}</p>
+                <p style={{ fontSize: 15, color: COLORES.textoMuted, lineHeight: 1.7 }}>{r.descripcion}</p>
               </div>
             ))}
           </div>
@@ -138,22 +138,22 @@ export default function Landing() {
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, marginBottom: 32 }}>
           <div>
             <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>🌱 Proyecto Integrador</h3>
-            <p style={{ fontSize: 13, opacity: 0.7, lineHeight: 1.7 }}>Sistema para la gestión de inspecciones fitosanitarias en predios agrícolas.</p>
+            <p style={{ fontSize: 15, opacity: 0.7, lineHeight: 1.7 }}>Sistema para la gestión de inspecciones fitosanitarias en predios agrícolas.</p>
           </div>
           <div>
             <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Redes sociales</h3>
             {['Facebook', 'Instagram', 'Twitter'].map(r => (
-              <p key={r} style={{ fontSize: 13, opacity: 0.7, marginBottom: 4 }}><a href="#" style={{ color: COLORES.blanco, textDecoration: 'none' }}>{r}</a></p>
+              <p key={r} style={{ fontSize: 15, opacity: 0.7, marginBottom: 4 }}><a href="#" style={{ color: COLORES.blanco, textDecoration: 'none' }}>{r}</a></p>
             ))}
           </div>
           <div>
             <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Contacto</h3>
-            <p style={{ fontSize: 13, opacity: 0.7, marginBottom: 4 }}>📞 +57 300 123 4567</p>
-            <p style={{ fontSize: 13, opacity: 0.7, marginBottom: 4 }}>📞 +57 310 987 6543</p>
-            <p style={{ fontSize: 13, opacity: 0.7 }}>📧 proyecto.integrador@email.com</p>
+            <p style={{ fontSize: 15, opacity: 0.7, marginBottom: 4 }}>📞 +57 300 123 4567</p>
+            <p style={{ fontSize: 15, opacity: 0.7, marginBottom: 4 }}>📞 +57 310 987 6543</p>
+            <p style={{ fontSize: 15, opacity: 0.7 }}>📧 proyecto.integrador@email.com</p>
           </div>
         </div>
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16, textAlign: 'center', fontSize: 12, opacity: 0.5 }}>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16, textAlign: 'center', fontSize: 14, opacity: 0.5 }}>
           © 2026 Proyecto Integrador
         </div>
       </footer>

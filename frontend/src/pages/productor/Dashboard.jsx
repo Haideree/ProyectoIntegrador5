@@ -51,7 +51,7 @@ const diasRestantes = f => Math.ceil((new Date(f) - HOY) / 86400000);
 const fmt = s => { const [y,m,d] = s.split("-"); return `${d}/${m}/${y}`; };
 
 const NAV = [
-    { key: "dashboard",    label: "Dashboard",             icono: "📊" },
+    { key: "dashboard",    label: "Inicio",             icono: "📊" },
     { key: "lugares",      label: "Lugares de producción", icono: "🗺️" },
     { key: "predios",      label: "Predios asociados",     icono: "🏡" },
     { key: "inspecciones", label: "Inspecciones",          icono: "✅" },
@@ -72,7 +72,7 @@ function Badge({ estado, children }) {
     const texto = children || estado;
     const s = tipoBadge(estado);
     return (
-        <span style={{ background: s.bg, color: s.color, fontSize: 11, fontWeight: 700, padding: "3px 11px", borderRadius: 20, whiteSpace: "nowrap", display: "inline-block" }}>
+        <span style={{ background: s.bg, color: s.color, fontSize: 15, fontWeight: 700, padding: "3px 11px", borderRadius: 20, whiteSpace: "nowrap", display: "inline-block" }}>
         {texto}
         </span>
     );
@@ -87,11 +87,11 @@ function Sidebar({ activa, setActiva, menuAbierto, setMenuAbierto }) {
         display: "flex", flexDirection: "column",
         height: "100vh", position: "sticky", top: 0,
         }}>
-        {/* Logo */}
-        <div style={{ padding: "0 16px", height: 56, display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid rgba(255,255,255,0.15)`, flexShrink: 0 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: C.verdeClaro, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>🌱</div>
-            <span style={{ color: C.blanco, fontSize: 15, fontWeight: 700, whiteSpace: "nowrap", opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s" }}>Productor</span>
-        </div>
+     {/* Logo */}
+<div style={{ padding: "0 16px", height: 56, display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid rgba(255,255,255,0.15)`, flexShrink: 0 }}>
+    <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+    <span style={{ color: C.blanco, fontSize: 15, fontWeight: 700, whiteSpace: "nowrap", opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s" }}>Productor</span>
+</div>
 
         {/* Tag rol */}
         <div style={{ padding: "10px 20px", background: "rgba(0,0,0,0.12)", borderBottom: `1px solid rgba(255,255,255,0.1)`, whiteSpace: "nowrap" }}>
@@ -108,7 +108,7 @@ function Sidebar({ activa, setActiva, menuAbierto, setMenuAbierto }) {
                 border: "none", textAlign: "left", whiteSpace: "nowrap", cursor: "pointer",
                 background: activa === key ? "rgba(255,255,255,0.18)" : "transparent",
                 color: activa === key ? C.blanco : C.verdeMedio,
-                fontWeight: activa === key ? 700 : 400, fontSize: 13,
+                fontWeight: activa === key ? 700 : 400, fontSize: 15,
                 borderLeft: activa === key ? `3px solid ${C.blanco}` : "3px solid transparent",
                 transition: "all 0.15s",
             }}>
@@ -126,7 +126,7 @@ function Sidebar({ activa, setActiva, menuAbierto, setMenuAbierto }) {
             localStorage.removeItem('usuario')
             window.location.href = '/login'
         }}
-        style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 20px", border: "none", background: "transparent", color: "#FFCDD2", cursor: "pointer", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap" }}>
+        style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 20px", border: "none", background: "transparent", color: "#FFCDD2", cursor: "pointer", fontWeight: 600, fontSize: 15, whiteSpace: "nowrap" }}>
         <span style={{ fontSize: 17, flexShrink: 0 }}>🚪</span>
         <span style={{ opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s" }}>Cerrar sesión</span>
     </button>
@@ -148,14 +148,17 @@ function Header({ titulo, menuAbierto, setMenuAbierto }) {
             <button onClick={() => setMenuAbierto(!menuAbierto)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 36, height: 36, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, flexShrink: 0 }}>
             {[0,1,2].map(i => <span key={i} style={{ display: "block", width: 18, height: 2, background: C.blanco, borderRadius: 2 }} />)}
             </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
             <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: -0.3 }}>{titulo}</span>
+            </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Laura Gómez</div>
-            <div style={{ fontSize: 11, opacity: 0.75 }}>Productor registrado</div>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>Laura Gómez</div>
+            <div style={{ fontSize: 15, opacity: 0.75 }}>Productor registrado</div>
             </div>
-            <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>LG</div>
+            <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700 }}>LG</div>
         </div>
         </header>
     );
@@ -176,7 +179,7 @@ function StatCard({ icono, label, value, colorTexto, colorFondo }) {
         <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: colorFondo, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{icono}</div>
         <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 3 }}>{label}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 3 }}>{label}</div>
             <div style={{ fontSize: 26, fontWeight: 800, color: colorTexto, lineHeight: 1 }}>{value}</div>
         </div>
         </div>
@@ -185,26 +188,26 @@ function StatCard({ icono, label, value, colorTexto, colorFondo }) {
 
 function BtnVerde({ onClick, children, style = {} }) {
     return (
-        <button onClick={onClick} style={{ background: C.verde, color: C.blanco, border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, ...style }}>{children}</button>
+        <button onClick={onClick} style={{ background: C.verde, color: C.blanco, border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, ...style }}>{children}</button>
     );
 }
 
 function BtnGris({ onClick, children, style = {} }) {
     return (
-        <button onClick={onClick} style={{ background: C.grisPastel, color: C.gris, border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", ...style }}>{children}</button>
+        <button onClick={onClick} style={{ background: C.grisPastel, color: C.gris, border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 15, fontWeight: 600, cursor: "pointer", ...style }}>{children}</button>
     );
 }
 
 function BtnOutline({ onClick, children }) {
     return (
-        <button onClick={onClick} style={{ background: "transparent", color: C.texto, border: `1px solid ${C.borde}`, borderRadius: 7, padding: "5px 13px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{children}</button>
+        <button onClick={onClick} style={{ background: "transparent", color: C.texto, border: `1px solid ${C.borde}`, borderRadius: 7, padding: "5px 13px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{children}</button>
     );
 }
 
 function FilaInfo({ label, valor }) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <span style={{ fontSize: 11, color: C.textoMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
+        <span style={{ fontSize: 15, color: C.textoMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
         <span style={{ fontSize: 14, color: C.texto, fontWeight: 500 }}>{valor}</span>
         </div>
     );
@@ -214,7 +217,7 @@ function Divider() { return <div style={{ height: 1, background: C.borde, margin
 
 function TableHead({ cols }) {
     return (
-        <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+        <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
         {Object.values(cols.labels || {}).map((h, i) => <span key={i}>{h}</span>)}
         </div>
     );
@@ -222,7 +225,7 @@ function TableHead({ cols }) {
 
 function TabBtn({ activa, id, label, setActiva }) {
     return (
-        <button onClick={() => setActiva(id)} style={{ padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", background: activa === id ? C.verde : C.blanco, color: activa === id ? C.blanco : C.gris }}>
+        <button onClick={() => setActiva(id)} style={{ padding: "9px 20px", borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: "pointer", border: "none", background: activa === id ? C.verde : C.blanco, color: activa === id ? C.blanco : C.gris }}>
         {label}
         </button>
     );
@@ -242,7 +245,7 @@ function ModalShell({ titulo, subtitulo, onClose, children, ancho = 480 }) {
         <div style={{ background: C.blanco, borderRadius: 16, padding: 28, width: ancho, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 8px 40px rgba(0,0,0,0.2)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
             <div>
-            {subtitulo && <div style={{ fontSize: 11, fontWeight: 700, color: C.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>{subtitulo}</div>}
+            {subtitulo && <div style={{ fontSize: 15, fontWeight: 700, color: C.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>{subtitulo}</div>}
             <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700, color: C.texto }}>{titulo}</h2>
             </div>
             <button onClick={onClose} style={{ background: C.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: C.gris }}>×</button>
@@ -262,7 +265,7 @@ function ModalLugar({ lugar, onClose }) {
         <ModalShell titulo={lugar.nombre} subtitulo="Lugar de producción" onClose={onClose} ancho={500}>
             {/* Banner estado */}
             <div style={{ background: s.bg, borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: s.color }}>Estado sanitario</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: s.color }}>Estado sanitario</span>
             <Badge estado={lugar.estado} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -276,18 +279,46 @@ function ModalLugar({ lugar, onClose }) {
             <Divider />
             <FilaInfo label="Cultivos" valor={lugar.cultivos.join(", ")} />
             <Divider />
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Predios que lo componen</div>
-            <div style={{ display: "grid", gap: 7 }}>
-            {predios.map(p => (
-                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: 9, border: `1px solid ${C.borde}`, background: C.grisPastel }}>
-                <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.texto }}>{p.nombre}</div>
-                    <div style={{ fontSize: 11, color: C.textoMuted }}>{p.areaHa} ha · {p.cultivos.join(", ")}</div>
-                </div>
-                <Badge estado={p.estadoSanitario} />
-                </div>
-            ))}
+         <div style={{ fontSize: 14, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Predios que lo componen</div>
+<div style={{ display: "grid", gap: 10 }}>
+  {predios.map(p => (
+    <div key={p.id} style={{ borderRadius: 10, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
+      {/* Cabecera del predio */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", background: C.grisPastel }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
+          <div style={{ fontSize: 13, color: C.textoMuted }}>{p.areaHa} ha · {p.tipoProduccion}</div>
+        </div>
+        <Badge estado={p.estadoSanitario} />
+      </div>
+      {/* Cultivos */}
+      <div style={{ padding: "10px 14px", borderTop: `1px solid ${C.borde}` }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>🌱 Cultivos</div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {p.cultivos.map((c, i) => {
+            const colores = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
+            const [bg, col] = colores[i % 4];
+            return (
+              <span key={i} style={{ background: bg, color: col, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{c}</span>
+            );
+          })}
+        </div>
+      </div>
+      {/* Lotes */}
+      <div style={{ padding: "10px 14px", borderTop: `1px solid ${C.borde}`, background: "#FAFAFA" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>🏞️ Lotes</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 6 }}>
+          {[1, 2, 3].map(n => (
+            <div key={n} style={{ background: C.verdePastel, borderRadius: 8, padding: "6px 10px", textAlign: "center" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.verde }}>Lote {n}</div>
+              <div style={{ fontSize: 10, color: C.textoMuted }}>{(p.areaHa / 3).toFixed(1)} ha</div>
             </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
             <div style={{ marginTop: 22 }}><BtnGris onClick={onClose} style={{ width: "100%", textAlign: "center" }}>Cerrar</BtnGris></div>
         </ModalShell>
         </Overlay>
@@ -314,13 +345,13 @@ function ModalPredio({ predio, onClose }) {
             {/* Estado y próxima inspección */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 6 }}>
             <div style={{ background: C.verdePastel, borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Estado sanitario</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Estado sanitario</div>
                 <Badge estado={predio.estadoSanitario} />
             </div>
             <div style={{ background: urgente ? C.rojoPastel : C.amarilloPastel, borderRadius: 10, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: urgente ? C.rojo : "#B7770D", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Próxima inspección</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: urgente ? C.rojo : C.texto }}>{fmt(predio.proximaInspeccion)}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: urgente ? C.rojo : "#B7770D", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Próxima inspección</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: urgente ? C.rojo : C.texto }}>{fmt(predio.proximaInspeccion)}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: urgente ? C.rojo : "#B7770D" }}>{dias}</div>
@@ -329,17 +360,17 @@ function ModalPredio({ predio, onClose }) {
             </div>
             </div>
             <Divider />
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Historial de inspecciones</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Historial de inspecciones</div>
             <div style={{ display: "grid", gap: 8 }}>
-            {historial.length === 0 && <p style={{ fontSize: 13, color: C.textoMuted, margin: 0 }}>Sin inspecciones registradas.</p>}
+            {historial.length === 0 && <p style={{ fontSize: 15, color: C.textoMuted, margin: 0 }}>Sin inspecciones registradas.</p>}
             {historial.map(ins => (
                 <div key={ins.id} style={{ borderRadius: 10, border: `1px solid ${C.borde}`, padding: "13px 15px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.texto }}>{fmt(ins.fecha)}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: C.texto }}>{fmt(ins.fecha)}</span>
                     <Badge estado={ins.resultado} />
                 </div>
-                <div style={{ fontSize: 12, color: C.textoMuted, marginBottom: 4 }}>Técnico: <strong style={{ color: C.texto }}>{ins.tecnico}</strong></div>
-                <div style={{ fontSize: 12, color: C.textoMuted, lineHeight: 1.5 }}>{ins.observaciones}</div>
+                <div style={{ fontSize: 14, color: C.textoMuted, marginBottom: 4 }}>Técnico: <strong style={{ color: C.texto }}>{ins.tecnico}</strong></div>
+                <div style={{ fontSize: 14, color: C.textoMuted, lineHeight: 1.5 }}>{ins.observaciones}</div>
                 </div>
             ))}
             </div>
@@ -361,7 +392,7 @@ function ModalInspeccion({ ins, onClose }) {
             <FilaInfo label="Fecha de solicitud" valor={new Date(ins.fechaSolicitud).toLocaleDateString('es-CO')} />
             <FilaInfo label="Observaciones" valor={ins.observaciones || 'Sin observaciones'} />
             <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Estado</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Estado</div>
                 <Badge estado={ins.estado === 'pendiente' ? 'Pendiente' : ins.estado === 'asignada' ? 'En revisión' : ins.estado === 'aprobada' ? 'Aprobada' : ins.estado} />
             </div>
             </div>
@@ -369,17 +400,17 @@ function ModalInspeccion({ ins, onClose }) {
             {ins.lotes && ins.lotes.length > 0 && (
             <>
                 <Divider />
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Lotes del predio</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Lotes del predio</div>
                 <div style={{ display: "grid", gap: 8 }}>
                 {ins.lotes.map(l => (
                     <div key={l.id} style={{ background: C.verdePastel, borderRadius: 10, padding: "12px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: C.verde }}>{l.nombre}</div>
-                        <div style={{ fontSize: 11, color: C.textoMuted }}>{l.area} ha</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.verde }}>{l.nombre}</div>
+                        <div style={{ fontSize: 15, color: C.textoMuted }}>{l.area} ha</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 11, color: C.textoMuted }}>Cultivos</div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: C.texto }}>{l.cultivos || 'Sin cultivos'}</div>
+                        <div style={{ fontSize: 15, color: C.textoMuted }}>Cultivos</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: C.texto }}>{l.cultivos || 'Sin cultivos'}</div>
                     </div>
                     </div>
                 ))}
@@ -462,7 +493,7 @@ function ModalSolicitar({ onClose, onSolicitudEnviada }) {
           <div style={{ textAlign: "center", padding: "32px 0" }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: C.verde, marginBottom: 8 }}>¡Solicitud enviada!</div>
-            <div style={{ fontSize: 13, color: C.textoMuted }}>Se asignará un técnico en los próximos días hábiles.</div>
+            <div style={{ fontSize: 15, color: C.textoMuted }}>Se asignará un técnico en los próximos días hábiles.</div>
           </div>
         ) : (
           <>
@@ -471,10 +502,10 @@ function ModalSolicitar({ onClose, onSolicitudEnviada }) {
               {["Predio y fecha", "Confirmar"].map((label, i) => (
                 <div key={i} style={{ flex: 1, textAlign: "center", position: "relative" }}>
                   {i < 1 && <div style={{ position: "absolute", top: 14, left: "50%", right: "-50%", height: 2, background: paso > 1 ? C.verde : C.borde, zIndex: 0 }} />}
-                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: paso >= i + 1 ? C.verde : C.borde, color: C.blanco, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 7px", fontWeight: 700, fontSize: 13, position: "relative", zIndex: 1 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: paso >= i + 1 ? C.verde : C.borde, color: C.blanco, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 7px", fontWeight: 700, fontSize: 15, position: "relative", zIndex: 1 }}>
                     {paso > i ? "✓" : i + 1}
                   </div>
-                  <div style={{ fontSize: 11, color: paso === i + 1 ? C.verde : C.textoMuted, fontWeight: paso === i + 1 ? 700 : 400 }}>{label}</div>
+                  <div style={{ fontSize: 15, color: paso === i + 1 ? C.verde : C.textoMuted, fontWeight: paso === i + 1 ? 700 : 400 }}>{label}</div>
                 </div>
               ))}
             </div>
@@ -482,19 +513,19 @@ function ModalSolicitar({ onClose, onSolicitudEnviada }) {
             {paso === 1 && (
               <div style={{ display: "grid", gap: 16 }}>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Predio *</label>
+                  <label style={{ fontSize: 15, fontWeight: 700, color: C.textoMuted, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Predio *</label>
                   <select value={form.predioId} onChange={e => { set("predioId", e.target.value); setErrores(er => ({ ...er, predioId: "" })); }}
-                    style={{ width: "100%", border: `1px solid ${errores.predioId ? C.rojo : C.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 13, color: C.texto, background: C.blanco, boxSizing: "border-box" }}>
+                    style={{ width: "100%", border: `1px solid ${errores.predioId ? C.rojo : C.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 15, color: C.texto, background: C.blanco, boxSizing: "border-box" }}>
                     <option value="">Seleccione un predio...</option>
                     {predios.map(p => <option key={p.id} value={p.id}>{p.nombre} — {p.lugarProduccion}</option>)}
                   </select>
-                  {errores.predioId && <span style={{ fontSize: 11, color: C.rojo, marginTop: 4, display: "block" }}>{errores.predioId}</span>}
+                  {errores.predioId && <span style={{ fontSize: 15, color: C.rojo, marginTop: 4, display: "block" }}>{errores.predioId}</span>}
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Fecha sugerida *</label>
+                  <label style={{ fontSize: 15, fontWeight: 700, color: C.textoMuted, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Fecha sugerida *</label>
                   <input type="date" value={form.fecha} onChange={e => { set("fecha", e.target.value); setErrores(er => ({ ...er, fecha: "" })); }}
-                    style={{ width: "100%", border: `1px solid ${errores.fecha ? C.rojo : C.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 13, color: C.texto, boxSizing: "border-box" }} />
-                  {errores.fecha && <span style={{ fontSize: 11, color: C.rojo, marginTop: 4, display: "block" }}>{errores.fecha}</span>}
+                    style={{ width: "100%", border: `1px solid ${errores.fecha ? C.rojo : C.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 15, color: C.texto, boxSizing: "border-box" }} />
+                  {errores.fecha && <span style={{ fontSize: 15, color: C.rojo, marginTop: 4, display: "block" }}>{errores.fecha}</span>}
                 </div>
                
               </div>
@@ -508,11 +539,11 @@ function ModalSolicitar({ onClose, onSolicitudEnviada }) {
                   <FilaInfo label="Fecha sugerida" valor={form.fecha ? fmt(form.fecha) : "No indicada"} />
                   {form.obs && <FilaInfo label="Observaciones" valor={form.obs} />}
                 </div>
-                <div style={{ background: C.azulPastel, borderRadius: 10, padding: "12px 14px", fontSize: 13, color: C.azul, lineHeight: 1.5 }}>
+                <div style={{ background: C.azulPastel, borderRadius: 10, padding: "12px 14px", fontSize: 15, color: C.azul, lineHeight: 1.5 }}>
                   ℹ️ Su solicitud será revisada y se asignará un técnico en los próximos días hábiles.
                 </div>
                 {errorEnvio && (
-                  <div style={{ background: C.rojoPastel, borderRadius: 10, padding: "12px 14px", fontSize: 13, color: C.rojo, fontWeight: 600 }}>
+                  <div style={{ background: C.rojoPastel, borderRadius: 10, padding: "12px 14px", fontSize: 15, color: C.rojo, fontWeight: 600 }}>
                     ⚠️ {errorEnvio}
                   </div>
                 )}
@@ -547,10 +578,10 @@ function PaginaDashboard({ setActiva }) {
         {alertas > 0 && (
             <div style={{ background: C.rojoPastel, border: `1px solid ${C.rojo}`, borderRadius: 10, padding: "12px 18px", marginBottom: 22, display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 18 }}>⚠️</span>
-            <span style={{ fontSize: 13, color: C.rojo, fontWeight: 600, flex: 1 }}>
+            <span style={{ fontSize: 15, color: C.rojo, fontWeight: 600, flex: 1 }}>
                 Tienes {alertas} predio{alertas > 1 ? "s" : ""} con inspección próxima en menos de 30 días.
             </span>
-            <button onClick={() => setActiva("inspecciones")} style={{ background: C.rojo, color: C.blanco, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Ver inspecciones</button>
+            <button onClick={() => setActiva("inspecciones")} style={{ background: C.rojo, color: C.blanco, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Ver inspecciones</button>
             </div>
         )}
 
@@ -566,17 +597,17 @@ function PaginaDashboard({ setActiva }) {
         <SectionTitle>Mis lugares de producción</SectionTitle>
         <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
             <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.borde}`, display: "flex", justifyContent: "flex-end" }}>
-            <BtnVerde onClick={() => setActiva("lugares")} style={{ fontSize: 12, padding: "6px 14px" }}>Ver todos</BtnVerde>
+            <BtnVerde onClick={() => setActiva("lugares")} style={{ fontSize: 14, padding: "6px 14px" }}>Ver todos</BtnVerde>
             </div>
             {/* Cabecera */}
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 0.6fr 1.4fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 0.6fr 1.4fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
             <span>Nombre</span><span>Registro ICA</span><span>Predios</span><span>Estado sanitario</span><span>Detalle</span>
             </div>
             {LUGARES.map((l, i) => (
             <div key={l.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 0.6fr 1.4fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: C.texto }}>{l.nombre}</span>
-                <span style={{ fontSize: 12, color: C.textoMuted }}>{l.ica}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.texto }}>{l.prediosIds.length}</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: C.texto }}>{l.nombre}</span>
+                <span style={{ fontSize: 14, color: C.textoMuted }}>{l.ica}</span>
+                <span style={{ fontSize: 15, fontWeight: 600, color: C.texto }}>{l.prediosIds.length}</span>
                 <Badge estado={l.estado} />
                 <BtnOutline onClick={() => setLugarVer(l)}>Ver</BtnOutline>
             </div>
@@ -598,7 +629,7 @@ function PaginaLugares() {
         {/* Filtros pill */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
             {["Todos", "Sin alerta", "Con alerta"].map(f => (
-            <button key={f} onClick={() => setFiltro(f)} style={{ padding: "6px 16px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: `1px solid ${filtro === f ? C.verde : C.borde}`, background: filtro === f ? C.verdePastel : C.blanco, color: filtro === f ? C.verde : C.textoMuted, transition: "all 0.15s" }}>
+            <button key={f} onClick={() => setFiltro(f)} style={{ padding: "6px 16px", borderRadius: 20, fontSize: 14, fontWeight: 600, cursor: "pointer", border: `1px solid ${filtro === f ? C.verde : C.borde}`, background: filtro === f ? C.verdePastel : C.blanco, color: filtro === f ? C.verde : C.textoMuted, transition: "all 0.15s" }}>
                 {f}
             </button>
             ))}
@@ -611,16 +642,16 @@ function PaginaLugares() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                     <div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
-                    <div style={{ fontSize: 12, color: C.textoMuted, marginTop: 2 }}>{l.ica}</div>
+                    <div style={{ fontSize: 14, color: C.textoMuted, marginTop: 2 }}>{l.ica}</div>
                     </div>
                     <Badge estado={l.estado} />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
                     {[["Área", `${l.areaHa} ha`], ["Predios", l.prediosIds.length], ["Municipio", l.municipio], ["Cultivos", l.cultivos.join(", ")]].map(([k, v]) => (
-                    <div key={k}><div style={{ fontSize: 10, color: C.textoMuted, fontWeight: 700, textTransform: "uppercase", marginBottom: 2 }}>{k}</div><div style={{ fontSize: 13, fontWeight: 600, color: C.texto }}>{v}</div></div>
+                    <div key={k}><div style={{ fontSize: 10, color: C.textoMuted, fontWeight: 700, textTransform: "uppercase", marginBottom: 2 }}>{k}</div><div style={{ fontSize: 15, fontWeight: 600, color: C.texto }}>{v}</div></div>
                     ))}
                 </div>
-                <button onClick={() => setLugarVer(l)} style={{ width: "100%", background: C.verdePastel, color: C.verde, border: "none", borderRadius: 8, padding: "9px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Ver detalle</button>
+                <button onClick={() => setLugarVer(l)} style={{ width: "100%", background: C.verdePastel, color: C.verde, border: "none", borderRadius: 8, padding: "9px 0", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Ver detalle</button>
                 </div>
             </div>
             ))}
@@ -640,10 +671,10 @@ function PaginaPredios() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
             <SectionTitle>Predios asociados</SectionTitle>
             <input placeholder="Buscar predio..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
-            style={{ border: `1px solid ${C.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, outline: "none", width: 200, color: C.texto }} />
+            style={{ border: `1px solid ${C.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 15, outline: "none", width: 200, color: C.texto }} />
         </div>
         <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
             <span>Predio</span><span>Lugar</span><span>Área</span><span>Estado</span><span>Próx. inspección</span><span>Ver</span>
             </div>
             {filtrados.map((p, i) => {
@@ -651,14 +682,14 @@ function PaginaPredios() {
             return (
                 <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                 <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
-                    <div style={{ fontSize: 11, color: C.textoMuted }}>{p.cultivos.join(", ")}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
+                    <div style={{ fontSize: 15, color: C.textoMuted }}>{p.cultivos.join(", ")}</div>
                 </div>
-                <span style={{ fontSize: 12, color: C.textoMuted }}>{p.lugarNombre}</span>
-                <span style={{ fontSize: 13, color: C.texto }}>{p.areaHa} ha</span>
+                <span style={{ fontSize: 14, color: C.textoMuted }}>{p.lugarNombre}</span>
+                <span style={{ fontSize: 15, color: C.texto }}>{p.areaHa} ha</span>
                 <Badge estado={p.estadoSanitario} />
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 12, color: dias <= 7 ? C.rojo : C.textoMuted, fontWeight: dias <= 7 ? 700 : 400 }}>{fmt(p.proximaInspeccion)}</span>
+                    <span style={{ fontSize: 14, color: dias <= 7 ? C.rojo : C.textoMuted, fontWeight: dias <= 7 ? 700 : 400 }}>{fmt(p.proximaInspeccion)}</span>
                     {dias <= 30 && <span style={{ fontSize: 10, background: dias <= 7 ? C.rojoPastel : C.amarilloPastel, color: dias <= 7 ? C.rojo : C.amarillo, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>{dias}d</span>}
                 </div>
                 <BtnOutline onClick={() => setPredioVer(p)}>Ver</BtnOutline>
@@ -710,7 +741,7 @@ function PaginaInspecciones() {
 
         {tab === "realizadas" && (
             <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1.2fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1.2fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 <span>Predio</span><span>Fecha Solicitud</span><span>Fecha Sugerida</span><span>Estado</span><span>Detalle</span>
             </div>
             {cargando ? (
@@ -722,9 +753,9 @@ function PaginaInspecciones() {
                 </div>
             ) : inspecciones.map((ins, i) => (
                 <div key={ins.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1.2fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: C.texto }}>{ins.nombrePredio}</span>
-                <span style={{ fontSize: 12, color: C.textoMuted }}>{new Date(ins.fechaSolicitud).toLocaleDateString('es-CO')}</span>
-                <span style={{ fontSize: 12, color: C.textoMuted }}>{ins.fechaSugerida ? new Date(ins.fechaSugerida).toLocaleDateString('es-CO') : 'No indicada'}</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: C.texto }}>{ins.nombrePredio}</span>
+                <span style={{ fontSize: 14, color: C.textoMuted }}>{new Date(ins.fechaSolicitud).toLocaleDateString('es-CO')}</span>
+                <span style={{ fontSize: 14, color: C.textoMuted }}>{ins.fechaSugerida ? new Date(ins.fechaSugerida).toLocaleDateString('es-CO') : 'No indicada'}</span>
                 <Badge estado={ins.estado === 'pendiente' ? 'Pendiente' : ins.estado === 'asignada' ? 'En revisión' : ins.estado} />
                 <BtnOutline onClick={() => setInsVer(ins)}>Ver</BtnOutline>
                 </div>
@@ -745,11 +776,11 @@ function PaginaInspecciones() {
                     <div key={p.id} style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${dias <= 7 ? C.rojo : C.amarillo}`, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: C.texto, marginBottom: 3 }}>{p.nombre}</div>
-                        <div style={{ fontSize: 12, color: C.textoMuted }}>{p.lugarNombre} · {p.cultivos.join(", ")}</div>
+                        <div style={{ fontSize: 14, color: C.textoMuted }}>{p.lugarNombre} · {p.cultivos.join(", ")}</div>
                         </div>
                         <div style={{ textAlign: "right" }}>
                         <div style={{ fontSize: 24, fontWeight: 800, color: dias <= 7 ? C.rojo : C.amarillo }}>{dias}d</div>
-                        <div style={{ fontSize: 11, color: C.textoMuted }}>para {fmt(p.proximaInspeccion)}</div>
+                        <div style={{ fontSize: 15, color: C.textoMuted }}>para {fmt(p.proximaInspeccion)}</div>
                         </div>
                     </div>
                     );
@@ -772,12 +803,10 @@ function PaginaInspecciones() {
 }
 
 function PaginaInformes() {
-    const reportes = [
-        { titulo: "Reporte por lugar de producción", desc: "Estado sanitario, inspecciones y cultivos por lugar.", icono: "🗺️" },
-        { titulo: "Reporte por predio",              desc: "Historial completo de inspecciones y resultados.",      icono: "🏡" },
-        { titulo: "Historial de inspecciones",       desc: "Listado cronológico de todas las inspecciones.",        icono: "📋" },
-        { titulo: "Alertas y observaciones",         desc: "Alertas activas y observaciones pendientes.",           icono: "⚠️" },
-    ];
+   const reportes = [
+    { titulo: "Reporte por lugar de producción", desc: "Estado sanitario, inspecciones y cultivos por lugar.", icono: "🗺️" },
+    { titulo: "Alertas y observaciones",         desc: "Alertas activas y observaciones pendientes.",           icono: "⚠️" },
+];
     return (
         <div style={{ padding: "24px 28px" }}>
         <SectionTitle>Informes</SectionTitle>
@@ -787,9 +816,9 @@ function PaginaInformes() {
                 <div style={{ width: 48, height: 48, background: C.verdePastel, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>{r.icono}</div>
                 <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.texto, marginBottom: 5 }}>{r.titulo}</div>
-                <div style={{ fontSize: 12, color: C.textoMuted, lineHeight: 1.6 }}>{r.desc}</div>
+                <div style={{ fontSize: 14, color: C.textoMuted, lineHeight: 1.6 }}>{r.desc}</div>
                 </div>
-                <button style={{ marginTop: "auto", background: C.verdePastel, color: C.verde, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <button style={{ marginTop: "auto", background: C.verdePastel, color: C.verde, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                 ⬇ Descargar PDF
                 </button>
             </div>
