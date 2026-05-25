@@ -351,12 +351,12 @@ function PaginaSolicitudes() {
   const [seleccionada, setSeleccionada] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/inspecciones/solicitudes/completas')
+    fetch('https://proyectointegrador5.onrender.com//api/inspecciones/solicitudes/completas')
       .then(res => res.json())
       .then(data => setSolicitudes(data))
       .catch(err => console.error(err));
 
-    fetch('http://localhost:3000/api/usuarios')
+    fetch('https://proyectointegrador5.onrender.com//api/usuarios')
       .then(res => res.json())
       .then(data => setTecnicos(data.filter(u => u.rol === 'tecnico')))
       .catch(err => console.error(err));
@@ -367,7 +367,7 @@ function PaginaSolicitudes() {
   const completadas = solicitudes.filter(s => s.resultado === "Completada");
 
   const handleAprobar = async (id) => {
-    await fetch(`http://localhost:3000/api/inspecciones/solicitudes/${id}/estado`, {
+    await fetch(`https://proyectointegrador5.onrender.com//api/inspecciones/solicitudes/${id}/estado`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estado: 'aprobada' })
@@ -377,7 +377,7 @@ function PaginaSolicitudes() {
   };
 
   const handleRechazar = async (id) => {
-    await fetch(`http://localhost:3000/api/inspecciones/solicitudes/${id}/estado`, {
+    await fetch(`https://proyectointegrador5.onrender.com//api/inspecciones/solicitudes/${id}/estado`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estado: 'rechazada' })
@@ -388,7 +388,7 @@ function PaginaSolicitudes() {
 
   const handleAsignarTecnico = async (solicitudId, tecnicoId, tecnicoNombre) => {
     try {
-      const res = await fetch('http://localhost:3000/api/inspecciones/inspecciones', {
+      const res = await fetch('https://proyectointegrador5.onrender.com//api/inspecciones/inspecciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -400,7 +400,7 @@ function PaginaSolicitudes() {
         })
       });
       if (!res.ok) throw new Error('Error al asignar');
-      await fetch(`http://localhost:3000/api/inspecciones/solicitudes/${solicitudId}/estado`, {
+      await fetch(`https://proyectointegrador5.onrender.com//api/inspecciones/solicitudes/${solicitudId}/estado`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: 'asignada' })
