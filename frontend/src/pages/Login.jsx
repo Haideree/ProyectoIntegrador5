@@ -38,7 +38,7 @@ useEffect(() => {
     }
     setCargando(true)
     try {
-      const res = await fetch('https://proyectointegrador5.onrender.com//api/usuarios/login', {
+      const res = await fetch('https://proyectointegrador5.onrender.comapi/usuarios/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
