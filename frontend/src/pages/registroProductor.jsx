@@ -65,7 +65,7 @@ export default function RegistroProductor() {
 const [municipios, setMunicipios] = useState([]);
 
 useEffect(() => {
-  fetch('https://proyectointegrador5.onrender.comapi/geografico/departamentos')
+  fetch('https://proyectointegrador5.onrender.com/api/geografico/departamentos')
     .then(res => res.json())
     .then(data => setDepartamentos(data))
     .catch(err => console.error(err));
@@ -75,7 +75,7 @@ const handleDepartamento = (e) => {
   const id = e.target.value;
   const nombre = departamentos.find(d => d.id === parseInt(id))?.nombre || '';
   setForm(prev => ({ ...prev, departamento: nombre, departamento_id: id, municipio: '', municipio_id: '' }));
-  fetch(`https://proyectointegrador5.onrender.comapi/geografico/municipios/departamento/${id}`)
+  fetch(`https://proyectointegrador5.onrender.com/api/geografico/municipios/departamento/${id}`)
     .then(res => res.json())
     .then(data => setMunicipios(data))
     .catch(err => console.error(err));
@@ -173,7 +173,7 @@ const handleSubmit = async () => {
   if (Object.keys(e).length > 0) return;
 
   try {
-    const res = await fetch('https://proyectointegrador5.onrender.comapi/usuarios', {
+    const res = await fetch('https://proyectointegrador5.onrender.com/api/usuarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -439,7 +439,7 @@ function ModalSolicitar({ onClose, onSolicitudEnviada }) {
   const productorId = usuario.id;
 
   useEffect(() => {
-    fetch(`https://proyectointegrador5.onrender.comapi/inspecciones/predios/productor/${productorId}`)
+    fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/predios/productor/${productorId}`)
       .then(r => r.json())
       .then(data => setPredios(Array.isArray(data) ? data : []))
       .catch(() => setPredios([]));
@@ -463,7 +463,7 @@ function ModalSolicitar({ onClose, onSolicitudEnviada }) {
     setEnviando(true);
     setErrorEnvio("");
     try {
-      const res = await fetch('https://proyectointegrador5.onrender.comapi/inspecciones/solicitudes', {
+      const res = await fetch('https://proyectointegrador5.onrender.com/api/inspecciones/solicitudes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -713,7 +713,7 @@ function PaginaInspecciones() {
 
     const cargarInspecciones = () => {
         setCargando(true);
-        fetch(`https://proyectointegrador5.onrender.comapi/inspecciones/solicitudes/productor/${usuario.id}`)
+        fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/solicitudes/productor/${usuario.id}`)
             .then(r => r.json())
             .then(data => setInspecciones(Array.isArray(data) ? data : []))
             .catch(err => console.error(err))
