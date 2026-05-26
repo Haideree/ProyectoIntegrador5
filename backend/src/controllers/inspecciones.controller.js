@@ -28,7 +28,7 @@ const updateSolicitudEstado = (req, res) => {
 };
 
 const getInspecciones = (req, res) => {
-  dbInspecciones.query('SELECT * FROM inspeccionsanitaria', (err, results) => {
+  dbInspecciones.query('SELECT * FROM inspeccionSanitaria', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
@@ -37,7 +37,7 @@ const getInspecciones = (req, res) => {
 const createInspeccion = (req, res) => {
   const { fechaInspeccion, observaciones, resultado, tecnico_id, solicitud_id } = req.body;
   dbInspecciones.query(
-    'INSERT INTO inspeccionsanitaria (fechaInspeccion, observaciones, resultado, tecnico_id, solicitud_id) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO inspeccionSanitaria (fechaInspeccion, observaciones, resultado, tecnico_id, solicitud_id) VALUES (?, ?, ?, ?, ?)',
     [fechaInspeccion, observaciones, resultado, tecnico_id, solicitud_id],
     (err, results) => {
       if (err) return res.status(500).json({ error: err.message });
@@ -51,7 +51,7 @@ const getInspeccionesByTecnico = (req, res) => {
 
   dbInspecciones.query(
     `SELECT i.*, s.fechaSolicitud, s.estado, s.productor_id, s.predio_id
- FROM inspeccionsanitaria i
+ FROM inspeccionSanitaria i
  JOIN solicitudinspeccion s ON i.solicitud_id = s.id
  WHERE i.tecnico_id = ?`,
     [tecnico_id],
@@ -62,9 +62,9 @@ const getInspeccionesByTecnico = (req, res) => {
       const predioIds = inspecciones.map(i => i.predio_id);
 
       dbPredial.query(
-        `SELECT p.id, p.nombre, p.vereda, lp.nombre AS lugarProduccion, lp.municipio_id
+        `SELECT p.id, p.nombre, p.vereda, lp.nombre AS lugarproduccion, lp.municipio_id
          FROM predio p
-         JOIN lugarproduccion lp ON p.lugarProduccion_id = lp.id
+         JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id
          WHERE p.id IN (?)`,
         [predioIds],
         (err, predios) => {
@@ -104,7 +104,7 @@ dbPredial.query(
         ...insp,
         lugar: predio.nombre || 'Sin nombre',
         vereda: predio.vereda || '',
-        lugarProduccion: predio.lugarProduccion || '',
+        lugarproduccion: predio.lugarproduccion || '',
         municipio: municipio.municipio || '',
         departamento: municipio.departamento || '',
         ubicacion: `${municipio.departamento || ''}/${municipio.municipio || ''}/${predio.vereda || ''}`,
@@ -146,7 +146,7 @@ const updateInspeccion = (req, res) => {
   const { fechaInspeccion, fechaFin, observaciones, resultado, 
           plagaDetectada, nivelRiesgo, cantidadPlantas, estadoFitosanitario } = req.body;
   dbInspecciones.query(
-    `UPDATE InspeccionSanitaria SET 
+    `UPDATE inspeccionSanitaria SET 
       fechaInspeccion = ?, fechaFin = ?, observaciones = ?, resultado = ?,
       plagaDetectada = ?, nivelRiesgo = ?, cantidadPlantas = ?, estadoFitosanitario = ?
      WHERE id = ?`,
@@ -192,9 +192,9 @@ const getSolicitudesCompletas = (req, res) => {
       const productorIds = [...new Set(solicitudes.map(s => s.productor_id))];
 
       dbPredial.query(
-        `SELECT p.id, p.nombre, p.vereda, lp.nombre AS lugarProduccion, lp.municipio_id
+        `SELECT p.id, p.nombre, p.vereda, lp.nombre AS lugarproduccion, lp.municipio_id
          FROM predio p
-         JOIN lugarproduccion lp ON p.lugarProduccion_id = lp.id
+         JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id
          WHERE p.id IN (?)`,
         [predioIds],
         (err, predios) => {
@@ -254,9 +254,9 @@ const getPrediosByProductor = (req, res) => {
   const { productor_id } = req.params;
   dbPredial.query(
     `SELECT p.id, p.nombre, p.numRegistroICA, p.vereda, 
-            lp.nombre as lugarProduccion
-     FROM Predio p
-     JOIN LugarProduccion lp ON p.lugarProduccion_id = lp.id
+            lp.nombre as lugarproduccion
+     FROM predio p
+     JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id
      WHERE p.propietario_id = ?`,
     [productor_id],
     (err, results) => {
@@ -274,7 +274,7 @@ const createSolicitud = (req, res) => {
     return res.status(400).json({ mensaje: 'Faltan campos requeridos' });
   }
   dbInspecciones.query(
-    `INSERT INTO SolicitudInspeccion (fechaSolicitud, estado, productor_id, predio_id, observaciones) 
+    `INSERT INTO solicitudinspeccion (fechaSolicitud, estado, productor_id, predio_id, observaciones) 
      VALUES (?, 'pendiente', ?, ?, ?)`,
     [fechaSolicitud, productor_id, predio_id, observaciones || ''],
     (err, results) => {
@@ -297,9 +297,9 @@ const getSolicitudesByProductor = (req, res) => {
       const predioIds = [...new Set(solicitudes.map(s => s.predio_id))];
 
       dbPredial.query(
-        `SELECT p.id, p.nombre, lp.nombre AS lugarProduccion
+        `SELECT p.id, p.nombre, lp.nombre AS lugarproduccion
          FROM predio p
-         JOIN lugarproduccion lp ON p.lugarProduccion_id = lp.id
+         JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id
          WHERE p.id IN (?)`,
         [predioIds],
         (err, predios) => {
@@ -323,7 +323,7 @@ const getSolicitudesByProductor = (req, res) => {
                 return {
                   ...s,
                   nombrePredio: predio.nombre || `Predio #${s.predio_id}`,
-                  lugarProduccion: predio.lugarProduccion || '',
+                  lugarproduccion: predio.lugarproduccion || '',
                   lotes: lotesDelPredio
                 };
               });

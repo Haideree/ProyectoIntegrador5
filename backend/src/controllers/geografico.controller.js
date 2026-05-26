@@ -2,7 +2,7 @@ const { dbGeografico } = require('../config/db');
 
 // Departamentos
 const getDepartamentos = (req, res) => {
-  dbGeografico.query('SELECT * FROM Departamento', (err, results) => {
+  dbGeografico.query('SELECT * FROM departamento', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
@@ -18,7 +18,7 @@ const createDepartamento = (req, res) => {
 
 // Municipios
 const getMunicipios = (req, res) => {
-  dbGeografico.query('SELECT * FROM Municipio', (err, results) => {
+  dbGeografico.query('SELECT * FROM municipio', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
@@ -26,7 +26,7 @@ const getMunicipios = (req, res) => {
 
 const getMunicipiosByDepartamento = (req, res) => {
   const { id } = req.params;
-  dbGeografico.query('SELECT * FROM Municipio WHERE departamento_id = ?', [id], (err, results) => {
+  dbGeografico.query('SELECT * FROM municipio WHERE departamento_id = ?', [id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });

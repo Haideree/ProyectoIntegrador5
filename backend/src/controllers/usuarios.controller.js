@@ -21,7 +21,7 @@ const getUsuarios = (req, res) => {
 // Obtener un usuario por ID
 const getUsuarioById = (req, res) => {
   const { id } = req.params;
-  dbUsuarios.query('SELECT * FROM Usuario WHERE id = ?', [id], (err, results) => {
+  dbUsuarios.query('SELECT * FROM usuario WHERE id = ?', [id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
     res.json(results[0]);
@@ -101,7 +101,7 @@ const loginUsuario = (req, res) => {
 // Eliminar usuario
 const deleteUsuario = (req, res) => {
   const { id } = req.params;
-  dbUsuarios.query('DELETE FROM Usuario WHERE id = ?', [id], (err) => {
+  dbUsuarios.query('DELETE FROM usuario WHERE id = ?', [id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ mensaje: 'Usuario eliminado' });
   });
