@@ -154,7 +154,7 @@ function ModalDetalle({ item, onClose }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: COLORES.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Lugar de producción</div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: COLORES.texto }}>{item.lugarProduccion}</h2>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: COLORES.texto }}>{item.lugarproduccion}</h2>
           </div>
           <button onClick={onClose} style={{ background: COLORES.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: COLORES.gris }}>×</button>
         </div>
@@ -387,7 +387,7 @@ function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario }) {
           </div>
           {inspecciones.map(insp => (
             <div key={insp.id} style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1.4fr auto auto", gap: 8, alignItems: "center", padding: "12px 14px", background: COLORES.blanco, borderRadius: 10, border: `1px solid ${COLORES.borde}` }}>
-              <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{insp.lugarProduccion}</span>
+              <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{insp.lugarproduccion}</span>
               <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}</span>
               <Badge estado={insp.estado} />
               <button onClick={() => onVerDetalle(insp)} style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
