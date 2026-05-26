@@ -144,18 +144,26 @@ dbPredial.query(
 
 const updateInspeccion = (req, res) => {
   const { id } = req.params;
-  const { fechaInspeccion, fechaFin, observaciones, resultado, 
-          plagaDetectada, nivelRiesgo, cantidadPlantas, estadoFitosanitario } = req.body;
+  const { fechaInspeccion, fechaFin, observaciones, resultado, plagaDetectada, nivelRiesgo, cantidadPlantas, estadoFitosanitario } = req.body;
+  
   dbInspecciones.query(
-    `UPDATE inspeccionsanitaria SET 
-      fechaInspeccion = ?, fechaFin = ?, observaciones = ?, resultado = ?,
-      plagaDetectada = ?, nivelRiesgo = ?, cantidadPlantas = ?, estadoFitosanitario = ?
-     WHERE id = ?`,
-    [fechaInspeccion, fechaFin, observaciones, resultado,
-     plagaDetectada, nivelRiesgo, cantidadPlantas, estadoFitosanitario, id],
-    (err, results) => {
+    'UPDATE inspeccionsanitaria SET fechaInspeccion = ?, fechaFin = ?, observaciones = ?, resultado = ?, plagaDetectada = ?, nivelRiesgo = ?, cantidadPlantas = ?, estadoFitosanitario = ? WHERE id = ?',
+    [fechaInspeccion, fechaFin, observaciones, resultado, plagaDetectada, nivelRiesgo, cantidadPlantas, estadoFitosanitario, id],
+    (err) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ mensaje: 'Inspección actualizada' });
+      
+      if (resultado === 'Completada') {
+        dbInspecciones.query(
+          'UPDATE solicitudinspeccion SET estado = ? WHERE id = (SELECT solicitud_id FROM inspeccionsanitaria WHERE id = ?)',
+          ['completada', id],
+          (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ mensaje: 'Inspección actualizada' });
+          }
+        );
+      } else {
+        res.json({ mensaje: 'Inspección actualizada' });
+      }
     }
   );
 };
