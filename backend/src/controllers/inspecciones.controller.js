@@ -28,7 +28,7 @@ const updateSolicitudEstado = (req, res) => {
 };
 
 const getInspecciones = (req, res) => {
-  dbInspecciones.query('SELECT * FROM inspeccionSanitaria', (err, results) => {
+  dbInspecciones.query('SELECT * FROM inspeccionsanitaria', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
@@ -51,7 +51,7 @@ const getInspeccionesByTecnico = (req, res) => {
 
   dbInspecciones.query(
     `SELECT i.*, s.fechaSolicitud, s.estado, s.productor_id, s.predio_id
- FROM inspeccionSanitaria i
+ FROM inspeccionsanitaria i
  JOIN solicitudinspeccion s ON i.solicitud_id = s.id
  WHERE i.tecnico_id = ?`,
     [tecnico_id],
