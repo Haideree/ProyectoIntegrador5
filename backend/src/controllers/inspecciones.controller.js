@@ -72,6 +72,7 @@ const getInspeccionesByTecnico = (req, res) => {
 
           const municipioIds = predios.map(p => p.municipio_id).filter(Boolean);
 
+
           dbGeografico.query(
             `SELECT m.id, m.nombre AS municipio, d.nombre AS departamento
              FROM municipio m
@@ -204,13 +205,13 @@ const getSolicitudesCompletas = (req, res) => {
           const municipioIds = predios.map(p => p.municipio_id).filter(Boolean);
 
           dbGeografico.query(
-            `SELECT m.id, m.nombre AS municipio, d.nombre AS departamento
-             FROM municipio m
-             JOIN departamento d ON m.departamento_id = d.id
-             WHERE m.id IN (?)`,
-            [municipioIds.length ? municipioIds : [0]],
-            (err, municipios) => {
-              if (err) return res.status(500).json({ error: err.message });
+  `SELECT m.id, m.nombre AS municipio, d.nombre AS departamento
+   FROM municipio m
+   JOIN departamento d ON m.departamento_id = d.id
+   WHERE m.id IN (?)`,
+  [municipioIds.length ? municipioIds : [0]],
+  (err, municipios) => {
+    if (err) return res.status(500).json({ error: err.message });
 
               dbPredial.query(
                 `SELECT DISTINCT l.predio_id, c.nombre AS cultivo
