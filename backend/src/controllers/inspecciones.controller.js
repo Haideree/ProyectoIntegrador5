@@ -190,6 +190,7 @@ const getSolicitudesCompletas = (req, res) => {
 
       const predioIds = [...new Set(solicitudes.map(s => s.predio_id))];
       const productorIds = [...new Set(solicitudes.map(s => s.productor_id))];
+      const tecnicoIds = [...new Set(solicitudes.map(s => s.tecnico_id).filter(Boolean))];
 
       dbPredial.query(
         `SELECT p.id, p.nombre, p.vereda, lp.nombre AS lugarproduccion, lp.municipio_id
@@ -200,7 +201,6 @@ const getSolicitudesCompletas = (req, res) => {
         (err, predios) => {
           if (err) return res.status(500).json({ error: err.message });
 
-          // Query de cultivos por predio
           dbPredial.query(
             `SELECT DISTINCT l.predio_id, c.nombre AS cultivo
              FROM lote l
@@ -217,29 +217,46 @@ const getSolicitudesCompletas = (req, res) => {
                 (err, productores) => {
                   if (err) return res.status(500).json({ error: err.message });
 
-                  const resultado = solicitudes.map(s => {
-                    const predio = predios.find(p => p.id === s.predio_id) || {};
-                    const productor = productores.find(p => p.id === s.productor_id) || {};
-                    const cultivosDelPredio = [...new Set(
-                      cultivos
-                        .filter(c => c.predio_id === s.predio_id)
-                        .map(c => c.cultivo)
-                    )].join(', ');
+                  if (tecnicoIds.length === 0) {
+                    const resultado = solicitudes.map(s => {
+                      const predio = predios.find(p => p.id === s.predio_id) || {};
+                      const productor = productores.find(p => p.id === s.productor_id) || {};
+                      const cultivosDelPredio = [...new Set(cultivos.filter(c => c.predio_id === s.predio_id).map(c => c.cultivo))].join(', ');
+                      return {
+                        ...s,
+                        predio: predio.nombre || 'Sin nombre',
+                        vereda: predio.vereda || '',
+                        cultivos: cultivosDelPredio || 'Sin cultivos',
+                        tecnicoAsignado: null,
+                        productor: { nombre: productor.nombre || '', correo: productor.correo || '', telefono: productor.telefono || '' }
+                      };
+                    });
+                    return res.json(resultado);
+                  }
 
-                    return {
-                      ...s,
-                      predio: predio.nombre || 'Sin nombre',
-                      vereda: predio.vereda || '',
-                      cultivos: cultivosDelPredio || 'Sin cultivos',
-                      productor: {
-                        nombre: productor.nombre || '',
-                        correo: productor.correo || '',
-                        telefono: productor.telefono || ''
-                      }
-                    };
-                  });
+                  dbUsuarios.query(
+                    `SELECT id, nombre FROM usuario WHERE id IN (?)`,
+                    [tecnicoIds],
+                    (err, tecnicos) => {
+                      if (err) return res.status(500).json({ error: err.message });
 
-                  res.json(resultado);
+                      const resultado = solicitudes.map(s => {
+                        const predio = predios.find(p => p.id === s.predio_id) || {};
+                        const productor = productores.find(p => p.id === s.productor_id) || {};
+                        const tecnico = tecnicos.find(t => t.id === s.tecnico_id) || {};
+                        const cultivosDelPredio = [...new Set(cultivos.filter(c => c.predio_id === s.predio_id).map(c => c.cultivo))].join(', ');
+                        return {
+                          ...s,
+                          predio: predio.nombre || 'Sin nombre',
+                          vereda: predio.vereda || '',
+                          cultivos: cultivosDelPredio || 'Sin cultivos',
+                          tecnicoAsignado: tecnico.nombre || null,
+                          productor: { nombre: productor.nombre || '', correo: productor.correo || '', telefono: productor.telefono || '' }
+                        };
+                      });
+                      res.json(resultado);
+                    }
+                  );
                 }
               );
             }
