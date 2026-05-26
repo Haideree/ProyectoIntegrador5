@@ -373,7 +373,7 @@ function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario }) {
   <div style={{ fontSize: 15, fontWeight: 700, color: "#1B5E20" }}>
     {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
   </div>
-  <div style={{ fontSize: 14, color: "#2E7D32", marginTop: 4 }}>{inspecciones.length} inspecciones programadas</div>
+  <div style={{ fontSize: 14, color: "#2E7D32", marginTop: 4 }}>{inspecciones.filter(i => i.resultado !== 'Completada').length} inspecciones programadas</div>
 </div>
       </div>
       <div>
@@ -385,7 +385,7 @@ function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario }) {
           <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1.4fr auto auto", gap: 8, padding: "6px 14px", fontSize: 13, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>
             <span>Lugar de producción</span><span>Fecha de inspección</span><span>Estado</span><span>Detalles</span><span>Formulario</span>
           </div>
-          {inspecciones.map(insp => (
+          {inspecciones.filter(insp => insp.resultado !== 'Completada').map(insp => (
             <div key={insp.id} style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1.4fr auto auto", gap: 8, alignItems: "center", padding: "12px 14px", background: COLORES.blanco, borderRadius: 10, border: `1px solid ${COLORES.borde}` }}>
               <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{insp.lugarproduccion}</span>
               <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}</span>
