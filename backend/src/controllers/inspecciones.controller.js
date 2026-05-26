@@ -46,20 +46,20 @@ const createInspeccion = (req, res) => {
   );
 };
 
-const getInspeccionesByTecnico = (req, res) => {
-  const { tecnico_id } = req.params;
-
+const getSolicitudesCompletas = (req, res) => {
   dbInspecciones.query(
-    `SELECT i.*, s.fechaSolicitud, s.estado, s.productor_id, s.predio_id
- FROM inspeccionSanitaria i
- JOIN solicitudinspeccion s ON i.solicitud_id = s.id
- WHERE i.tecnico_id = ?`,
-    [tecnico_id],
-    (err, inspecciones) => {
+    `SELECT s.*, 
+     i.id AS inspeccion_id, i.tecnico_id, i.resultado
+     FROM solicitudinspeccion s
+     LEFT JOIN inspeccionSanitaria i ON i.solicitud_id = s.id
+     ORDER BY s.fechaSolicitud DESC`,
+    (err, solicitudes) => {
       if (err) return res.status(500).json({ error: err.message });
-      if (inspecciones.length === 0) return res.json([]);
+      if (solicitudes.length === 0) return res.json([]);
 
-      const predioIds = inspecciones.map(i => i.predio_id);
+      const predioIds = [...new Set(solicitudes.map(s => s.predio_id))];
+      const productorIds = [...new Set(solicitudes.map(s => s.productor_id))];
+      const tecnicoIds = [...new Set(solicitudes.map(s => s.tecnico_id).filter(Boolean))];
 
       dbPredial.query(
         `SELECT p.id, p.nombre, p.vereda, lp.nombre AS lugarproduccion, lp.municipio_id
@@ -81,58 +81,72 @@ const getInspeccionesByTecnico = (req, res) => {
             (err, municipios) => {
               if (err) return res.status(500).json({ error: err.message });
 
-dbPredial.query(
-  `SELECT DISTINCT l.predio_id, c.nombre AS cultivo
-   FROM lote l
-   JOIN lotecultivo lc ON l.id = lc.lote_id
-   JOIN cultivo c ON lc.cultivo_id = c.id
-   WHERE l.predio_id IN (?)`,
-  [predioIds],
-  (err, cultivos) => {
-    if (err) return res.status(500).json({ error: err.message });
+              dbPredial.query(
+                `SELECT DISTINCT l.predio_id, c.nombre AS cultivo
+                 FROM lote l
+                 JOIN lotecultivo lc ON l.id = lc.lote_id
+                 JOIN cultivo c ON lc.cultivo_id = c.id
+                 WHERE l.predio_id IN (?)`,
+                [predioIds],
+                (err, cultivos) => {
+                  if (err) return res.status(500).json({ error: err.message });
 
-    const resultado = inspecciones.map(insp => {
-      const predio = predios.find(p => p.id === insp.predio_id) || {};
-      const municipio = municipios.find(m => m.id === predio.municipio_id) || {};
-      const cultivosDelPredio = [...new Set(
-        cultivos
-          .filter(c => c.predio_id === insp.predio_id)
-          .map(c => c.cultivo)
-      )].join(', ');
+                  dbUsuarios.query(
+                    `SELECT id, nombre, correo, telefono FROM usuario WHERE id IN (?)`,
+                    [productorIds],
+                    (err, productores) => {
+                      if (err) return res.status(500).json({ error: err.message });
 
-      return {
-        ...insp,
-        lugar: predio.nombre || 'Sin nombre',
-        vereda: predio.vereda || '',
-        lugarproduccion: predio.lugarproduccion || '',
-        municipio: municipio.municipio || '',
-        departamento: municipio.departamento || '',
-        ubicacion: `${municipio.departamento || ''}/${municipio.municipio || ''}/${predio.vereda || ''}`,
-        cultivos: cultivosDelPredio || 'Sin cultivos',
-      };
-    });
+                      if (tecnicoIds.length === 0) {
+                        const resultado = solicitudes.map(s => {
+                          const predio = predios.find(p => p.id === s.predio_id) || {};
+                          const municipio = municipios.find(m => m.id === predio.municipio_id) || {};
+                          const productor = productores.find(p => p.id === s.productor_id) || {};
+                          const cultivosDelPredio = [...new Set(cultivos.filter(c => c.predio_id === s.predio_id).map(c => c.cultivo))].join(', ');
+                          return {
+                            ...s,
+                            predio: predio.nombre || 'Sin nombre',
+                            vereda: predio.vereda || '',
+                            municipio: municipio.municipio || '',
+                            departamento: municipio.departamento || '',
+                            cultivos: cultivosDelPredio || 'Sin cultivos',
+                            tecnicoAsignado: null,
+                            productor: { nombre: productor.nombre || '', correo: productor.correo || '', telefono: productor.telefono || '' }
+                          };
+                        });
+                        return res.json(resultado);
+                      }
 
-    const productorIds = [...new Set(inspecciones.map(i => i.productor_id))];
+                      dbUsuarios.query(
+                        `SELECT id, nombre FROM usuario WHERE id IN (?)`,
+                        [tecnicoIds],
+                        (err, tecnicos) => {
+                          if (err) return res.status(500).json({ error: err.message });
 
-    dbUsuarios.query(
-      `SELECT id, nombre FROM usuario WHERE id IN (?)`,
-      [productorIds],
-      (err, productores) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        const resultadoFinal = resultado.map(insp => {
-          const productor = productores.find(p => p.id === insp.productor_id) || {};
-          return {
-            ...insp,
-            nombreProductor: productor.nombre || 'Sin nombre',
-          };
-        });
-
-        res.json(resultadoFinal);
-      }
-    );
-  }
-);
+                          const resultado = solicitudes.map(s => {
+                            const predio = predios.find(p => p.id === s.predio_id) || {};
+                            const municipio = municipios.find(m => m.id === predio.municipio_id) || {};
+                            const productor = productores.find(p => p.id === s.productor_id) || {};
+                            const tecnico = tecnicos.find(t => t.id === s.tecnico_id) || {};
+                            const cultivosDelPredio = [...new Set(cultivos.filter(c => c.predio_id === s.predio_id).map(c => c.cultivo))].join(', ');
+                            return {
+                              ...s,
+                              predio: predio.nombre || 'Sin nombre',
+                              vereda: predio.vereda || '',
+                              municipio: municipio.municipio || '',
+                              departamento: municipio.departamento || '',
+                              cultivos: cultivosDelPredio || 'Sin cultivos',
+                              tecnicoAsignado: tecnico.nombre || null,
+                              productor: { nombre: productor.nombre || '', correo: productor.correo || '', telefono: productor.telefono || '' }
+                            };
+                          });
+                          res.json(resultado);
+                        }
+                      );
+                    }
+                  );
+                }
+              );
             }
           );
         }
