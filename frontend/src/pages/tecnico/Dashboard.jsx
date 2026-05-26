@@ -272,7 +272,7 @@ function ModalFormularioLote({ inspeccion, lote, onClose, onVolver }) {
   const handleConfirmar = async () => {
     setGuardando(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/inspecciones/inspecciones/${inspeccion.id}`, {
+      const res = await fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccion.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -406,7 +406,7 @@ function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
   const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/inspecciones/inspecciones/tecnico/${usuario.id}`)
+    fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/tecnico/${usuario.id}`)
       .then(res => res.json())
       .then(data => setHistorialReal(data.filter(i => i.resultado === 'Completada')))
       .catch(err => console.error(err));
@@ -478,7 +478,7 @@ function PaginaFormulario({ inspecciones }) {
   useEffect(() => {
     if (inspeccionHoy) {
       fetch(
-        `http://localhost:3000/api/inspecciones/lotes/predio/${inspeccionHoy.predio_id}`
+        `https://proyectointegrador5.onrender.com/api/inspecciones/lotes/predio/${inspeccionHoy.predio_id}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -551,7 +551,7 @@ function PaginaFormulario({ inspecciones }) {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/inspecciones/inspecciones/${inspeccionHoy.id}`,
+        `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}`,
         {
           method: "PATCH",
           headers: {
@@ -1107,7 +1107,7 @@ const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/inspecciones/inspecciones/tecnico/${usuario.id}`)
+    fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/tecnico/${usuario.id}`)
       .then(res => res.json())
       .then(data => setInspecciones(data))
       .catch(err => console.error(err));
@@ -1121,7 +1121,7 @@ const navigate = useNavigate()
 
   const abrirModalLotes = (insp) => {
     setItemLotes(insp);
-    fetch(`http://localhost:3000/api/inspecciones/lotes/predio/${insp.predio_id}`)
+    fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/lotes/predio/${insp.predio_id}`)
       .then(res => res.json())
       .then(data => setLotesReales(data))
       .catch(err => console.error(err));
