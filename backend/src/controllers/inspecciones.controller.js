@@ -37,7 +37,7 @@ const getInspecciones = (req, res) => {
 const createInspeccion = (req, res) => {
   const { fechaInspeccion, observaciones, resultado, tecnico_id, solicitud_id } = req.body;
   dbInspecciones.query(
-    'INSERT INTO inspeccionSanitaria (fechaInspeccion, observaciones, resultado, tecnico_id, solicitud_id) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO inspeccionsanitaria (fechaInspeccion, observaciones, resultado, tecnico_id, solicitud_id) VALUES (?, ?, ?, ?, ?)',
     [fechaInspeccion, observaciones, resultado, tecnico_id, solicitud_id],
     (err, results) => {
       if (err) return res.status(500).json({ error: err.message });
@@ -147,7 +147,7 @@ const updateInspeccion = (req, res) => {
   const { fechaInspeccion, fechaFin, observaciones, resultado, 
           plagaDetectada, nivelRiesgo, cantidadPlantas, estadoFitosanitario } = req.body;
   dbInspecciones.query(
-    `UPDATE inspeccionSanitaria SET 
+    `UPDATE inspeccionsanitaria SET 
       fechaInspeccion = ?, fechaFin = ?, observaciones = ?, resultado = ?,
       plagaDetectada = ?, nivelRiesgo = ?, cantidadPlantas = ?, estadoFitosanitario = ?
      WHERE id = ?`,
@@ -183,7 +183,7 @@ const getSolicitudesCompletas = (req, res) => {
     `SELECT s.*, 
      i.id AS inspeccion_id, i.tecnico_id, i.resultado
      FROM solicitudinspeccion s
-     LEFT JOIN inspeccionSanitaria i ON i.solicitud_id = s.id
+     LEFT JOIN inspeccionsanitaria i ON i.solicitud_id = s.id
      ORDER BY s.fechaSolicitud DESC`,
     (err, solicitudes) => {
       if (err) return res.status(500).json({ error: err.message });
