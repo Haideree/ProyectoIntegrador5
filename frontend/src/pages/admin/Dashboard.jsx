@@ -138,7 +138,7 @@ const solicitudesIniciales = [
 ];
 
 const navItems = [
-  { id: "dashboard",   label: "Dashboard",                icono: "📊" },
+  { id: "dashboard",   label: "Inicio",                icono: "📊" },
   { id: "solicitudes", label: "Solicitudes de inspección", icono: "📄" },
   { id: "usuarios",    label: "Verificación de usuarios",  icono: "👤" },
 ];
@@ -739,7 +739,7 @@ export default function DashboardAdmin() {
             <div style={{ padding: "28px 32px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
                 <div style={{ width: 4, height: 24, background: COLORES.verde, borderRadius: 2 }} />
-                <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: COLORES.texto }}>Dashboard</h1>
+                <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: COLORES.texto }}>Inicio</h1>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 32 }}>
                 <Tarjeta icono="🗺️" titulo="Lugares de producción" valor={120} colorTexto={COLORES.azul}    colorFondo={COLORES.azulPastel}    />
@@ -758,7 +758,7 @@ export default function DashboardAdmin() {
                     style={{ border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 15, outline: "none", width: 200, color: COLORES.texto }} />
                 </div>
                 <div style={{ padding: "12px 20px", borderBottom: `1px solid ${COLORES.borde}`, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {["Predios", "Lugares de producción", "Más afectados", "Menos afectados"].map(f => (
+                  {[ "Lugares de producción", "Más afectados", "Menos afectados"].map(f => (
                     <button key={f} onClick={() => setFiltro(f)} style={{ padding: "5px 14px", borderRadius: 20, fontSize: 14, fontWeight: 600, cursor: "pointer", border: `1px solid ${filtro === f ? COLORES.verde : COLORES.borde}`, background: filtro === f ? COLORES.verdePastel : COLORES.blanco, color: filtro === f ? COLORES.verde : COLORES.textoMuted }}>{f}</button>
                   ))}
                 </div>
