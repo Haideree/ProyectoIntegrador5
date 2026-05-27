@@ -1,4 +1,4 @@
-const { dbPredial } = require('../config/db');
+const { dbPredial, dbInspecciones } = require('../config/db');
 
 // Lugares de producción
 const getLugares = (req, res) => {

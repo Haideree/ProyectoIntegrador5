@@ -801,9 +801,9 @@ const prediosFiltrados = prediosData
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr style={{ background: "#A5D6A7" }}>
-                        {["Nombre", "Ubicación", "Afectación"].map(h => (
-                          <th key={h} style={{ padding: "11px 20px", textAlign: "left", fontSize: 15, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>{h}</th>
-                        ))}
+                        {["Nombre", "Lugar de producción", "Nivel de riesgo"].map(h => (
+  <th key={h} style={{ padding: "11px 20px", textAlign: "left", fontSize: 15, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>{h}</th>
+))}
                       </tr>
                     </thead>
                     <tbody>
