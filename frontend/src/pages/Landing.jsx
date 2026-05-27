@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+
 const COLORES = {
   verde: "#2E7D32",
   verdeClaro: "#4CAF50",
@@ -18,12 +19,25 @@ const imagenes = [
   "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1400",
 ]
 
-const stats = [
-  { label: "Cultivos inspeccionados", valor: "120+" },
-  { label: "Predios registrados",     valor: "85"   },
-  { label: "Cantidad exportada",      valor: "45 Ton"},
-  { label: "Inspecciones realizadas", valor: "210"  },
-]
+const [stats, setStats] = useState([
+  { label: "Cultivos inspeccionados", valor: "..." },
+  { label: "Predios registrados",     valor: "..." },
+  { label: "Inspecciones realizadas", valor: "..." },
+]);
+
+useEffect(() => {
+  Promise.all([
+    fetch('https://proyectointegrador5.onrender.com/api/predial/cultivos').then(r => r.json()),
+    fetch('https://proyectointegrador5.onrender.com/api/predial/predios').then(r => r.json()),
+    fetch('https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones').then(r => r.json()),
+  ]).then(([cultivos, predios, inspecciones]) => {
+    setStats([
+      { label: "Cultivos registrados",    valor: cultivos.length + "+" },
+      { label: "Predios registrados",     valor: predios.length },
+      { label: "Inspecciones realizadas", valor: inspecciones.length },
+    ]);
+  }).catch(err => console.error(err));
+}, []);
 
 const roles = [
   {
@@ -99,11 +113,11 @@ export default function Landing() {
       <section style={{ background: COLORES.verde, padding: '32px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
           {stats.map((s, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '20px 16px', textAlign: 'center', color: COLORES.blanco }}>
-              <div style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>{s.valor}</div>
-              <div style={{ fontSize: 14, opacity: 0.85 }}>{s.label}</div>
-            </div>
-          ))}
+  <div key={i} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '20px 16px', textAlign: 'center', color: COLORES.blanco }}>
+    <div style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>{s.valor}</div>
+    <div style={{ fontSize: 12, opacity: 0.85 }}>{s.label}</div>
+  </div>
+))}
         </div>
       </section>
 
