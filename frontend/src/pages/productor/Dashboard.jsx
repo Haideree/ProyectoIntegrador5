@@ -651,6 +651,60 @@ function PaginaDashboard({ setActiva }) {
             ))}
         </div>
         {lugarVer && <ModalLugar lugar={lugarVer} onClose={() => setLugarVer(null)} />}
+            {/* Leyenda de estados sanitarios */}
+<div style={{ marginTop: 20 }}>
+  <div style={{ fontSize: 12, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>
+    ¿Qué significa cada estado?
+  </div>
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+    {[
+      {
+        estado: "Sin alertas",
+        bg: C.verdePastel,
+        color: C.verde,
+        icono: "✅",
+        desc: "Cultivos en buen estado. Sin novedades fitosanitarias.",
+      },
+      {
+        estado: "Alerta media",
+        bg: C.amarilloPastel,
+        color: "#B7770D",
+        icono: "⚠️",
+        desc: "Observaciones detectadas. Se requiere seguimiento.",
+      },
+      {
+        estado: "Alerta",
+        bg: C.rojoPastel,
+        color: C.rojo,
+        icono: "🚨",
+        desc: "Problema fitosanitario activo. Requiere acción inmediata.",
+      },
+    ].map(({ estado, bg, color, icono, desc }) => (
+      <div
+        key={estado}
+        style={{
+          background: bg,
+          border: `1px solid ${color}30`,
+          borderRadius: 10,
+          padding: "12px 14px",
+          display: "flex",
+          gap: 10,
+          alignItems: "flex-start",
+        }}
+      >
+        <span style={{ fontSize: 18, flexShrink: 0 }}>{icono}</span>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color, marginBottom: 3 }}>
+            {estado}
+          </div>
+          <div style={{ fontSize: 13, color, opacity: 0.85, lineHeight: 1.5 }}>
+            {desc}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
         </div>
     );
 }
