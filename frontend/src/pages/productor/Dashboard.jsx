@@ -387,7 +387,7 @@ function ModalInspeccion({ ins, onClose }) {
         <Overlay onClose={onClose}>
         <ModalShell titulo={`Solicitud #${ins.id}`} subtitulo="Detalle de solicitud" onClose={onClose} ancho={480}>
             <div style={{ display: "grid", gap: 14 }}>
-            <FilaInfo label="Lugar de producción" valor={ins.lugarProduccion} />
+            <FilaInfo label="Lugar de producción" valor={ins.lugarproduccion} />
             <FilaInfo label="Predio" valor={ins.nombrePredio} />
             <FilaInfo label="Fecha de solicitud" valor={new Date(ins.fechaSolicitud).toLocaleDateString('es-CO')} />
             <FilaInfo label="Observaciones" valor={ins.observaciones || 'Sin observaciones'} />
@@ -517,7 +517,7 @@ function ModalSolicitar({ onClose, onSolicitudEnviada }) {
                   <select value={form.predioId} onChange={e => { set("predioId", e.target.value); setErrores(er => ({ ...er, predioId: "" })); }}
                     style={{ width: "100%", border: `1px solid ${errores.predioId ? C.rojo : C.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 15, color: C.texto, background: C.blanco, boxSizing: "border-box" }}>
                     <option value="">Seleccione un predio...</option>
-                    {predios.map(p => <option key={p.id} value={p.id}>{p.nombre} — {p.lugarProduccion}</option>)}
+                    {predios.map(p => <option key={p.id} value={p.id}>{p.nombre} — {p.lugarproduccion}</option>)}
                   </select>
                   {errores.predioId && <span style={{ fontSize: 15, color: C.rojo, marginTop: 4, display: "block" }}>{errores.predioId}</span>}
                 </div>
@@ -535,7 +535,7 @@ function ModalSolicitar({ onClose, onSolicitudEnviada }) {
               <div style={{ display: "grid", gap: 12 }}>
                 <div style={{ background: C.verdePastel, borderRadius: 10, padding: "16px 18px", display: "grid", gap: 12 }}>
                   <FilaInfo label="Predio" valor={predioSel.nombre} />
-                  <FilaInfo label="Lugar de producción" valor={predioSel.lugarProduccion} />
+                  <FilaInfo label="Lugar de producción" valor={predioSel.lugarproduccion} />
                   <FilaInfo label="Fecha sugerida" valor={form.fecha ? fmt(form.fecha) : "No indicada"} />
                   {form.obs && <FilaInfo label="Observaciones" valor={form.obs} />}
                 </div>

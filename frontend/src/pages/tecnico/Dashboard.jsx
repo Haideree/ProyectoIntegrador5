@@ -562,6 +562,7 @@ function PaginaFormulario({ inspecciones, onGuardado }) {
             fechaFin: datos.fechaFin,
             observaciones: datos.observaciones,
             resultado: "Completada",
+            estado: "completada"
           }),
         }
       );
@@ -1104,6 +1105,7 @@ export default function App() {
   const [menuAbierto, setMenuAbierto] = useState(true);
 const navigate = useNavigate()
   const [inspecciones, setInspecciones] = useState([]);
+  const [inspeccionSeleccionada, setInspeccionSeleccionada] = useState(null);
 
   const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
@@ -1136,6 +1138,7 @@ const handleVerFormulario = (insp) => {
   if (insp.resultado === 'Completada') {
     abrirModalLotes(insp);
   } else {
+    setInspeccionSeleccionada(insp);
     setPaginaActual("formulario");
   }
 }
@@ -1225,18 +1228,13 @@ const handleVerFormulario = (insp) => {
           {paginaActual === "inicio" && <PaginaInicio inspecciones={inspecciones} onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
           {paginaActual === "historial" && <PaginaHistorial onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
           {paginaActual === "formulario" && (
-  <PaginaFormulario 
-    inspecciones={inspecciones.filter(i => {
-      if (!i.fechaInspeccion) return false;
-      const fecha = new Date(i.fechaInspeccion);
-      const hoy = new Date();
-      return fecha.getUTCFullYear() === hoy.getFullYear() &&
-             fecha.getUTCMonth() === hoy.getMonth() &&
-             fecha.getUTCDate() === hoy.getDate() &&
-             i.resultado !== 'Completada';
-    })} 
-    onGuardado={() => { cargarInspecciones(); setPaginaActual("inicio"); }}
-  />
+<PaginaFormulario 
+  inspecciones={inspeccionSeleccionada ? [inspeccionSeleccionada] : []}
+  onGuardado={() => { 
+    cargarInspecciones(); 
+    setPaginaActual("inicio"); 
+  }}
+/>
 )}
         </main>
       </div>
