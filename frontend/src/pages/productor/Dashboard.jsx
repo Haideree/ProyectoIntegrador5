@@ -846,7 +846,7 @@ function PaginaInspecciones() {
 
         {tab === "realizadas" && (
             <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 80px", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 0.8fr 0.8fr 80px", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 <span>Predio</span><span>Fecha Solicitud</span><span>Estado</span><span>Detalle</span>
             </div>
             {cargando ? (
@@ -857,7 +857,7 @@ function PaginaInspecciones() {
                     <p style={{ margin: 0, fontWeight: 600 }}>No tienes solicitudes de inspección</p>
                 </div>
             ) : inspecciones.map((ins, i) => (
-                <div key={ins.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 80px", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
+                <div key={ins.id} style={{ display: "grid", gridTemplateColumns: "2fr 0.8fr 0.8fr 80px", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: C.texto }}>{ins.nombrePredio}</span>
                 <span style={{ fontSize: 14, color: C.textoMuted }}>{new Date(ins.fechaSolicitud).toLocaleDateString('es-CO')}</span>
                 <Badge estado={ins.estado === 'pendiente' ? 'Pendiente' : ins.estado === 'asignada' ? 'En revisión' : ins.estado} />
