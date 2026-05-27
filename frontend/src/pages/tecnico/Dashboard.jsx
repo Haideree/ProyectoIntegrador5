@@ -452,7 +452,7 @@ function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
   );
 }
 
-function PaginaFormulario({ inspecciones, onGuardado }) { {
+function PaginaFormulario({ inspecciones, onGuardado }) {
   const inspeccionHoy = inspecciones?.[0] || null;
 
   const [datos, setDatos] = useState({
