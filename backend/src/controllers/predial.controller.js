@@ -73,4 +73,44 @@ const getCultivos = (req, res) => {
   });
 };
 
-module.exports = { getLugares, createLugar, getPredios, createPredio, deletePredio, getLotesByPredio, createLote, getCultivos };
+const getPrediosConRiesgo = (req, res) => {
+  dbPredial.query(
+    `SELECT p.id, p.nombre, p.vereda,
+            lp.nombre AS lugarproduccion,
+            lp.municipio_id
+     FROM predio p
+     JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id`,
+    (err, predios) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (predios.length === 0) return res.json([]);
+
+      const predioIds = predios.map(p => p.id);
+
+      dbInspecciones.query(
+        `SELECT i.solicitud_id, s.predio_id, i.nivelRiesgo
+         FROM inspeccionsanitaria i
+         JOIN solicitudinspeccion s ON i.solicitud_id = s.id
+         WHERE s.predio_id IN (?)
+         ORDER BY i.fechaInspeccion DESC`,
+        [predioIds],
+        (err, inspecciones) => {
+          if (err) return res.status(500).json({ error: err.message });
+
+          const resultado = predios.map(p => {
+            const ultimaInsp = inspecciones.find(i => i.predio_id === p.id);
+            return {
+              ...p,
+              nivelRiesgo: ultimaInsp?.nivelRiesgo || 'bajo',
+            };
+          });
+
+          res.json(resultado);
+        }
+      );
+    }
+  );
+};
+
+module.exports = { getLugares, createLugar, getPredios, createPredio, deletePredio, getLotesByPredio, createLote, getCultivos,
+  getPrediosConRiesgo
+ };

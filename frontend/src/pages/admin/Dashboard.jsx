@@ -672,6 +672,15 @@ export default function DashboardAdmin() {
   const nombreAdmin = usuario.nombre || "Administrador";
   const iniciales = nombreAdmin.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 
+  const [prediosData, setPrediosData] = useState([]);
+
+useEffect(() => {
+  fetch('https://proyectointegrador5.onrender.com/api/predial/predios/riesgo')
+    .then(r => r.json())
+    .then(data => setPrediosData(Array.isArray(data) ? data : []))
+    .catch(err => console.error(err));
+}, []);
+
   useEffect(() => {
   Promise.all([
     fetch('https://proyectointegrador5.onrender.com/api/predial/lugares').then(r => r.json()),
@@ -689,18 +698,20 @@ export default function DashboardAdmin() {
   }).catch(err => console.error(err));
 }, []);
 
-  const prediosFiltrados = predios
-    .filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()))
-    .filter(p => {
-      if (filtro === "Más afectados")   return p.afectacion >= 50;
-      if (filtro === "Menos afectados") return p.afectacion <  50;
-      return true;
-    })
-    .sort((a, b) => {
-      if (filtro === "Más afectados")   return b.afectacion - a.afectacion;
-      if (filtro === "Menos afectados") return a.afectacion - b.afectacion;
-      return 0;
-    });
+const nivelANum = n => n === 'alto' ? 3 : n === 'medio' ? 2 : 1;
+
+const prediosFiltrados = prediosData
+  .filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()))
+  .filter(p => {
+    if (filtro === "Más afectados")   return p.nivelRiesgo === 'alto' || p.nivelRiesgo === 'medio';
+    if (filtro === "Menos afectados") return p.nivelRiesgo === 'bajo';
+    return true;
+  })
+  .sort((a, b) => {
+    if (filtro === "Más afectados")   return nivelANum(b.nivelRiesgo) - nivelANum(a.nivelRiesgo);
+    if (filtro === "Menos afectados") return nivelANum(a.nivelRiesgo) - nivelANum(b.nivelRiesgo);
+    return 0;
+  });
 
   return (
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", minHeight: "100vh", background: COLORES.grisPastel, display: "flex", flexDirection: "column" }}>
@@ -796,15 +807,22 @@ export default function DashboardAdmin() {
                       </tr>
                     </thead>
                     <tbody>
-                      {prediosFiltrados.map((p, i) => (
-                        <tr key={i} style={{ borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
-                          <td style={{ padding: "13px 20px", fontSize: 15, fontWeight: 600, color: COLORES.texto }}>{p.nombre}</td>
-                          <td style={{ padding: "13px 20px" }}>
-                            <span style={{ background: COLORES.grisPastel, color: COLORES.gris, padding: "2px 10px", borderRadius: 12, fontSize: 14, fontWeight: 500 }}>{p.ubicacion}</span>
-                          </td>
-                          <td style={{ padding: "13px 20px", minWidth: 200 }}><BarraAfectacion valor={p.afectacion} /></td>
-                        </tr>
-                      ))}
+                    {prediosFiltrados.map((p, i) => (
+  <tr key={i} style={{ borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
+    <td style={{ padding: "13px 20px", fontSize: 15, fontWeight: 600, color: COLORES.texto }}>{p.nombre}</td>
+    <td style={{ padding: "13px 20px" }}>
+      <span style={{ background: COLORES.grisPastel, color: COLORES.gris, padding: "2px 10px", borderRadius: 12, fontSize: 14, fontWeight: 500 }}>
+        {p.lugarproduccion || p.vereda || '—'}
+      </span>
+    </td>
+    <td style={{ padding: "13px 20px" }}>
+      {p.nivelRiesgo === 'alto'  && <span style={{ background: COLORES.rojoPastel,     color: COLORES.rojo,    fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>🚨 Alerta</span>}
+      {p.nivelRiesgo === 'medio' && <span style={{ background: COLORES.amarilloPastel, color: COLORES.amarillo, fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>⚠️ Alerta media</span>}
+      {p.nivelRiesgo === 'bajo'  && <span style={{ background: COLORES.verdePastel,    color: COLORES.verde,   fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>✅ Sin alertas</span>}
+      {!p.nivelRiesgo            && <span style={{ background: COLORES.grisPastel,     color: COLORES.gris,    fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>Sin inspección</span>}
+    </td>
+  </tr>
+))}
                       {prediosFiltrados.length === 0 && (
                         <tr><td colSpan={3} style={{ padding: "24px 20px", textAlign: "center", color: COLORES.textoMuted, fontSize: 15 }}>No se encontraron predios</td></tr>
                       )}
