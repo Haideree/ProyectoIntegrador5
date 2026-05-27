@@ -63,9 +63,14 @@ const TITULOS = { dashboard: "Panel del productor", lugares: "Lugares de producc
 
 // ── HELPERS DE BADGE ──────────────────────────────────────────────────────────
 function tipoBadge(estado) {
-    if (estado === "Aprobado" || estado === "Sin alertas")    return { bg: C.verdePastel,    color: C.verde   };
-    if (estado === "Con observaciones" || estado === "Alerta media") return { bg: C.amarilloPastel, color: "#B7770D" };
-    if (estado === "Alerta")                                  return { bg: C.rojoPastel,     color: C.rojo    };
+    if (estado === "Aprobado" || estado === "Sin alertas" || estado === "completada" || estado === "Aprobada")
+        return { bg: C.verdePastel, color: C.verde };
+    if (estado === "Con observaciones" || estado === "Alerta media" || estado === "Pendiente")
+        return { bg: C.amarilloPastel, color: "#B7770D" };
+    if (estado === "Alerta" || estado === "rechazada")
+        return { bg: C.rojoPastel, color: C.rojo };
+    if (estado === "En revisión" || estado === "asignada")
+        return { bg: C.azulPastel, color: C.azul };
     return { bg: C.grisPastel, color: C.gris };
 }
 
@@ -434,8 +439,13 @@ function ModalInspeccion({ ins, onClose }) {
             <FilaInfo label="Observaciones" valor={ins.observaciones || 'Sin observaciones'} />
             <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Estado</div>
-                <Badge estado={ins.estado === 'pendiente' ? 'Pendiente' : ins.estado === 'asignada' ? 'En revisión' : ins.estado === 'aprobada' ? 'Aprobada' : ins.estado} />
-            </div>
+<Badge estado={
+    ins.estado === 'pendiente' ? 'Pendiente' :
+    ins.estado === 'asignada' ? 'En revisión' :
+    ins.estado === 'aprobada' || ins.estado === 'completada' ? 'Aprobada' :
+    ins.estado === 'rechazada' ? 'rechazada' :
+    ins.estado
+} />            </div>
             </div>
 
             {ins.lotes && ins.lotes.length > 0 && (
