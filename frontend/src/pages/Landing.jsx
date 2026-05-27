@@ -156,18 +156,35 @@ useEffect(() => {
             <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>🌱 Proyecto Integrador</h3>
             <p style={{ fontSize: 15, opacity: 0.7, lineHeight: 1.7 }}>Sistema para la gestión de inspecciones fitosanitarias en predios agrícolas.</p>
           </div>
+         <div>
+  <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Redes sociales</h3>
+  <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+    {[
+      { nombre: 'Facebook',  href: '#', icono: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg' },
+      { nombre: 'Instagram', href: '#', icono: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg' },
+      { nombre: 'Twitter',   href: '#', icono: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/twitter.svg' },
+    ].map(r => (
+      <a key={r.nombre} href={r.href} title={r.nombre} style={{ width: 38, height: 38, borderRadius: 8, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}>
+        <img src={r.icono} alt={r.nombre} style={{ width: 18, height: 18, filter: 'invert(1)' }} />
+      </a>
+    ))}
+  </div>
+</div>
           <div>
-            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Redes sociales</h3>
-            {['Facebook', 'Instagram', 'Twitter'].map(r => (
-              <p key={r} style={{ fontSize: 15, opacity: 0.7, marginBottom: 4 }}><a href="#" style={{ color: COLORES.blanco, textDecoration: 'none' }}>{r}</a></p>
-            ))}
-          </div>
-          <div>
-            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Contacto</h3>
-            <p style={{ fontSize: 15, opacity: 0.7, marginBottom: 4 }}>📞 +57 300 123 4567</p>
-            <p style={{ fontSize: 15, opacity: 0.7, marginBottom: 4 }}>📞 +57 310 987 6543</p>
-            <p style={{ fontSize: 15, opacity: 0.7 }}>📧 proyecto.integrador@email.com</p>
-          </div>
+  <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>Contacto</h3>
+  {[
+    { icono: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg', texto: '+57 300 123 4567' },
+    { icono: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/whatsapp.svg', texto: '+57 310 987 6543' },
+    { icono: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/gmail.svg',    texto: 'proyecto.integrador@email.com' },
+  ].map((item, i) => (
+    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, opacity: 0.7 }}>
+      <img src={item.icono} alt="" style={{ width: 16, height: 16, filter: 'invert(1)', flexShrink: 0 }} />
+      <span style={{ fontSize: 14 }}>{item.texto}</span>
+    </div>
+  ))}
+</div>
         </div>
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16, textAlign: 'center', fontSize: 14, opacity: 0.5 }}>
           © 2026 Proyecto Integrador Haider Esteban Fuentes || Angel Giovanny Arevalo || Brayan Andrés Suarez
