@@ -47,95 +47,9 @@ const usuariosRegistrados = [
   { id: 8, tipo: "Técnico",   nombre: "Hernán", apellido: "Vargas",  identificacion: "91234567", tarjetaProfesional: "ICA-2023-0299", correo: "h.vargas@ica.gov.co",   telefono: "3001122334", fechaRegistro: "10/04/2025", enviadoPorIca: true  },
 ];
 
-const tecnicosDisponibles = [
-  { id: 4, nombre: "María",  apellido: "Gómez"   },
-  { id: 5, nombre: "Jorge",  apellido: "Herrera"  },
-  { id: 8, nombre: "Hernán", apellido: "Vargas"   },
-];
 
-const solicitudesIniciales = [
-  {
-    id: 1, estado: "Sin asignar", fechaSolicitud: "14/04/2025",
-    predio: "Finca El Paraíso",
-    productor: { nombre: "Pedro Sánchez", id: "72345678", telefono: "3187654321", correo: "pedro.s@gmail.com" },
-    ubicacion: { departamento: "Santander", municipio: "Piedecuesta", vereda: "Vereda El Carmen", coordenadas: "6°59'12\"N 73°02'44\"W" },
-    area: 12.5,
-    cultivos: [
-      { nombre: "Tomate",        variedad: "Chonto", area: 5.0, tiempoSembrado: "3 meses", estadoFenologico: "Fructificación", cantidadPlantas: 8400  },
-      { nombre: "Cebolla larga", variedad: "Junca",  area: 7.5, tiempoSembrado: "5 meses", estadoFenologico: "Maduración",     cantidadPlantas: 15000 },
-    ],
-    infraestructura: "Invernadero, sistema de riego por goteo",
-    observaciones: "Se detectaron posibles síntomas de plaga en sector norte del predio.",
-    tecnicoAsignado: null,
-  },
-  {
-    id: 2, estado: "Sin asignar", fechaSolicitud: "12/04/2025",
-    predio: "Hacienda Montecarlo",
-    productor: { nombre: "Carlos Medina", id: "91234567", telefono: "3201234567", correo: "c.medina@gmail.com" },
-    ubicacion: { departamento: "Antioquia", municipio: "Rionegro", vereda: "Vereda La Mosca", coordenadas: "6°09'00\"N 75°22'00\"W" },
-    area: 6.8,
-    cultivos: [
-      { nombre: "Fresa", variedad: "Festival", area: 6.8, tiempoSembrado: "6 meses", estadoFenologico: "Cosecha", cantidadPlantas: 34000 },
-    ],
-    infraestructura: "Macrotúneles, fertiriego automatizado",
-    observaciones: "Producción para exportación, requiere certificación urgente.",
-    tecnicoAsignado: null,
-  },
-  {
-    id: 3, estado: "Pendiente", fechaSolicitud: "10/04/2025",
-    predio: "Predio La Esperanza",
-    productor: { nombre: "Ana Torres", id: "52123456", telefono: "3145678901", correo: "ana.torres@correo.com" },
-    ubicacion: { departamento: "Boyacá", municipio: "Tunja", vereda: "Vereda Higueras", coordenadas: "5°31'40\"N 73°21'38\"W" },
-    area: 8.2,
-    cultivos: [
-      { nombre: "Papa", variedad: "Pastusa suprema", area: 8.2, tiempoSembrado: "4 meses", estadoFenologico: "Tuberización", cantidadPlantas: 20500 },
-    ],
-    infraestructura: "Sistema de drenaje, bodega de almacenamiento",
-    observaciones: "Solicitud urgente por posible ataque de Phytophthora.",
-    tecnicoAsignado: "María Gómez",
-  },
-  {
-    id: 4, estado: "Pendiente", fechaSolicitud: "08/04/2025",
-    predio: "Finca San Isidro",
-    productor: { nombre: "Jorge Ríos", id: "80234567", telefono: "3012345678", correo: "j.rios@agro.com" },
-    ubicacion: { departamento: "Huila", municipio: "Pitalito", vereda: "Vereda Palmar", coordenadas: "1°51'00\"N 76°03'00\"W" },
-    area: 15.0,
-    cultivos: [
-      { nombre: "Café",    variedad: "Castillo", area: 10.0, tiempoSembrado: "3 años",   estadoFenologico: "Maduración",       cantidadPlantas: 18000 },
-      { nombre: "Plátano", variedad: "Hartón",   area: 5.0,  tiempoSembrado: "14 meses", estadoFenologico: "Llenado de fruto", cantidadPlantas: 2500  },
-    ],
-    infraestructura: "Beneficiadero de café, secadero solar",
-    observaciones: "Inspección de rutina anual requerida por exportador.",
-    tecnicoAsignado: "Hernán Vargas",
-  },
-  {
-    id: 5, estado: "Completada", fechaSolicitud: "02/04/2025",
-    predio: "Hacienda Verde",
-    productor: { nombre: "Luis Herrera", id: "43876543", telefono: "3167890123", correo: "l.herrera@agro.com" },
-    ubicacion: { departamento: "Cundinamarca", municipio: "Fusagasugá", vereda: "Vereda Bochica", coordenadas: "4°20'35\"N 74°21'47\"W" },
-    area: 20.0,
-    cultivos: [
-      { nombre: "Aguacate", variedad: "Hass",   area: 12.0, tiempoSembrado: "2 años",   estadoFenologico: "Floración",        cantidadPlantas: 3600 },
-      { nombre: "Plátano",  variedad: "Hartón", area: 8.0,  tiempoSembrado: "10 meses", estadoFenologico: "Llenado de fruto", cantidadPlantas: 2400 },
-    ],
-    infraestructura: "Red de caminos internos, sistema de riego por aspersión",
-    observaciones: "Sin novedades adicionales.",
-    tecnicoAsignado: "Hernán Vargas",
-  },
-  {
-    id: 6, estado: "Completada", fechaSolicitud: "28/03/2025",
-    predio: "Predio El Roble",
-    productor: { nombre: "Sandra Gómez", id: "52987654", telefono: "3109876543", correo: "s.gomez@gmail.com" },
-    ubicacion: { departamento: "Santander", municipio: "Floridablanca", vereda: "Vereda Sur", coordenadas: "6°59'00\"N 73°03'00\"W" },
-    area: 4.5,
-    cultivos: [
-      { nombre: "Pimentón", variedad: "Natalie", area: 4.5, tiempoSembrado: "2 meses", estadoFenologico: "Cuajado", cantidadPlantas: 9000 },
-    ],
-    infraestructura: "Invernadero plástico, riego por aspersión",
-    observaciones: "Primer ciclo de producción, sin antecedentes.",
-    tecnicoAsignado: "María Gómez",
-  },
-];
+
+
 
 const navItems = [
   { id: "dashboard",   label: "Inicio",                icono: "📊" },
@@ -542,7 +456,7 @@ function PaginaUsuarios() {
   const [cargando, setCargando] = useState(true);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [rolModal, setRolModal] = useState(1);
-  const [form, setForm] = useState({ numeroDocumento: "", nombre: "", correo: "", contrasena: "", telefono: "" });
+  const [form, setForm] = useState({ numeroDocumento: "", nombre: "", correo: "", contrasena: "", telefono: "", confirmContrasena: "" });
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState("");
@@ -570,14 +484,58 @@ function PaginaUsuarios() {
   };
 
   const validar = () => {
-    const e = {};
-    if (!form.numeroDocumento) e.numeroDocumento = "Requerido";
-    if (!form.nombre)          e.nombre          = "Requerido";
-    if (!form.correo)          e.correo          = "Requerido";
-    if (!form.contrasena)      e.contrasena      = "Requerido";
-    if (!form.telefono)        e.telefono        = "Requerido";
-    return e;
-  };
+  const e = {};
+
+  // Nombre — no puede contener @ ni parecer un correo
+  if (!form.nombre.trim()) {
+    e.nombre = "Requerido";
+  } else if (/@/.test(form.nombre)) {
+    e.nombre = "El nombre no puede contener una dirección de correo";
+  }
+
+  // Documento — números o formato pasaporte (letras+números), entre 6 y 20 chars
+  if (!form.numeroDocumento.trim()) {
+    e.numeroDocumento = "Requerido";
+  } else if (!/^[A-Za-z0-9]{6,20}$/.test(form.numeroDocumento.trim())) {
+    e.numeroDocumento = "Entre 6 y 20 caracteres (números o formato pasaporte)";
+  }
+
+  // Correo
+  if (!form.correo.trim()) {
+    e.correo = "Requerido";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo)) {
+    e.correo = "Ingresa un correo válido";
+  }
+
+  // Teléfono — exactamente 10 dígitos
+  if (!form.telefono.trim()) {
+    e.telefono = "Requerido";
+  } else if (!/^\d{10}$/.test(form.telefono.trim())) {
+    e.telefono = "El teléfono debe tener exactamente 10 dígitos";
+  }
+
+  // Contraseña
+  if (!form.contrasena) {
+    e.contrasena = "Requerido";
+  } else {
+    const errs = [];
+    if (form.contrasena.length < 8)          errs.push("mínimo 8 caracteres");
+    if (!/[A-Z]/.test(form.contrasena))      errs.push("una mayúscula");
+    if (!/[a-z]/.test(form.contrasena))      errs.push("una minúscula");
+    if (!/[0-9]/.test(form.contrasena))      errs.push("un número");
+    if (!/[^A-Za-z0-9]/.test(form.contrasena)) errs.push("un símbolo (!@#$%)");
+    if (errs.length > 0) e.contrasena = "Debe tener: " + errs.join(" · ");
+  }
+
+  // Confirmar contraseña
+  if (!form.confirmContrasena) {
+    e.confirmContrasena = "Requerido";
+  } else if (form.contrasena !== form.confirmContrasena) {
+    e.confirmContrasena = "Las contraseñas no coinciden";
+  }
+
+  return e;
+};
 
   const handleEnviar = async () => {
     const e = validar();
@@ -588,7 +546,14 @@ function PaginaUsuarios() {
       const res = await fetch('https://proyectointegrador5.onrender.com/api/usuarios/crear-con-rol', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, rol_id: rolModal })
+        body: JSON.stringify({ 
+  numeroDocumento: form.numeroDocumento,
+  nombre: form.nombre,
+  correo: form.correo,
+  contrasena: form.contrasena,
+  telefono: form.telefono,
+  rol_id: rolModal 
+})
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al crear');
@@ -682,11 +647,12 @@ function PaginaUsuarios() {
             ) : (
               <div style={{ display: "grid", gap: 14 }}>
                 {[
-                  { key: "nombre",          label: "Nombre completo",  placeholder: "Ej. Carlos Ramírez" },
-                  { key: "numeroDocumento", label: "Número de documento", placeholder: "1234567890" },
-                  { key: "correo",          label: "Correo electrónico", placeholder: "correo@ejemplo.com" },
-                  { key: "telefono",        label: "Teléfono",          placeholder: "3001234567" },
-                  { key: "contrasena",      label: "Contraseña",        placeholder: "Mínimo 8 caracteres", type: "password" },
+                  { key: "nombre",           label: "Nombre completo",      placeholder: "Ej. Carlos Ramírez" },
+{ key: "numeroDocumento",  label: "Número de documento",  placeholder: "Cédula o pasaporte" },
+{ key: "correo",           label: "Correo electrónico",   placeholder: "correo@ejemplo.com" },
+{ key: "telefono",         label: "Teléfono",             placeholder: "3001234567" },
+{ key: "contrasena",       label: "Contraseña",           placeholder: "Mínimo 8 caracteres", type: "password" },
+{ key: "confirmContrasena",label: "Confirmar contraseña", placeholder: "Repite la contraseña", type: "password" },
                 ].map(({ key, label, placeholder, type = "text" }) => (
                   <div key={key}>
                     <label style={labelStyle}>{label}</label>
