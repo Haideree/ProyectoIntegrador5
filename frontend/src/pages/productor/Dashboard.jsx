@@ -51,13 +51,15 @@ const diasRestantes = f => Math.ceil((new Date(f) - HOY) / 86400000);
 const fmt = s => { const [y,m,d] = s.split("-"); return `${d}/${m}/${y}`; };
 
 const NAV = [
-    { key: "dashboard",    label: "Inicio",             icono: "📊" },
-    { key: "lugares",      label: "Lugares de producción", icono: "🗺️" },
-    { key: "predios",      label: "Predios asociados",     icono: "🏡" },
+    { key: "dashboard",    label: "Inicio",                icono: "📊" },
+    { key: "lugares",      label: "Lugares de producción", icono: "🗺️", subItems: [
+        { key: "predios", label: "Predios",  icono: "🏡" },
+        { key: "lotes",   label: "Lotes",    icono: "🌿" },
+    ]},
     { key: "inspecciones", label: "Inspecciones",          icono: "✅" },
 ];
 
-const TITULOS = { dashboard: "Panel del productor", lugares: "Lugares de producción", predios: "Predios asociados", inspecciones: "Inspecciones", informes: "Informes" };
+const TITULOS = { dashboard: "Panel del productor", lugares: "Lugares de producción", predios: "Predios asociados", lotes: "Lotes", inspecciones: "Inspecciones" };
 
 // ── HELPERS DE BADGE ──────────────────────────────────────────────────────────
 function tipoBadge(estado) {
@@ -79,18 +81,29 @@ function Badge({ estado, children }) {
 
 // ── SIDEBAR (igual al Admin y Técnico) ───────────────────────────────────────
 function Sidebar({ activa, setActiva, menuAbierto, setMenuAbierto }) {
+    const [desplegado, setDesplegado] = useState(false);
+
+    const handleClick = (key, tieneSubItems) => {
+        if (tieneSubItems) {
+            setDesplegado(d => !d);
+        } else {
+            setActiva(key);
+            setDesplegado(false);
+        }
+    };
+
     return (
         <aside style={{
-        width: menuAbierto ? 230 : 62, background: C.verde, flexShrink: 0,
-        transition: "width 0.25s ease", overflow: "hidden",
-        display: "flex", flexDirection: "column",
-        height: "100vh", position: "sticky", top: 0,
+            width: menuAbierto ? 230 : 62, background: C.verde, flexShrink: 0,
+            transition: "width 0.25s ease", overflow: "hidden",
+            display: "flex", flexDirection: "column",
+            height: "100vh", position: "sticky", top: 0,
         }}>
-     {/* Logo */}
-<div style={{ padding: "0 16px", height: 56, display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid rgba(255,255,255,0.15)`, flexShrink: 0 }}>
-    <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-    <span style={{ color: C.blanco, fontSize: 15, fontWeight: 700, whiteSpace: "nowrap", opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s" }}>Productor</span>
-</div>
+        {/* Logo */}
+        <div style={{ padding: "0 16px", height: 56, display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid rgba(255,255,255,0.15)`, flexShrink: 0 }}>
+            <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+            <span style={{ color: C.blanco, fontSize: 15, fontWeight: 700, whiteSpace: "nowrap", opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s" }}>Productor</span>
+        </div>
 
         {/* Tag rol */}
         <div style={{ padding: "10px 20px", background: "rgba(0,0,0,0.12)", borderBottom: `1px solid rgba(255,255,255,0.1)`, whiteSpace: "nowrap" }}>
@@ -101,36 +114,61 @@ function Sidebar({ activa, setActiva, menuAbierto, setMenuAbierto }) {
 
         {/* Nav */}
         <nav style={{ flex: 1, padding: "10px 0", overflowY: "auto" }}>
-            {NAV.map(({ key, label, icono }) => (
-            <button key={key} onClick={() => setActiva(key)} style={{
-                display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "12px 20px",
-                border: "none", textAlign: "left", whiteSpace: "nowrap", cursor: "pointer",
-                background: activa === key ? "rgba(255,255,255,0.18)" : "transparent",
-                color: activa === key ? C.blanco : C.verdeMedio,
-                fontWeight: activa === key ? 700 : 400, fontSize: 15,
-                borderLeft: activa === key ? `3px solid ${C.blanco}` : "3px solid transparent",
-                transition: "all 0.15s",
-            }}>
-                <span style={{ fontSize: 17, flexShrink: 0 }}>{icono}</span>
-                <span style={{ opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s" }}>{label}</span>
-            </button>
+            {NAV.map(({ key, label, icono, subItems }) => (
+            <div key={key}>
+                <button onClick={() => handleClick(key, !!subItems)} style={{
+                    display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "12px 20px",
+                    border: "none", textAlign: "left", whiteSpace: "nowrap", cursor: "pointer",
+                    background: activa === key || (subItems && subItems.some(s => s.key === activa)) ? "rgba(255,255,255,0.18)" : "transparent",
+                    color: activa === key || (subItems && subItems.some(s => s.key === activa)) ? C.blanco : C.verdeMedio,
+                    fontWeight: activa === key || (subItems && subItems.some(s => s.key === activa)) ? 700 : 400, fontSize: 15,
+                    borderLeft: activa === key || (subItems && subItems.some(s => s.key === activa)) ? `3px solid ${C.blanco}` : "3px solid transparent",
+                    transition: "all 0.15s",
+                }}>
+                    <span style={{ fontSize: 17, flexShrink: 0 }}>{icono}</span>
+                    <span style={{ opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s", flex: 1 }}>{label}</span>
+                    {subItems && menuAbierto && (
+                        <span style={{ fontSize: 11, opacity: 0.8 }}>{desplegado ? "▲" : "▼"}</span>
+                    )}
+                </button>
+
+                {/* SubItems */}
+                {subItems && desplegado && menuAbierto && (
+                    <div style={{ background: "rgba(0,0,0,0.15)" }}>
+                        {subItems.map(sub => (
+                            <button key={sub.key} onClick={() => setActiva(sub.key)} style={{
+                                display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "10px 20px 10px 40px",
+                                border: "none", textAlign: "left", whiteSpace: "nowrap", cursor: "pointer",
+                                background: activa === sub.key ? "rgba(255,255,255,0.15)" : "transparent",
+                                color: activa === sub.key ? C.blanco : C.verdeMedio,
+                                fontWeight: activa === sub.key ? 700 : 400, fontSize: 14,
+                                borderLeft: activa === sub.key ? `3px solid ${C.blanco}` : "3px solid transparent",
+                                transition: "all 0.15s",
+                            }}>
+                                <span style={{ fontSize: 15, flexShrink: 0 }}>{sub.icono}</span>
+                                <span>{sub.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
             ))}
         </nav>
 
         {/* Cerrar sesión */}
-<div style={{ borderTop: `1px solid rgba(255,255,255,0.12)`, flexShrink: 0 }}>
-    <button 
-        onClick={() => {
-            localStorage.removeItem('token')
-            localStorage.removeItem('usuario')
-            window.location.href = '/login'
-        }}
-        style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 20px", border: "none", background: "transparent", color: "#FFCDD2", cursor: "pointer", fontWeight: 600, fontSize: 15, whiteSpace: "nowrap" }}>
-        <span style={{ fontSize: 17, flexShrink: 0 }}>🚪</span>
-        <span style={{ opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s" }}>Cerrar sesión</span>
-    </button>
-</div>
-</aside>
+        <div style={{ borderTop: `1px solid rgba(255,255,255,0.12)`, flexShrink: 0 }}>
+            <button 
+                onClick={() => {
+                    localStorage.removeItem('token')
+                    localStorage.removeItem('usuario')
+                    window.location.href = '/login'
+                }}
+                style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 20px", border: "none", background: "transparent", color: "#FFCDD2", cursor: "pointer", fontWeight: 600, fontSize: 15, whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 17, flexShrink: 0 }}>🚪</span>
+                <span style={{ opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s" }}>Cerrar sesión</span>
+            </button>
+        </div>
+        </aside>
     );
 }
 
@@ -843,6 +881,7 @@ export default function DashboardProductor() {
             {activa === "predios"      && <PaginaPredios />}
             {activa === "inspecciones" && <PaginaInspecciones />}
             {activa === "informes"     && <PaginaInformes />}
+            {activa === "lotes" && <PaginaPredios />}
             </main>
         </div>
         </div>
