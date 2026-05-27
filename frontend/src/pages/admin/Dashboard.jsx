@@ -665,7 +665,29 @@ export default function DashboardAdmin() {
   const [menuAbierto, setMenuAbierto]   = useState(true);
   const [busqueda, setBusqueda]         = useState("");
   const [filtro, setFiltro]             = useState("Predios");
+  const [stats, setStats] = useState({ lugares: 0, cultivos: 0, tecnicos: 0, inspecciones: 0 });
   const navigate = useNavigate()
+
+  const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+  const nombreAdmin = usuario.nombre || "Administrador";
+  const iniciales = nombreAdmin.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+
+  useEffect(() => {
+  Promise.all([
+    fetch('https://proyectointegrador5.onrender.com/api/predial/lugares').then(r => r.json()),
+    fetch('https://proyectointegrador5.onrender.com/api/predial/cultivos').then(r => r.json()),
+    fetch('https://proyectointegrador5.onrender.com/api/usuarios').then(r => r.json()),
+    fetch('https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones').then(r => r.json()),
+  ]).then(([lugares, cultivos, usuarios, inspecciones]) => {
+    const tecnicos = usuarios.filter(u => u.rol === 'tecnico');
+    setStats({
+      lugares: lugares.length,
+      cultivos: cultivos.length,
+      tecnicos: tecnicos.length,
+      inspecciones: inspecciones.length,
+    });
+  }).catch(err => console.error(err));
+}, []);
 
   const prediosFiltrados = predios
     .filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()))
@@ -695,9 +717,12 @@ export default function DashboardAdmin() {
     </div>
   </div>
   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-    <span style={{ fontSize: 15, opacity: 0.85 }}>Juan Pérez</span>
-    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>👤</div>
-  </div>
+    <div style={{ textAlign: "right" }}>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>{nombreAdmin}</div>
+        <div style={{ fontSize: 13, opacity: 0.75 }}>Administrador</div>
+    </div>
+    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700 }}>{iniciales}</div>
+</div>
 </header>
 
       <div style={{ display: "flex", flex: 1 }}>
@@ -742,11 +767,10 @@ export default function DashboardAdmin() {
                 <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: COLORES.texto }}>Inicio</h1>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 32 }}>
-                <Tarjeta icono="🗺️" titulo="Lugares de producción" valor={120} colorTexto={COLORES.azul}    colorFondo={COLORES.azulPastel}    />
-                <Tarjeta icono="🌾" titulo="Cultivos exportados"   valor={85}  colorTexto={COLORES.verde}   colorFondo={COLORES.verdePastel}   />
-                <Tarjeta icono="⚙️" titulo="Técnicos"             valor={25}  colorTexto={COLORES.naranja} colorFondo={COLORES.naranjaPastel} />
-                <Tarjeta icono="🌿" titulo="Cultivos totales"      valor={200} colorTexto={COLORES.morado}  colorFondo={COLORES.moradoPastel}  />
-                <Tarjeta icono="🐛" titulo="Cultivos afectados"    valor={40}  colorTexto={COLORES.rojo}    colorFondo={COLORES.rojoPastel}    />
+                <Tarjeta icono="🗺️" titulo="Lugares de producción" valor={stats.lugares}      colorTexto={COLORES.azul}    colorFondo={COLORES.azulPastel}    />
+<Tarjeta icono="🌾" titulo="Cultivos registrados"  valor={stats.cultivos}     colorTexto={COLORES.verde}   colorFondo={COLORES.verdePastel}   />
+<Tarjeta icono="⚙️" titulo="Técnicos"             valor={stats.tecnicos}     colorTexto={COLORES.naranja} colorFondo={COLORES.naranjaPastel} />
+<Tarjeta icono="🌿" titulo="Inspecciones"          valor={stats.inspecciones} colorTexto={COLORES.morado}  colorFondo={COLORES.moradoPastel}  />
               </div>
               <div style={{ background: COLORES.blanco, borderRadius: 14, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
                 <div style={{ padding: "16px 20px", borderBottom: `1px solid ${COLORES.borde}`, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
