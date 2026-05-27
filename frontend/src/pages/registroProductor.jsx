@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const inputBase = {
   height: 38, padding: "0 12px", fontSize: 14, borderRadius: 8,
@@ -57,6 +58,7 @@ function SectionLabel({ children }) {
 const INITIAL = { nombre: "", apellido: "", tipoId: "", numeroId: "", correo: "", celular: "", departamento: "", municipio: "", direccion: "", password: "", confirmPassword: "" };
 
 export default function RegistroProductor() {
+  const navigate = useNavigate(); 
   const [form, setForm] = useState(INITIAL);
   const [errors, setErrors] = useState({});
   const [strength, setStrength] = useState(0);
@@ -187,6 +189,7 @@ const handleSubmit = async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al registrar');
     setSubmitted(true);
+    setTimeout(() => navigate('/login'), 2000);
   } catch (err) {
     setErrors({ general: err.message });
   }
@@ -333,7 +336,8 @@ const handleSubmit = async () => {
   Crear cuenta
 </button>
           <p style={{ textAlign: "center", fontSize: 15, color: "#607D8B", marginTop: 14 }}>
-            ¿Ya tienes cuenta? <a href="#" style={{ color: "#2E7D32", textDecoration: "none", fontWeight: 500 }}>Inicia sesión</a>
+            ¿Ya tienes cuenta? <a onClick={() => navigate('/login')} style={{ color: "#2E7D32", textDecoration: "none", fontWeight: 500, cursor: "pointer" }}>Inicia sesión</a>
+
           </p>
         </div>
       </div>
