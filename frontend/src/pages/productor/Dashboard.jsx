@@ -846,7 +846,7 @@ function PaginaInspecciones() {
 
         {tab === "realizadas" && (
             <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 80px", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 80px", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 <span>Predio</span><span>Fecha Solicitud</span><span>Estado</span><span>Detalle</span>
             </div>
             {cargando ? (
