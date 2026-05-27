@@ -55,7 +55,6 @@ const NAV = [
     { key: "lugares",      label: "Lugares de producción", icono: "🗺️" },
     { key: "predios",      label: "Predios asociados",     icono: "🏡" },
     { key: "inspecciones", label: "Inspecciones",          icono: "✅" },
-    { key: "informes",     label: "Informes",              icono: "📄" },
 ];
 
 const TITULOS = { dashboard: "Panel del productor", lugares: "Lugares de producción", predios: "Predios asociados", inspecciones: "Inspecciones", informes: "Informes" };
