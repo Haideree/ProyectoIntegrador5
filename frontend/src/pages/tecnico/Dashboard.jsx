@@ -452,7 +452,7 @@ function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
   );
 }
 
-function PaginaFormulario({ inspecciones }) {
+function PaginaFormulario({ inspecciones, onGuardado }) { {
   const inspeccionHoy = inspecciones?.[0] || null;
 
   const [datos, setDatos] = useState({
@@ -569,6 +569,7 @@ function PaginaFormulario({ inspecciones }) {
       if (!res.ok) throw new Error("Error al guardar");
 
       setGuardado(true);
+setTimeout(() => onGuardado(), 2000);
     } catch (err) {
       console.error(err);
     } finally {
@@ -1106,12 +1107,16 @@ const navigate = useNavigate()
 
   const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
-  useEffect(() => {
-    fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/tecnico/${usuario.id}`)
-      .then(res => res.json())
-      .then(data => setInspecciones(data))
-      .catch(err => console.error(err));
-  }, []);
+const cargarInspecciones = () => {
+  fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/tecnico/${usuario.id}`)
+    .then(res => res.json())
+    .then(data => setInspecciones(data.sort((a, b) => new Date(b.fechaInspeccion) - new Date(a.fechaInspeccion))))
+    .catch(err => console.error(err));
+};
+
+useEffect(() => {
+  cargarInspecciones();
+}, []);
 
   const navItems = [
     { id: "inicio",     label: "INICIO",                  icono: "🏠" },
@@ -1227,8 +1232,10 @@ const handleVerFormulario = (insp) => {
       const hoy = new Date();
       return fecha.getUTCFullYear() === hoy.getFullYear() &&
              fecha.getUTCMonth() === hoy.getMonth() &&
-             fecha.getUTCDate() === hoy.getDate();
+             fecha.getUTCDate() === hoy.getDate() &&
+             i.resultado !== 'Completada';
     })} 
+    onGuardado={() => { cargarInspecciones(); setPaginaActual("inicio"); }}
   />
 )}
         </main>
