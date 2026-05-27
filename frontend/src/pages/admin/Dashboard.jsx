@@ -816,10 +816,10 @@ const prediosFiltrados = prediosData
       </span>
     </td>
     <td style={{ padding: "13px 20px" }}>
-      {p.nivelRiesgo === 'alto'  && <span style={{ background: COLORES.rojoPastel,     color: COLORES.rojo,    fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>🚨 Alerta</span>}
-      {p.nivelRiesgo === 'medio' && <span style={{ background: COLORES.amarilloPastel, color: COLORES.amarillo, fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>⚠️ Alerta media</span>}
-      {p.nivelRiesgo === 'bajo'  && <span style={{ background: COLORES.verdePastel,    color: COLORES.verde,   fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>✅ Sin alertas</span>}
-      {!p.nivelRiesgo            && <span style={{ background: COLORES.grisPastel,     color: COLORES.gris,    fontSize: 13, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>Sin inspección</span>}
+      {p.nivelRiesgo === 'alto'  && <span style={{ background: COLORES.rojoPastel,     color: COLORES.rojo,    fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>🚨 Alerta</span>}
+      {p.nivelRiesgo === 'medio' && <span style={{ background: COLORES.amarilloPastel, color: COLORES.amarillo, fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>⚠️ Alerta media</span>}
+      {p.nivelRiesgo === 'bajo'  && <span style={{ background: COLORES.verdePastel,    color: COLORES.verde,   fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>✅ Sin alertas</span>}
+      {!p.nivelRiesgo            && <span style={{ background: COLORES.grisPastel,     color: COLORES.gris,    fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>Sin inspección</span>}
     </td>
   </tr>
 ))}

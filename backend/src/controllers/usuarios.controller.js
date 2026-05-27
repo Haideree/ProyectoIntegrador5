@@ -107,4 +107,31 @@ const deleteUsuario = (req, res) => {
   });
 };
 
-module.exports = { getUsuarios, getUsuarioById, createUsuario, loginUsuario, deleteUsuario };
+const createUsuarioConRol = (req, res) => {
+  const { numeroDocumento, nombre, correo, contrasena, telefono, rol_id } = req.body;
+
+  bcrypt.hash(contrasena, 10, (err, hash) => {
+    if (err) return res.status(500).json({ error: 'Error al hashear contraseña' });
+
+    dbUsuarios.query(
+      'INSERT INTO usuario (numeroDocumento, nombre, correo, contrasena, telefono) VALUES (?, ?, ?, ?, ?)',
+      [numeroDocumento, nombre, correo, hash, telefono],
+      (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        const nuevoId = results.insertId;
+
+        dbUsuarios.query(
+          'INSERT INTO usuariorol (usuario_id, rol_id) VALUES (?, ?)',
+          [nuevoId, rol_id],
+          (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.status(201).json({ mensaje: 'Usuario creado', id: nuevoId });
+          }
+        );
+      }
+    );
+  });
+};
+
+module.exports = { getUsuarios, getUsuarioById, createUsuario, loginUsuario, deleteUsuario, createUsuarioConRol };
