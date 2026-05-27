@@ -113,7 +113,7 @@ useEffect(() => {
 
       {/* STATS */}
       <section style={{ background: COLORES.verde, padding: '32px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
           {stats.map((s, i) => (
   <div key={i} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '20px 16px', textAlign: 'center', color: COLORES.blanco }}>
     <div style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>{s.valor}</div>
