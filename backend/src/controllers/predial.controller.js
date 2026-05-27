@@ -2,7 +2,7 @@ const { dbPredial } = require('../config/db');
 
 // Lugares de producción
 const getLugares = (req, res) => {
-  dbPredial.query('SELECT * FROM lugarroduccion', (err, results) => {
+  dbPredial.query('SELECT * FROM lugarproduccion', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
