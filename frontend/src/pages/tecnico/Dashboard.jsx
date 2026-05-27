@@ -1169,8 +1169,14 @@ const handleVerFormulario = (insp) => {
     <span style={{ fontSize: 15, opacity: 0.85 }}>
       {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
     </span>
-    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>TÉ</div>
-  </div>
+    <div style={{ textAlign: "right" }}>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>{usuario.nombre || "Técnico"}</div>
+        <div style={{ fontSize: 13, opacity: 0.75 }}>Técnico inspector</div>
+    </div>
+    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700 }}>
+        {(usuario.nombre || "TÉ").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+    </div>
+</div>
 </header>
 
       <div style={{ display: "flex", minHeight: "calc(100vh - 56px)" }}>
