@@ -19,25 +19,6 @@ const imagenes = [
   "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1400",
 ]
 
-const [stats, setStats] = useState([
-  { label: "Cultivos inspeccionados", valor: "..." },
-  { label: "Predios registrados",     valor: "..." },
-  { label: "Inspecciones realizadas", valor: "..." },
-]);
-
-useEffect(() => {
-  Promise.all([
-    fetch('https://proyectointegrador5.onrender.com/api/predial/cultivos').then(r => r.json()),
-    fetch('https://proyectointegrador5.onrender.com/api/predial/predios').then(r => r.json()),
-    fetch('https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones').then(r => r.json()),
-  ]).then(([cultivos, predios, inspecciones]) => {
-    setStats([
-      { label: "Cultivos registrados",    valor: cultivos.length + "+" },
-      { label: "Predios registrados",     valor: predios.length },
-      { label: "Inspecciones realizadas", valor: inspecciones.length },
-    ]);
-  }).catch(err => console.error(err));
-}, []);
 
 const roles = [
   {
@@ -57,6 +38,27 @@ const roles = [
 export default function Landing() {
   const [imagenActual, setImagenActual] = useState(0)
   const navigate = useNavigate()
+
+  const [stats, setStats] = useState([
+  { label: "Cultivos inspeccionados", valor: "..." },
+  { label: "Predios registrados",     valor: "..." },
+  { label: "Inspecciones realizadas", valor: "..." },
+]);
+
+useEffect(() => {
+  Promise.all([
+    fetch('https://proyectointegrador5.onrender.com/api/predial/cultivos').then(r => r.json()),
+    fetch('https://proyectointegrador5.onrender.com/api/predial/predios').then(r => r.json()),
+    fetch('https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones').then(r => r.json()),
+  ]).then(([cultivos, predios, inspecciones]) => {
+    setStats([
+      { label: "Cultivos registrados",    valor: cultivos.length + "+" },
+      { label: "Predios registrados",     valor: predios.length },
+      { label: "Inspecciones realizadas", valor: inspecciones.length },
+    ]);
+  }).catch(err => console.error(err));
+}, []);
+
 
   useEffect(() => {
     const intervalo = setInterval(() => {
