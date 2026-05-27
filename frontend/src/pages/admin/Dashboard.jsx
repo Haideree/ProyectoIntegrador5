@@ -140,7 +140,7 @@ const solicitudesIniciales = [
 const navItems = [
   { id: "dashboard",   label: "Inicio",                icono: "📊" },
   { id: "solicitudes", label: "Solicitudes de inspección", icono: "📄" },
-  { id: "usuarios",    label: "Verificación de usuarios",  icono: "👤" },
+{ id: "usuarios", label: "Registro de usuarios", icono: "👤" },
 ];
 
 // ── COMPONENTES REUTILIZABLES ─────────────────────────────────────────────────
@@ -537,124 +537,181 @@ function ModalUsuario({ usuario, onClose, onAceptar, onRechazar, esPendiente }) 
 }
 
 function PaginaUsuarios() {
-  const [pendientes, setPendientes]                   = useState(tecnicosPendientes);
-  const [registrados, setRegistrados]                 = useState(usuariosRegistrados);
-  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
-  const [esPendiente, setEsPendiente]                 = useState(false);
-  const [tabActiva, setTabActiva]                     = useState("pendientes");
-  const [busqueda, setBusqueda]                       = useState("");
+  const [tab, setTab] = useState("tecnicos");
+  const [usuarios, setUsuarios] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [rolModal, setRolModal] = useState(1);
+  const [form, setForm] = useState({ numeroDocumento: "", nombre: "", correo: "", contrasena: "", telefono: "" });
+  const [errores, setErrores] = useState({});
+  const [enviando, setEnviando] = useState(false);
+  const [exito, setExito] = useState("");
 
-  const abrirModal  = (u, p) => { setUsuarioSeleccionado(u); setEsPendiente(p); };
-  const cerrarModal = ()     => setUsuarioSeleccionado(null);
-
-  const aceptar = () => {
-    setRegistrados(prev => [...prev, { ...usuarioSeleccionado, tipo: "Técnico" }]);
-    setPendientes(prev => prev.filter(p => p.id !== usuarioSeleccionado.id));
-    cerrarModal();
+  const cargarUsuarios = () => {
+    setCargando(true);
+    fetch('https://proyectointegrador5.onrender.com/api/usuarios')
+      .then(r => r.json())
+      .then(data => setUsuarios(Array.isArray(data) ? data : []))
+      .catch(err => console.error(err))
+      .finally(() => setCargando(false));
   };
 
-  const rechazar = () => {
-    setPendientes(prev => prev.filter(p => p.id !== usuarioSeleccionado.id));
-    cerrarModal();
+  useEffect(() => { cargarUsuarios(); }, []);
+
+  const tecnicos = usuarios.filter(u => u.rol === 'tecnico');
+  const admins   = usuarios.filter(u => u.rol === 'admin');
+
+  const abrirModal = (rol_id) => {
+    setRolModal(rol_id);
+    setForm({ numeroDocumento: "", nombre: "", correo: "", contrasena: "", telefono: "" });
+    setErrores({});
+    setExito("");
+    setModalAbierto(true);
   };
 
-  const registradosFiltrados = registrados.filter(u =>
-    `${u.nombre} ${u.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const validar = () => {
+    const e = {};
+    if (!form.numeroDocumento) e.numeroDocumento = "Requerido";
+    if (!form.nombre)          e.nombre          = "Requerido";
+    if (!form.correo)          e.correo          = "Requerido";
+    if (!form.contrasena)      e.contrasena      = "Requerido";
+    if (!form.telefono)        e.telefono        = "Requerido";
+    return e;
+  };
+
+  const handleEnviar = async () => {
+    const e = validar();
+    setErrores(e);
+    if (Object.keys(e).length > 0) return;
+    setEnviando(true);
+    try {
+      const res = await fetch('https://proyectointegrador5.onrender.com/api/usuarios/crear-con-rol', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, rol_id: rolModal })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al crear');
+      setExito(`${rolModal === 3 ? 'Técnico' : 'Administrador'} creado exitosamente`);
+      cargarUsuarios();
+      setTimeout(() => setModalAbierto(false), 1500);
+    } catch (err) {
+      setErrores({ general: err.message });
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const inputStyle = { width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 14, color: COLORES.texto, boxSizing: "border-box" };
+  const labelStyle = { fontSize: 13, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 4 };
 
   const TabBtn = ({ id, label, count }) => (
-    <button onClick={() => setTabActiva(id)} style={{ padding: "9px 20px", borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: "pointer", border: "none", background: tabActiva === id ? COLORES.verde : COLORES.blanco, color: tabActiva === id ? COLORES.blanco : COLORES.gris, display: "flex", alignItems: "center", gap: 8 }}>
+    <button onClick={() => setTab(id)} style={{ padding: "9px 20px", borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: "pointer", border: "none", background: tab === id ? COLORES.verde : COLORES.blanco, color: tab === id ? COLORES.blanco : COLORES.gris, display: "flex", alignItems: "center", gap: 8 }}>
       {label}
-      {count > 0 && <span style={{ background: tabActiva === id ? "rgba(255,255,255,0.25)" : COLORES.verdePastel, color: tabActiva === id ? COLORES.blanco : COLORES.verde, fontSize: 15, fontWeight: 800, padding: "1px 7px", borderRadius: 10 }}>{count}</span>}
+      <span style={{ background: tab === id ? "rgba(255,255,255,0.25)" : COLORES.verdePastel, color: tab === id ? COLORES.blanco : COLORES.verde, fontSize: 13, fontWeight: 800, padding: "1px 7px", borderRadius: 10 }}>{count}</span>
     </button>
+  );
+
+  const TablaUsuarios = ({ lista, tipo }) => (
+    <div style={{ background: COLORES.blanco, borderRadius: 14, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
+      <div style={{ padding: "14px 20px", borderBottom: `1px solid ${COLORES.borde}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto }}>{tipo}s registrados</span>
+        <button onClick={() => abrirModal(tipo === 'Técnico' ? 3 : 1)}
+          style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "7px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+          + Registrar {tipo}
+        </button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr", gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
+        <span>Nombre</span><span>Correo</span><span>Teléfono</span><span>Documento</span>
+      </div>
+      {cargando ? (
+        <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}>Cargando...</div>
+      ) : lista.length === 0 ? (
+        <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>👤</div>
+          <p style={{ margin: 0, fontWeight: 600 }}>No hay {tipo.toLowerCase()}s registrados</p>
+        </div>
+      ) : lista.map((u, i) => (
+        <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr", gap: 8, alignItems: "center", padding: "13px 20px", borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: "50%", background: tipo === 'Técnico' ? COLORES.verdePastel : COLORES.azulPastel, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
+              {tipo === 'Técnico' ? "⚙️" : "🛡️"}
+            </div>
+            <span style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{u.nombre}</span>
+          </div>
+          <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{u.correo}</span>
+          <span style={{ fontSize: 14, color: COLORES.texto }}>{u.telefono}</span>
+          <span style={{ fontSize: 14, color: COLORES.texto }}>{u.numeroDocumento}</span>
+        </div>
+      ))}
+    </div>
   );
 
   return (
     <div style={{ padding: "28px 32px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
         <div style={{ width: 4, height: 24, background: COLORES.verde, borderRadius: 2 }} />
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: COLORES.texto }}>Verificación de usuarios</h1>
+        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: COLORES.texto }}>Registro de técnicos y administradores</h1>
       </div>
+
       <div style={{ display: "flex", gap: 8, marginBottom: 20, background: COLORES.grisPastel, padding: 6, borderRadius: 10, width: "fit-content" }}>
-        <TabBtn id="pendientes"  label="Por aceptar"               count={pendientes.length} />
-        <TabBtn id="registrados" label="Registrados en el sistema"  count={0} />
+        <TabBtn id="tecnicos" label="Técnicos"       count={tecnicos.length} />
+        <TabBtn id="admins"   label="Administradores" count={admins.length}  />
       </div>
 
-      {tabActiva === "pendientes" && (
-        <div style={{ background: COLORES.blanco, borderRadius: 14, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
-          <div style={{ padding: "14px 20px", background: COLORES.amarilloPastel, borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 16 }}>⏳</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto }}>Técnicos pendientes de aprobación</span>
-            <span style={{ marginLeft: "auto", background: COLORES.amarillo, color: COLORES.blanco, fontSize: 14, fontWeight: 700, padding: "2px 10px", borderRadius: 10 }}>{pendientes.length}</span>
-          </div>
-          {pendientes.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}>
-              <div style={{ fontSize: 36, marginBottom: 10 }}>✅</div>
-              <p style={{ fontWeight: 600, margin: 0 }}>No hay técnicos pendientes de aprobación</p>
-            </div>
-          ) : (
-            <>
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr auto", gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 15, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                <span>Nombre</span><span>Correo</span><span>Identificación</span><span>Fecha registro</span><span>Acción</span>
+      {tab === "tecnicos" && <TablaUsuarios lista={tecnicos} tipo="Técnico" />}
+      {tab === "admins"   && <TablaUsuarios lista={admins}   tipo="Administrador" />}
+
+      {/* Modal registro */}
+      {modalAbierto && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setModalAbierto(false)}>
+          <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 28, width: 460, maxWidth: "95vw", boxShadow: "0 8px 40px rgba(0,0,0,0.2)" }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: COLORES.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>Nuevo registro</div>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: COLORES.texto }}>Registrar {rolModal === 3 ? 'Técnico' : 'Administrador'}</h2>
               </div>
-              {pendientes.map((u, i) => (
-                <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr auto", gap: 8, alignItems: "center", padding: "13px 20px", borderTop: i === 0 ? "none" : `1px solid ${COLORES.borde}` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 34, height: 34, borderRadius: "50%", background: COLORES.verdePastel, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>⚙️</div>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{u.nombre} {u.apellido}</div>
-                      {u.enviadoPorIca && <span style={{ fontSize: 10, background: COLORES.azulPastel, color: COLORES.azul, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>ICA</span>}
-                    </div>
+              <button onClick={() => setModalAbierto(false)} style={{ background: COLORES.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: COLORES.gris }}>×</button>
+            </div>
+
+            {exito ? (
+              <div style={{ textAlign: "center", padding: "24px 0" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.verde }}>{exito}</div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 14 }}>
+                {[
+                  { key: "nombre",          label: "Nombre completo",  placeholder: "Ej. Carlos Ramírez" },
+                  { key: "numeroDocumento", label: "Número de documento", placeholder: "1234567890" },
+                  { key: "correo",          label: "Correo electrónico", placeholder: "correo@ejemplo.com" },
+                  { key: "telefono",        label: "Teléfono",          placeholder: "3001234567" },
+                  { key: "contrasena",      label: "Contraseña",        placeholder: "Mínimo 8 caracteres", type: "password" },
+                ].map(({ key, label, placeholder, type = "text" }) => (
+                  <div key={key}>
+                    <label style={labelStyle}>{label}</label>
+                    <input type={type} placeholder={placeholder} value={form[key]}
+                      onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                      style={{ ...inputStyle, borderColor: errores[key] ? COLORES.rojo : COLORES.borde }} />
+                    {errores[key] && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores[key]}</span>}
                   </div>
-                  <span style={{ fontSize: 14, color: COLORES.textoMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.correo}</span>
-                  <span style={{ fontSize: 15, color: COLORES.texto, fontWeight: 500 }}>{u.identificacion}</span>
-                  <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{u.fechaRegistro}</span>
-                  <button onClick={() => abrirModal(u, true)} style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Ver info</button>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-      )}
-
-      {tabActiva === "registrados" && (
-        <div style={{ background: COLORES.blanco, borderRadius: 14, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
-          <div style={{ padding: "14px 20px", borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 16 }}>✅</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto }}>Técnicos y productores registrados</span>
-              <span style={{ background: COLORES.verdePastel, color: COLORES.verde, fontSize: 14, fontWeight: 700, padding: "2px 10px", borderRadius: 10 }}>{registradosFiltrados.length}</span>
-            </div>
-            <input placeholder="Buscar usuario..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
-              style={{ border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 15, outline: "none", width: 200, color: COLORES.texto }} />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.5fr 1fr 1fr auto", gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 15, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
-            <span>Nombre</span><span>Tipo</span><span>Correo</span><span>Identificación</span><span>Fecha registro</span><span>Info</span>
-          </div>
-          {registradosFiltrados.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}><p style={{ fontWeight: 600, margin: 0 }}>No se encontraron usuarios</p></div>
-          ) : registradosFiltrados.map((u, i) => (
-            <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.5fr 1fr 1fr auto", gap: 8, alignItems: "center", padding: "13px 20px", borderTop: i === 0 ? "none" : `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", background: u.tipo === "Técnico" ? COLORES.verdePastel : COLORES.azulPastel, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
-                  {u.tipo === "Técnico" ? "⚙️" : "🌾"}
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{u.nombre} {u.apellido}</div>
-                  {u.enviadoPorIca && <span style={{ fontSize: 10, background: COLORES.azulPastel, color: COLORES.azul, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>ICA</span>}
+                ))}
+                {errores.general && (
+                  <div style={{ background: COLORES.rojoPastel, color: COLORES.rojo, borderRadius: 8, padding: "10px 14px", fontSize: 14, fontWeight: 600 }}>
+                    ⚠️ {errores.general}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                  <button onClick={() => setModalAbierto(false)} style={{ flex: 1, background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+                  <button onClick={handleEnviar} style={{ flex: 1, background: enviando ? COLORES.gris : COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: enviando ? 0.7 : 1 }}>
+                    {enviando ? "Guardando..." : "✓ Registrar"}
+                  </button>
                 </div>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 12, whiteSpace: "nowrap", background: u.tipo === "Técnico" ? COLORES.verdePastel : COLORES.azulPastel, color: u.tipo === "Técnico" ? COLORES.verde : COLORES.azul }}>{u.tipo}</span>
-              <span style={{ fontSize: 14, color: COLORES.textoMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.correo}</span>
-              <span style={{ fontSize: 15, color: COLORES.texto }}>{u.identificacion}</span>
-              <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{u.fechaRegistro}</span>
-              <button onClick={() => abrirModal(u, false)} style={{ background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Ver info</button>
-            </div>
-          ))}
+            )}
+          </div>
         </div>
       )}
-
-      <ModalUsuario usuario={usuarioSeleccionado} esPendiente={esPendiente} onClose={cerrarModal} onAceptar={aceptar} onRechazar={rechazar} />
     </div>
   );
 }
