@@ -694,10 +694,10 @@ function PaginaDashboard({ setActiva }) {
       >
         <span style={{ fontSize: 18, flexShrink: 0 }}>{icono}</span>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color, marginBottom: 3 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color, marginBottom: 3 }}>
             {estado}
           </div>
-          <div style={{ fontSize: 13, color, opacity: 0.85, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 14, color, opacity: 0.85, lineHeight: 1.5 }}>
             {desc}
           </div>
         </div>
