@@ -174,6 +174,10 @@ function Sidebar({ activa, setActiva, menuAbierto, setMenuAbierto }) {
 
 // ── HEADER (igual al Admin y Técnico) ────────────────────────────────────────
 function Header({ titulo, menuAbierto, setMenuAbierto }) {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const nombre = usuario.nombre || "Usuario";
+    const iniciales = nombre.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+
     return (
         <header style={{
         background: C.verde, color: C.blanco, padding: "0 24px", height: 56,
@@ -192,10 +196,10 @@ function Header({ titulo, menuAbierto, setMenuAbierto }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 15, fontWeight: 600 }}>Laura Gómez</div>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>{nombre}</div>
             <div style={{ fontSize: 15, opacity: 0.75 }}>Productor registrado</div>
             </div>
-            <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700 }}>LG</div>
+            <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700 }}>{iniciales}</div>
         </div>
         </header>
     );
@@ -833,7 +837,7 @@ function PaginaInspecciones() {
         {tab === "realizadas" && (
             <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1.2fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 15, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                <span>Predio</span><span>Fecha Solicitud</span><span>Fecha Sugerida</span><span>Estado</span><span>Detalle</span>
+                <span>Predio</span><span>Fecha Solicitud</span><span>Estado</span><span>Detalle</span>
             </div>
             {cargando ? (
                 <div style={{ padding: 40, textAlign: "center", color: C.textoMuted }}>Cargando...</div>
@@ -843,10 +847,9 @@ function PaginaInspecciones() {
                     <p style={{ margin: 0, fontWeight: 600 }}>No tienes solicitudes de inspección</p>
                 </div>
             ) : inspecciones.map((ins, i) => (
-                <div key={ins.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1.2fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
+                <div key={ins.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1.2fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: C.texto }}>{ins.nombrePredio}</span>
                 <span style={{ fontSize: 14, color: C.textoMuted }}>{new Date(ins.fechaSolicitud).toLocaleDateString('es-CO')}</span>
-                <span style={{ fontSize: 14, color: C.textoMuted }}>{ins.fechaSugerida ? new Date(ins.fechaSugerida).toLocaleDateString('es-CO') : 'No indicada'}</span>
                 <Badge estado={ins.estado === 'pendiente' ? 'Pendiente' : ins.estado === 'asignada' ? 'En revisión' : ins.estado} />
                 <BtnOutline onClick={() => setInsVer(ins)}>Ver</BtnOutline>
                 </div>
