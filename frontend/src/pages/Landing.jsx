@@ -57,7 +57,7 @@ export default function Landing() {
       {/* HEADER */}
       <header style={{ background: COLORES.verde, color: COLORES.blanco, padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 2px 12px rgba(0,0,0,0.18)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 24 }}>JW</span>
+          <span style={{ fontSize: 24 }}>🌱</span>
           <span style={{ fontWeight: 700, fontSize: 17 }}>Proyecto Integrador</span>
         </div>
         <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
@@ -154,7 +154,7 @@ export default function Landing() {
           </div>
         </div>
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16, textAlign: 'center', fontSize: 14, opacity: 0.5 }}>
-          © 2026 Proyecto Integrador Haider Esteban Fuentes||Angel Giovanny Arevalo||Brayan Andrés Suarez
+          © 2026 Proyecto Integrador Haider Esteban Fuentes || Angel Giovanny Arevalo || Brayan Andrés Suarez
         </div>
       </footer>
 
