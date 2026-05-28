@@ -247,13 +247,10 @@ const handleSubmit = async () => {
       <div style={cardStyle}>
         {/* Header */}
         <div style={{ background: "#2E7D32", padding: "1.75rem 2rem 1.5rem", textAlign: "center" }}>
-          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-            <svg width="24" height="24" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 21H5.5c.5-1.5 1.5-4 3.5-5.5C10 16 9 18 9 21h2c0-3 1.5-7 6-9.5V21h2V8h-2z" fill="white"/></svg>
-          </div>
-          <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 500, margin: "0 0 4px" }}>Registro de productor</h2>
-          <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, margin: 0 }}>Registra tus datos para unirte</p>
-        </div>
-
+  <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", margin: "0 auto 12px", display: "block" }} />
+  <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 500, margin: "0 0 4px" }}>Registro de productor</h2>
+  <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, margin: 0 }}>Registra tus datos para unirte</p>
+</div>
         {/* Body */}
         <div style={{ padding: "1.5rem 2rem 2rem" }}>
           <SectionLabel>Información personal</SectionLabel>
