@@ -10,3 +10,27 @@ body {
   color: #1B2631;
   font-size: 15px;
 }
+
+/* Animaciones botones */
+button {
+  transition: transform 0.1s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+  opacity: 0.92;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+/* Animaciones links */
+a {
+  transition: opacity 0.15s ease;
+}
+
+a:hover {
+  opacity: 0.8;
+}
