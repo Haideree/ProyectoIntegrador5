@@ -195,7 +195,7 @@ function Header({ titulo, menuAbierto, setMenuAbierto }) {
             {[0,1,2].map(i => <span key={i} style={{ display: "block", width: 18, height: 2, background: C.blanco, borderRadius: 2 }} />)}
             </button>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
+            
             <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: -0.3 }}>{titulo}</span>
             </div>
         </div>
