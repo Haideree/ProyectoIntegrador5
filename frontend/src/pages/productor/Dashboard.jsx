@@ -2351,12 +2351,11 @@ export default function DashboardProductor() {
                 setLotes(lotesF.length   > 0 ? lotesF   : generarLotes(PREDIOS_INIT));
 
             } catch (err) {
-                // Error de red o de parseo: carga datos de prueba y avisa
-                mostrarToast("⚠️ Sin conexión al servidor — cargando datos de prueba");
-                setLugares(LUGARES_INIT);
-                setPredios(PREDIOS_INIT);
-                setLotes(generarLotes(PREDIOS_INIT));
-            } finally {
+    mostrarToast("⚠️ Sin conexión al servidor");
+    setLugares([]);
+    setPredios([]);
+    setLotes([]);
+} finally {
                 setCargando(false);
             }
         };

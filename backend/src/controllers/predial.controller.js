@@ -19,12 +19,12 @@ const asyncHandler = (fn) => (req, res, next) =>
 // =============================================================================
 
 const getLugares = asyncHandler(async (req, res) => {
-    const results = await query("SELECT * FROM LugarProduccion");
+    const results = await query("SELECT * FROM lugarproduccion");
     res.json(results);
 });
 
 const getLugarById = asyncHandler(async (req, res) => {
-    const rows = await query("SELECT * FROM LugarProduccion WHERE id = ?", [req.params.id]);
+    const rows = await query("SELECT * FROM lugarproduccion WHERE id = ?", [req.params.id]);
     if (!rows.length) return res.status(404).json({ mensaje: "Lugar no encontrado" });
     res.json(rows[0]);
 });
@@ -76,12 +76,12 @@ const deleteLugar = asyncHandler(async (req, res) => {
 // =============================================================================
 
 const getPredios = asyncHandler(async (req, res) => {
-    const results = await query("SELECT * FROM Predio");
+    const results = await query("SELECT * FROM predio");
     res.json(results);
 });
 
 const getPredioById = asyncHandler(async (req, res) => {
-    const rows = await query("SELECT * FROM Predio WHERE id = ?", [req.params.id]);
+    const rows = await query("SELECT * FROM predio WHERE id = ?", [req.params.id]);
     if (!rows.length) return res.status(404).json({ mensaje: "Predio no encontrado" });
     res.json(rows[0]);
 });
@@ -139,7 +139,7 @@ const deletePredio = asyncHandler(async (req, res) => {
 const getLotesByLugarProduccion = asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     const sql = id === 0
-        ? "SELECT * FROM Lote"
+        ? "SELECT * FROM lote"
         : `SELECT Lote.* FROM Lote
            INNER JOIN Predio ON Lote.predio_id = Predio.id
            WHERE Predio.lugarProduccion_id = ?`;
@@ -149,12 +149,12 @@ const getLotesByLugarProduccion = asyncHandler(async (req, res) => {
 
 // Compatibilidad con dashboard técnico y otros endpoints existentes
 const getLotesByPredio = asyncHandler(async (req, res) => {
-    const results = await query("SELECT * FROM Lote WHERE predio_id = ?", [req.params.id]);
+    const results = await query("SELECT * FROM lote WHERE predio_id = ?", [req.params.id]);
     res.json(results);
 });
 
 const getLoteById = asyncHandler(async (req, res) => {
-    const rows = await query("SELECT * FROM Lote WHERE id = ?", [req.params.id]);
+    const rows = await query("SELECT * FROM lote WHERE id = ?", [req.params.id]);
     if (!rows.length) return res.status(404).json({ mensaje: "Lote no encontrado" });
     res.json(rows[0]);
 });
