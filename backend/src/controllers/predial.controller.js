@@ -1,9 +1,5 @@
 const { dbPredial, dbInspecciones } = require("../config/db");
 
-// =============================================================================
-// HELPERS INTERNOS
-// =============================================================================
-
 const query = (sql, params = []) =>
     new Promise((resolve, reject) =>
         dbPredial.query(sql, params, (err, results) =>
@@ -36,7 +32,7 @@ const createLugar = asyncHandler(async (req, res) => {
     } = req.body;
 
     const result = await query(
-        `INSERT INTO LugarProduccion
+        `INSERT INTO lugarproduccion
             (nombre, municipio_id, numRegistroICA, vereda, area, cultivos, departamento, municipio, estado, estadoType)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [nombre, municipio_id, numRegistroICA, vereda, area,
@@ -53,7 +49,7 @@ const updateLugar = asyncHandler(async (req, res) => {
     } = req.body;
 
     const result = await query(
-        `UPDATE LugarProduccion
+        `UPDATE lugarproduccion
          SET nombre=?, municipio_id=?, numRegistroICA=?, vereda=?, area=?,
              cultivos=?, departamento=?, municipio=?, estado=?, estadoType=?
          WHERE id=?`,
@@ -66,7 +62,7 @@ const updateLugar = asyncHandler(async (req, res) => {
 });
 
 const deleteLugar = asyncHandler(async (req, res) => {
-    const result = await query("DELETE FROM LugarProduccion WHERE id = ?", [req.params.id]);
+    const result = await query("DELETE FROM lugarproduccion WHERE id = ?", [req.params.id]);
     if (!result.affectedRows) return res.status(404).json({ mensaje: "Lugar no encontrado" });
     res.json({ mensaje: "Lugar eliminado" });
 });
@@ -88,16 +84,19 @@ const getPredioById = asyncHandler(async (req, res) => {
 
 const createPredio = asyncHandler(async (req, res) => {
     const {
-        nombre, numRegistroICA, vereda, lugarProduccion_id,
+        nombre, numRegistroICA, vereda,
+        lugarProduccion_id, lugarproduccion_id,
         propietario_id, area, municipio, departamento, cultivos, estadoSanitario,
     } = req.body;
 
+    const lugarId = lugarProduccion_id || lugarproduccion_id;
+
     const result = await query(
-        `INSERT INTO Predio
-            (nombre, numRegistroICA, vereda, lugarProduccion_id, propietario_id,
+        `INSERT INTO predio
+            (nombre, numRegistroICA, vereda, lugarproduccion_id, propietario_id,
              area, municipio, departamento, cultivos, estadoSanitario)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [nombre, numRegistroICA, vereda, lugarProduccion_id, propietario_id,
+        [nombre, numRegistroICA, vereda, lugarId, propietario_id,
          area, municipio, departamento,
          Array.isArray(cultivos) ? cultivos.join(",") : cultivos,
          estadoSanitario || "Aprobado"]
@@ -107,17 +106,20 @@ const createPredio = asyncHandler(async (req, res) => {
 
 const updatePredio = asyncHandler(async (req, res) => {
     const {
-        nombre, numRegistroICA, vereda, lugarProduccion_id,
+        nombre, numRegistroICA, vereda,
+        lugarProduccion_id, lugarproduccion_id,
         propietario_id, area, municipio, departamento, cultivos, estadoSanitario,
     } = req.body;
 
+    const lugarId = lugarProduccion_id || lugarproduccion_id;
+
     const result = await query(
-        `UPDATE Predio
-         SET nombre=?, numRegistroICA=?, vereda=?, lugarProduccion_id=?,
+        `UPDATE predio
+         SET nombre=?, numRegistroICA=?, vereda=?, lugarproduccion_id=?,
              propietario_id=?, area=?, municipio=?, departamento=?,
              cultivos=?, estadoSanitario=?
          WHERE id=?`,
-        [nombre, numRegistroICA, vereda, lugarProduccion_id, propietario_id,
+        [nombre, numRegistroICA, vereda, lugarId, propietario_id,
          area, municipio, departamento,
          Array.isArray(cultivos) ? cultivos.join(",") : cultivos,
          estadoSanitario, req.params.id]
@@ -127,7 +129,7 @@ const updatePredio = asyncHandler(async (req, res) => {
 });
 
 const deletePredio = asyncHandler(async (req, res) => {
-    const result = await query("DELETE FROM Predio WHERE id = ?", [req.params.id]);
+    const result = await query("DELETE FROM predio WHERE id = ?", [req.params.id]);
     if (!result.affectedRows) return res.status(404).json({ mensaje: "Predio no encontrado" });
     res.json({ mensaje: "Predio eliminado" });
 });
@@ -140,14 +142,13 @@ const getLotesByLugarProduccion = asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     const sql = id === 0
         ? "SELECT * FROM lote"
-        : `SELECT Lote.* FROM Lote
-           INNER JOIN Predio ON Lote.predio_id = Predio.id
-           WHERE Predio.lugarProduccion_id = ?`;
+        : `SELECT lote.* FROM lote
+           INNER JOIN predio ON lote.predio_id = predio.id
+           WHERE predio.lugarproduccion_id = ?`;
     const results = await query(sql, id === 0 ? [] : [id]);
     res.json(results);
 });
 
-// Compatibilidad con dashboard técnico y otros endpoints existentes
 const getLotesByPredio = asyncHandler(async (req, res) => {
     const results = await query("SELECT * FROM lote WHERE predio_id = ?", [req.params.id]);
     res.json(results);
@@ -162,7 +163,7 @@ const getLoteById = asyncHandler(async (req, res) => {
 const createLote = asyncHandler(async (req, res) => {
     const { nombre, area, estado, predio_id, cultivos } = req.body;
     const result = await query(
-        "INSERT INTO Lote (nombre, area, estado, predio_id, cultivos) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO lote (nombre, area, estado, predio_id, cultivos) VALUES (?, ?, ?, ?, ?)",
         [nombre, area, estado || "Activo", predio_id,
          Array.isArray(cultivos) ? cultivos.join(",") : cultivos]
     );
@@ -172,7 +173,7 @@ const createLote = asyncHandler(async (req, res) => {
 const updateLote = asyncHandler(async (req, res) => {
     const { nombre, area, estado, predio_id, cultivos } = req.body;
     const result = await query(
-        "UPDATE Lote SET nombre=?, area=?, estado=?, predio_id=?, cultivos=? WHERE id=?",
+        "UPDATE lote SET nombre=?, area=?, estado=?, predio_id=?, cultivos=? WHERE id=?",
         [nombre, area, estado, predio_id,
          Array.isArray(cultivos) ? cultivos.join(",") : cultivos,
          req.params.id]
@@ -182,7 +183,7 @@ const updateLote = asyncHandler(async (req, res) => {
 });
 
 const deleteLote = asyncHandler(async (req, res) => {
-    const result = await query("DELETE FROM Lote WHERE id = ?", [req.params.id]);
+    const result = await query("DELETE FROM lote WHERE id = ?", [req.params.id]);
     if (!result.affectedRows) return res.status(404).json({ mensaje: "Lote no encontrado" });
     res.json({ mensaje: "Lote eliminado" });
 });
@@ -192,7 +193,7 @@ const deleteLote = asyncHandler(async (req, res) => {
 // =============================================================================
 
 const getCultivos = asyncHandler(async (req, res) => {
-    res.json(await query("SELECT * FROM Cultivo"));
+    res.json(await query("SELECT * FROM cultivo"));
 });
 
 // =============================================================================
@@ -204,8 +205,8 @@ const getPrediosConRiesgo = asyncHandler(async (req, res) => {
         `SELECT p.id, p.nombre, p.vereda,
                 lp.nombre AS lugarproduccion,
                 lp.municipio_id
-         FROM Predio p
-         JOIN LugarProduccion lp ON p.lugarProduccion_id = lp.id`
+         FROM predio p
+         JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id`
     );
     if (!predios.length) return res.json([]);
 
@@ -236,11 +237,11 @@ const getPrediosConRiesgo = asyncHandler(async (req, res) => {
 // =============================================================================
 
 const getProductores = asyncHandler(async (req, res) => {
-    res.json(await query("SELECT * FROM Productor"));
+    res.json(await query("SELECT * FROM productor"));
 });
 
 const getProductorById = asyncHandler(async (req, res) => {
-    const rows = await query("SELECT * FROM Productor WHERE id = ?", [req.params.id]);
+    const rows = await query("SELECT * FROM productor WHERE id = ?", [req.params.id]);
     if (!rows.length) return res.status(404).json({ mensaje: "Productor no encontrado" });
     res.json(rows[0]);
 });
@@ -248,7 +249,7 @@ const getProductorById = asyncHandler(async (req, res) => {
 const createProductor = asyncHandler(async (req, res) => {
     const { nombre, identificacion, telefono, correo } = req.body;
     const result = await query(
-        "INSERT INTO Productor (nombre, identificacion, telefono, correo) VALUES (?, ?, ?, ?)",
+        "INSERT INTO productor (nombre, identificacion, telefono, correo) VALUES (?, ?, ?, ?)",
         [nombre, identificacion, telefono, correo]
     );
     res.status(201).json({ mensaje: "Productor creado", id: result.insertId });
@@ -257,7 +258,7 @@ const createProductor = asyncHandler(async (req, res) => {
 const updateProductor = asyncHandler(async (req, res) => {
     const { nombre, identificacion, telefono, correo } = req.body;
     const result = await query(
-        "UPDATE Productor SET nombre=?, identificacion=?, telefono=?, correo=? WHERE id=?",
+        "UPDATE productor SET nombre=?, identificacion=?, telefono=?, correo=? WHERE id=?",
         [nombre, identificacion, telefono, correo, req.params.id]
     );
     if (!result.affectedRows) return res.status(404).json({ mensaje: "Productor no encontrado" });
@@ -265,7 +266,7 @@ const updateProductor = asyncHandler(async (req, res) => {
 });
 
 const deleteProductor = asyncHandler(async (req, res) => {
-    const result = await query("DELETE FROM Productor WHERE id = ?", [req.params.id]);
+    const result = await query("DELETE FROM productor WHERE id = ?", [req.params.id]);
     if (!result.affectedRows) return res.status(404).json({ mensaje: "Productor no encontrado" });
     res.json({ mensaje: "Productor eliminado" });
 });
@@ -274,16 +275,10 @@ const deleteProductor = asyncHandler(async (req, res) => {
 // EXPORTACIONES
 // =============================================================================
 module.exports = {
-    // Lugar de producción
     getLugares, getLugarById, createLugar, updateLugar, deleteLugar,
-    // Predios
     getPredios, getPredioById, createPredio, updatePredio, deletePredio,
-    // Lotes
     getLotesByLugarProduccion, getLotesByPredio, getLoteById, createLote, updateLote, deleteLote,
-    // Cultivos
     getCultivos,
-    // Admin dashboard
     getPrediosConRiesgo,
-    // Productor
     getProductores, getProductorById, createProductor, updateProductor, deleteProductor,
 };
