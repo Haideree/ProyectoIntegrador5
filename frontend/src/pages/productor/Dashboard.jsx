@@ -2256,7 +2256,7 @@ function PaginaInspecciones({ predios }) {
                                 <div key={p.id} style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${dias <= 7 ? C.rojo : C.amarillo}`, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                     <div>
                                         <div style={{ fontSize: 13, fontWeight: 700, color: C.texto, marginBottom: 3 }}>{p.nombre}</div>
-                                        <div style={{ fontSize: 13, color: C.textoMuted }}>{p.lugarNombre} · {p.cultivos.join(", ")}</div>
+                                        <div style={{ fontSize: 13, color: C.textoMuted }}>{p.lugarNombre} · {p.cultivos.map(c => c.nombre).join(", ")}</div>
                                     </div>
                                     <div style={{ textAlign: "right" }}>
                                         {/* Días restantes: rojo si queda ≤ 7 días, amarillo si ≤ 30 */}
