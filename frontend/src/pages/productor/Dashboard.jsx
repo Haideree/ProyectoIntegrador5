@@ -2318,12 +2318,15 @@ export default function DashboardProductor() {
                 setPredios(prediosF.length > 0 ? prediosF : PREDIOS_INIT);
                 setLotes(lotesF.length   > 0 ? lotesF   : generarLotes(PREDIOS_INIT));
 
-            } catch (err) {
-    mostrarToast("⚠️ Sin conexión al servidor");
+            } 
+             catch (err) {
+    mostrarToast(`❌ ${err.message}`);  // ← muestra el error real
     setLugares([]);
     setPredios([]);
     setLotes([]);
-} finally {
+}
+            
+            finally {
                 setCargando(false);
             }
         };
