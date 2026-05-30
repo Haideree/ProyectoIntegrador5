@@ -558,11 +558,15 @@ function PaginaFormulario({ inspecciones, onGuardado }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            fechaInspeccion: datos.fechaInicio,
-            fechaFin: datos.fechaFin,
-            observaciones: datos.observaciones,
-            resultado: "Completada",
-            estado: "completada"
+            fechaInspeccion:     datos.fechaInicio,
+            fechaFin:            datos.fechaFin,
+            observaciones:       datos.observaciones,
+            resultado:           "Completada",
+            estado:              "completada",
+            plagaDetectada:      datos.plagaDetectada,
+            nivelRiesgo:         datos.nivelRiesgo,
+            estadoFitosanitario: datos.estadoFitosanitario,
+            cantidadPlantas:     datos.plantas,
           }),
         }
       );

@@ -51,16 +51,18 @@ const getLugares = asyncHandler(async (req, res) => {
         // Paso 2: consulta inspecciones en dbInspecciones
         if (predioIds.length > 0) {
             lugar.nivelesRiesgo = await new Promise((resolve, reject) =>
-                dbInspecciones.query(
-                    `SELECT i.nivelRiesgo
-                     FROM inspeccionsanitaria i
-                     JOIN solicitudinspeccion s ON i.solicitud_id = s.id
-                     WHERE s.predio_id IN (?) AND s.estado = 'completada'
-                     ORDER BY i.fechaInspeccion DESC`,
-                    [predioIds],
-                    (err, results) => err ? reject(err) : resolve(results)
-                )
-            );
+    dbInspecciones.query(
+        `SELECT i.nivelRiesgo
+         FROM inspeccionsanitaria i
+         JOIN solicitudinspeccion s ON i.solicitud_id = s.id
+         WHERE s.predio_id IN (?)
+         AND i.nivelRiesgo IS NOT NULL 
+         AND i.nivelRiesgo != ''
+         ORDER BY i.fechaInspeccion DESC`,
+        [predioIds],
+        (err, results) => err ? reject(err) : resolve(results)
+    )
+);
         } else {
             lugar.nivelesRiesgo = [];
         }
