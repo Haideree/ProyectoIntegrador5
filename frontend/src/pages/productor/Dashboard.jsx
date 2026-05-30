@@ -1170,7 +1170,7 @@ function ModalVerPredio({ predio, onClose, onEditar, onEliminar }) {
                     <FilaInfo label="Área"                valor={`${predio.areaHa} ha`} />
                     <FilaInfo label="Lugar de producción" valor={predio.lugarNombre} />
                     <FilaInfo label="Municipio / Vereda"  valor={`${predio.municipio} / ${predio.vereda || "—"}`} />
-                    <FilaInfo label="Cultivos"            valor={predio.cultivos.join(", ")} />
+                    <FilaInfo label="Cultivos"            valor={predio.cultivos.map(c => c.nombre).join(", ")} />
                 </div>
                 <div style={{ background: C.verdePastel, borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Estado sanitario</div>
