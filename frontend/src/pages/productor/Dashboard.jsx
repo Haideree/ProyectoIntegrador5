@@ -68,16 +68,12 @@ const lugarToBack = (f, municipioId) => ({
 // Backend: { id, nombre, numRegistroICA, vereda, lugarProduccion_id, area, cultivos (csv), ... }
 // Frontend: { id, nombre, matricula, vereda, lugarId, lugarNombre, areaHa, cultivos (array), ... }
 const predioToFront = (p, lugares = []) => {
-    console.log("predioToFront raw:", JSON.stringify({ 
-        lugarproduccion_id: p.lugarproduccion_id, 
-        lugarId: p.lugarId,
-        lugarProduccion_id: p.lugarProduccion_id 
-    }));
-    const lugar = lugares.find(l => l.id === (p.lugarproduccion_id || p.lugarId));
+    const lugarId = p.lugarProduccion_id || p.lugarproduccion_id || p.lugarId || null;
+    const lugar = lugares.find(l => l.id === lugarId);
     return {
         id:          p.id,
         nombre:      p.nombre,
-        lugarId:     p.lugarproduccion_id || p.lugarId || null,
+        lugarId:     lugarId,
         lugarNombre: lugar?.nombre || p.lugarNombre || "",
         matricula:   p.numRegistroICA || p.matricula || "",
         areaHa:      parseFloat(p.area || p.areaHa || 0),
