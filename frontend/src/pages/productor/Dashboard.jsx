@@ -969,6 +969,8 @@ function ModalEliminarPredio({ predio, lotes, predios, onCancelar, onEliminarTod
 // Muestra estado sanitario, datos geográficos, cultivos y predios que lo componen.
 // Botones: Editar | Eliminar (en fila) + Cerrar (abajo)
 function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
+    console.log("lugar.id:", lugar.id);
+    console.log("predios lugarIds:", predios.map(p => ({ id: p.id, lugarId: p.lugarId })));
     const prediosLugar = predios.filter(p => p.lugarId === lugar.id);
     const areaTotal = prediosLugar.reduce((s, p) => s + (p.areaHa || 0), 0).toFixed(2);
 
