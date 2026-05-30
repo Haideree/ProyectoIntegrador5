@@ -191,6 +191,8 @@ const updatePredio = asyncHandler(async (req, res) => {
     } = req.body;
 
     const lugarId = lugarProduccion_id || lugarproduccion_id;
+    console.log("updatePredio - lugarId:", lugarId); // ← agrega esto
+    console.log("updatePredio - body:", req.body);   // ← y esto
 
     const result = await query(
         `UPDATE predio
