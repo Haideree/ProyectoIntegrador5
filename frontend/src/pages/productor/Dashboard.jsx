@@ -1248,7 +1248,6 @@ const handleCambioLugar = (nuevoId) => {
         const e = {};
         if (!form.nombre.trim())    e.nombre    = "Nombre requerido";
         if (!form.lugarId)          e.lugarId   = "Seleccione un lugar";
-        if (!form.matricula.trim()) e.matricula = "Matrícula requerida";
         if (!form.areaHa) {
             e.areaHa = "Área requerida";
         } else {
@@ -2327,10 +2326,13 @@ export default function DashboardProductor() {
 
                 // Mapeo backend → frontend
                 const lugaresF = lugaresRaw.map(lugarToFront);
-                const prediosF = prediosRaw.map(p => predioToFront(p, lugaresF));
-                const lotesF   = lotesRaw.map(l => loteToFront(l, prediosF));
+const prediosF = prediosRaw.map(p => predioToFront(p, lugaresF));
 
-               setLugares(lugaresF);
+const predioIds = prediosF.map(p => p.id);
+const lotesFiltrados = lotesRaw.filter(l => predioIds.includes(l.predio_id || l.predioId));
+const lotesF = lotesFiltrados.map(l => loteToFront(l, prediosF));
+
+setLugares(lugaresF);
 setPredios(prediosF);
 setLotes(lotesF);
 
