@@ -979,12 +979,13 @@ function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
             <ModalShell titulo={lugar.nombre} subtitulo="Lugar de producción" onClose={onClose} ancho={500}>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                    <FilaInfo label="Área total"        valor={`${areaTotal} ha`} />
-                    <FilaInfo label="Número de predios" valor={prediosLugar.length} />
-                    <FilaInfo label="Departamento"      valor={lugar.departamento || "—"} />
-                    <FilaInfo label="Municipio"         valor={lugar.municipio    || "—"} />
-                    <FilaInfo label="Vereda"            valor={lugar.vereda       || "—"} />
-                </div>
+    <FilaInfo label="Registro ICA"      valor={lugar.ica || "—"} />  {/* ← agrega */}
+    <FilaInfo label="Área total"        valor={`${areaTotal} ha`} />
+    <FilaInfo label="Número de predios" valor={prediosLugar.length} />
+    <FilaInfo label="Departamento"      valor={lugar.departamento || "—"} />
+    <FilaInfo label="Municipio"         valor={lugar.municipio    || "—"} />
+    <FilaInfo label="Vereda"            valor={lugar.vereda       || "—"} />
+</div>
                 <Divider />
 
                 <div style={{ marginBottom: 16 }}>
