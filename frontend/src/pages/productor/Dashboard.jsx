@@ -1667,14 +1667,20 @@ function ModalInspeccion({ ins, onClose }) {
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 // Muestra: banner de alerta si hay inspecciones próximas, 4 tarjetas de stats,
 // tabla resumida de lugares y leyenda de estados sanitarios.
-function PaginaDashboard({ setActiva, lugares, predios }) {
-    const [lugarVer, setLugarVer] = useState(null); 
-    const [totalInspecciones, setTotalInspecciones] = useState(0); 
-    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}'); 
-    // Cuenta predios con próxima inspección en menos de 30 días
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function PaginaDashboard({ setActiva, lugares, setLugares, predios, setPredios, lotes, setLotes, mostrarToast }) {
+    const [lugarVer,   setLugarVer]   = useState(null);
+    const [modalForm,  setModalForm]  = useState(null);
+    const [modalElim,  setModalElim]  = useState(null);
+    const [todosLosCultivos, setTodosLosCultivos] = useState([]);
+    const [totalInspecciones, setTotalInspecciones] = useState(0);
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     const alertas = predios.filter(p => p.proximaInspeccion && diasRestantes(p.proximaInspeccion) <= 30).length;
 
-    useEffect(() => { // 
+    useEffect(() => {
+        apiFetch("/predial/cultivos")
+            .then(data => setTodosLosCultivos(Array.isArray(data) ? data : []))
+            .catch(() => {});
         fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/solicitudes/productor/${usuario.id}`)
             .then(r => r.json())
             .then(data => {
@@ -1686,9 +1692,55 @@ function PaginaDashboard({ setActiva, lugares, predios }) {
             .catch(() => {});
     }, []);
 
+    /* Guardar (editar) lugar desde el dashboard */
+    const handleGuardar = async (datos) => {
+        try {
+            await apiFetch(`/predial/lugares/${datos.id}`, { method: "PUT", body: JSON.stringify(lugarToBack(datos, datos.municipioId)) });
+            setLugares(prev => prev.map(l => l.id === datos.id ? datos : l));
+            mostrarToast("✅ Lugar actualizado");
+            setModalForm(null);
+            setLugarVer(null);
+        } catch (err) { mostrarToast(`❌ ${err.message}`); }
+    };
+
+    /* Eliminar lugar + cascada desde el dashboard */
+    const handleEliminarTodo = async (lugar) => {
+        try {
+            await apiFetch(`/predial/lugares/${lugar.id}`, { method: "DELETE" });
+            const prediosIds = predios.filter(p => p.lugarId === lugar.id).map(p => p.id);
+            setLotes(prev   => prev.filter(l => !prediosIds.includes(l.predioId)));
+            setPredios(prev => prev.filter(p => p.lugarId !== lugar.id));
+            setLugares(prev => prev.filter(l => l.id !== lugar.id));
+            mostrarToast("🗑️ Lugar, predios y lotes eliminados");
+            setModalElim(null);
+            setLugarVer(null);
+        } catch (err) { mostrarToast(`❌ ${err.message}`); }
+    };
+
+    /* Mover predios a otro lugar y luego eliminar */
+    const handleMoverPredios = async (lugar, destinoId) => {
+        try {
+            const destino = lugares.find(l => l.id === destinoId);
+            await Promise.all(
+                predios
+                    .filter(p => p.lugarId === lugar.id)
+                    .map(p => apiFetch(`/predial/predios/${p.id}`, { method: "PUT", body: JSON.stringify(predioToBack({ ...p, lugarId: destinoId })) }))
+            );
+            await apiFetch(`/predial/lugares/${lugar.id}`, { method: "DELETE" });
+            setPredios(prev => prev.map(p => p.lugarId === lugar.id ? { ...p, lugarId: destinoId, lugarNombre: destino?.nombre || p.lugarNombre } : p));
+            setLotes(prev => prev.map(l => {
+                const predioDelLote = predios.find(p => p.id === l.predioId);
+                return predioDelLote?.lugarId === lugar.id ? { ...l, lugarNombre: destino?.nombre || l.lugarNombre } : l;
+            }));
+            setLugares(prev => prev.filter(l => l.id !== lugar.id));
+            mostrarToast("✅ Predios movidos y lugar eliminado");
+            setModalElim(null);
+            setLugarVer(null);
+        } catch (err) { mostrarToast(`❌ ${err.message}`); }
+    };
+
     return (
         <div style={{ padding: "24px 28px" }}>
-            {/* Banner de alerta: solo visible si hay inspecciones urgentes */}
             {alertas > 0 && (
                 <div style={{ background: C.rojoPastel, border: `1px solid ${C.rojo}`, borderRadius: 10, padding: "12px 18px", marginBottom: 22, display: "flex", alignItems: "center", gap: 12 }}>
                     <span style={{ fontSize: 18 }}>⚠️</span>
@@ -1701,15 +1753,13 @@ function PaginaDashboard({ setActiva, lugares, predios }) {
                 </div>
             )}
 
-            {/* Tarjetas de estadísticas */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginBottom: 26 }}>
-                <StatCard icono="🗺️" label="Lugares registrados"     value={lugares.length}      colorTexto={C.azul}    colorFondo={C.azulPastel} />
-                <StatCard icono="🏡" label="Predios asociados"       value={predios.length}      colorTexto={C.verde}   colorFondo={C.verdePastel} />
-                <StatCard icono="✅" label="Inspecciones realizadas" value={totalInspecciones} colorTexto={C.naranja} colorFondo={C.naranjaPastel} />
-                <StatCard icono="⚠️" label="Alertas de plazo"        value={alertas} colorTexto={alertas > 0 ? C.rojo : C.texto} colorFondo={alertas > 0 ? C.rojoPastel : C.grisPastel} />
+                <StatCard icono="🗺️" label="Lugares registrados"     value={lugares.length}        colorTexto={C.azul}    colorFondo={C.azulPastel} />
+                <StatCard icono="🏡" label="Predios asociados"       value={predios.length}        colorTexto={C.verde}   colorFondo={C.verdePastel} />
+                <StatCard icono="✅" label="Inspecciones realizadas" value={totalInspecciones}     colorTexto={C.naranja} colorFondo={C.naranjaPastel} />
+                <StatCard icono="⚠️" label="Alertas de plazo"        value={alertas}               colorTexto={alertas > 0 ? C.rojo : C.texto} colorFondo={alertas > 0 ? C.rojoPastel : C.grisPastel} />
             </div>
 
-            {/* Tabla resumen de lugares */}
             <SectionTitle>Mis lugares de producción</SectionTitle>
             <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
                 <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.borde}`, display: "flex", justifyContent: "flex-end" }}>
@@ -1723,13 +1773,12 @@ function PaginaDashboard({ setActiva, lugares, predios }) {
                         <span style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</span>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
                         <span style={{ fontSize: 14, fontWeight: 600, color: C.texto }}>{predios.filter(p => p.lugarId === l.id).length}</span>
-                        <span style={{ fontSize: 13, color: C.textoMuted }}>{l.cultivos?.length || 0} cultivos</span>
+                        <span style={{ fontSize: 13, color: C.textoMuted }}>{l.cultivos?.length || 0} cultivos</span>
                         <BtnOutline onClick={() => setLugarVer(l)}>Ver</BtnOutline>
                     </div>
                 ))}
             </div>
 
-            {/* Leyenda de estados sanitarios */}
             <div style={{ marginTop: 20 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>¿Qué significa cada estado?</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
@@ -1749,12 +1798,32 @@ function PaginaDashboard({ setActiva, lugares, predios }) {
                 </div>
             </div>
 
-            {/* Modal de detalle de lugar (desde la tabla del dashboard, sin edición) */}
-            {lugarVer && (
+            {/* Modales con datos y funciones reales */}
+            {lugarVer && !modalForm && !modalElim && (
                 <ModalVerLugar
-                    lugar={lugarVer} predios={[]}
+                    lugar={lugarVer}
+                    predios={predios}                          // ✅ predios reales
                     onClose={() => setLugarVer(null)}
-                    onEditar={() => {}} onEliminar={() => {}}
+                    onEditar={l => { setLugarVer(null); setModalForm(l); }}   // ✅ abre form
+                    onEliminar={l => { setLugarVer(null); setModalElim(l); }} // ✅ abre elim
+                />
+            )}
+            {modalForm && (
+                <ModalFormLugar
+                    lugar={modalForm}
+                    onClose={() => setModalForm(null)}
+                    onGuardar={handleGuardar}
+                    cultivosDisponibles={todosLosCultivos}
+                />
+            )}
+            {modalElim && (
+                <ModalEliminarLugar
+                    lugar={modalElim}
+                    predios={predios}
+                    lugares={lugares}
+                    onCancelar={() => setModalElim(null)}
+                    onEliminarTodo={handleEliminarTodo}
+                    onMover={handleMoverPredios}
                 />
             )}
         </div>
@@ -2300,12 +2369,20 @@ export default function DashboardProductor() {
 
                 {/* Contenido principal: renderiza la página activa */}
                 <main style={{ flex: 1, overflowY: "auto" }}>
-                    {activa === "dashboard"    && <PaginaDashboard    setActiva={setActiva} lugares={lugares} predios={predios} />}
-                    {activa === "lugares"      && <PaginaLugares      lugares={lugares} setLugares={setLugares} predios={predios} setPredios={setPredios} lotes={lotes} setLotes={setLotes} mostrarToast={mostrarToast} />}
-                    {activa === "predios"      && <PaginaPredios      predios={predios} setPredios={setPredios} lugares={lugares} lotes={lotes} setLotes={setLotes} mostrarToast={mostrarToast} />}
-                    {activa === "lotes"        && <PaginaLotes        lotes={lotes} setLotes={setLotes} predios={predios} mostrarToast={mostrarToast} />}
-                    {activa === "inspecciones" && <PaginaInspecciones predios={predios} />}
-                </main>
+    {activa === "dashboard" && (
+        <PaginaDashboard
+            setActiva={setActiva}
+            lugares={lugares}     setLugares={setLugares}
+            predios={predios}     setPredios={setPredios}
+            lotes={lotes}         setLotes={setLotes}
+            mostrarToast={mostrarToast}
+        />
+    )}
+    {activa === "lugares"      && <PaginaLugares      lugares={lugares} setLugares={setLugares} predios={predios} setPredios={setPredios} lotes={lotes} setLotes={setLotes} mostrarToast={mostrarToast} />}
+    {activa === "predios"      && <PaginaPredios      predios={predios} setPredios={setPredios} lugares={lugares} lotes={lotes} setLotes={setLotes} mostrarToast={mostrarToast} />}
+    {activa === "lotes"        && <PaginaLotes        lotes={lotes} setLotes={setLotes} predios={predios} mostrarToast={mostrarToast} />}
+    {activa === "inspecciones" && <PaginaInspecciones predios={predios} />}
+</main>
             </div>
         </div>
     );
