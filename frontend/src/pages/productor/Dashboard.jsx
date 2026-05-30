@@ -970,29 +970,33 @@ function ModalEliminarPredio({ predio, lotes, predios, onCancelar, onEliminarTod
 // Botones: Editar | Eliminar (en fila) + Cerrar (abajo)
 function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
     const prediosLugar = predios.filter(p => p.lugarId === lugar.id);
-    const s            = tipoBadge(lugar.estado);
+    const areaTotal = prediosLugar.reduce((s, p) => s + (p.areaHa || 0), 0).toFixed(2);
+
     return (
         <Overlay onClose={onClose}>
             <ModalShell titulo={lugar.nombre} subtitulo="Lugar de producción" onClose={onClose} ancho={500}>
-                {/* Banner de estado sanitario */}
-                <div style={{ background: s.bg, borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: s.color }}>Estado sanitario</span>
-                    <Badge estado={lugar.estado} />
-                </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                    <FilaInfo label="Área total" valor={`${predios.filter(p => p.lugarId === lugar.id).reduce((s, p) => s + (p.areaHa || 0), 0).toFixed(2)} ha`} />
-                    <FilaInfo label="Departamento"      valor={lugar.departamento} />
-                    <FilaInfo label="Municipio"         valor={lugar.municipio} />
-                    <FilaInfo label="Vereda"            valor={lugar.vereda || "—"} />
+                    <FilaInfo label="Área total"        valor={`${areaTotal} ha`} />
                     <FilaInfo label="Número de predios" valor={prediosLugar.length} />
+                    <FilaInfo label="Departamento"      valor={lugar.departamento || "—"} />
+                    <FilaInfo label="Municipio"         valor={lugar.municipio    || "—"} />
+                    <FilaInfo label="Vereda"            valor={lugar.vereda       || "—"} />
                 </div>
                 <Divider />
-                <FilaInfo label="Cultivos" valor={lugar.cultivos.map(c => c.nombre || c).join(", ")} />
 
+                <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Cultivos</div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {lugar.cultivos?.length > 0 ? lugar.cultivos.map((c, i) => {
+                            const cols = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
+                            const [bg, col] = cols[i % 4];
+                            return <span key={i} style={{ background: bg, color: col, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{c.nombre || c}</span>;
+                        }) : <span style={{ fontSize: 14, color: C.textoMuted }}>Sin cultivos asignados</span>}
+                    </div>
+                </div>
                 <Divider />
 
-                {/* Lista de predios que pertenecen a este lugar */}
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Predios que lo componen</div>
                 <div style={{ display: "grid", gap: 10, marginBottom: 22 }}>
                     {prediosLugar.map(p => (
@@ -1002,15 +1006,14 @@ function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
                                     <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
                                     <div style={{ fontSize: 12, color: C.textoMuted }}>{p.areaHa} ha</div>
                                 </div>
-                                <Badge estado={p.estadoSanitario} />
                             </div>
                             <div style={{ padding: "10px 14px", display: "flex", gap: 6, flexWrap: "wrap" }}>
-    {p.cultivos.map((c, i) => {
-        const cols = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
-        const [bg, col] = cols[i % 4];
-        return <span key={i} style={{ background: bg, color: col, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{c.nombre || c}</span>;
-    })}
-</div>
+                                {p.cultivos?.map((c, i) => {
+                                    const cols = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
+                                    const [bg, col] = cols[i % 4];
+                                    return <span key={i} style={{ background: bg, color: col, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{c.nombre || c}</span>;
+                                })}
+                            </div>
                         </div>
                     ))}
                     {prediosLugar.length === 0 && (
@@ -1720,7 +1723,7 @@ function PaginaDashboard({ setActiva, lugares, predios }) {
                         <span style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</span>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
                         <span style={{ fontSize: 14, fontWeight: 600, color: C.texto }}>{predios.filter(p => p.lugarId === l.id).length}</span>
-                        <Badge estado={l.estado} />
+                        <span style={{ fontSize: 13, color: C.textoMuted }}>{l.cultivos?.length || 0} cultivos</span>
                         <BtnOutline onClick={() => setLugarVer(l)}>Ver</BtnOutline>
                     </div>
                 ))}
