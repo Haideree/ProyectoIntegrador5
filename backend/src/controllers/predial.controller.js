@@ -18,8 +18,20 @@ const getLugares = asyncHandler(async (req, res) => {
     const productorId = req.query.productor_id;
 
     const lugares = productorId
-        ? await query("SELECT * FROM lugarproduccion WHERE productor_id = ?", [productorId])
-        : await query("SELECT * FROM lugarproduccion");
+        ? await query(
+            `SELECT lp.*, COUNT(p.id) AS predios
+             FROM lugarproduccion lp
+             LEFT JOIN predio p ON p.lugarproduccion_id = lp.id
+             WHERE lp.productor_id = ?
+             GROUP BY lp.id`,
+            [productorId]
+          )
+        : await query(
+            `SELECT lp.*, COUNT(p.id) AS predios
+             FROM lugarproduccion lp
+             LEFT JOIN predio p ON p.lugarproduccion_id = lp.id
+             GROUP BY lp.id`
+          );
 
     for (const lugar of lugares) {
         lugar.cultivos = await query(
@@ -39,12 +51,20 @@ const getLugarById = asyncHandler(async (req, res) => {
     if (!rows.length) return res.status(404).json({ mensaje: "Lugar no encontrado" });
 
     const lugar = rows[0];
+
     lugar.cultivos = await query(
         `SELECT c.id, c.nombre FROM cultivo c
          JOIN lugarproduccion_cultivo lc ON c.id = lc.cultivo_id
          WHERE lc.lugarproduccion_id = ?`,
         [lugar.id]
     );
+
+    lugar.predios = await query(
+        `SELECT id, nombre, area, vereda FROM predio WHERE lugarproduccion_id = ?`,
+        [lugar.id]
+    );
+
+    lugar.numeroPredios = lugar.predios.length;
 
     res.json(lugar);
 });
