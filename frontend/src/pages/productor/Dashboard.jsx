@@ -68,6 +68,11 @@ const lugarToBack = (f, municipioId) => ({
 // Backend: { id, nombre, numRegistroICA, vereda, lugarProduccion_id, area, cultivos (csv), ... }
 // Frontend: { id, nombre, matricula, vereda, lugarId, lugarNombre, areaHa, cultivos (array), ... }
 const predioToFront = (p, lugares = []) => {
+    console.log("predioToFront raw:", JSON.stringify({ 
+        lugarproduccion_id: p.lugarproduccion_id, 
+        lugarId: p.lugarId,
+        lugarProduccion_id: p.lugarProduccion_id 
+    }));
     const lugar = lugares.find(l => l.id === (p.lugarproduccion_id || p.lugarId));
     return {
         id:          p.id,
@@ -76,11 +81,9 @@ const predioToFront = (p, lugares = []) => {
         lugarNombre: lugar?.nombre || p.lugarNombre || "",
         matricula:   p.numRegistroICA || p.matricula || "",
         areaHa:      parseFloat(p.area || p.areaHa || 0),
-        // municipio y departamento vienen del JOIN con lugarproduccion
         municipio:    p.municipio    || lugar?.municipio    || "",
         departamento: p.departamento || lugar?.departamento || "",
         vereda:       p.vereda       || "",
-        // cultivos llega como array de objetos {id, nombre}
         cultivos:     Array.isArray(p.cultivos) ? p.cultivos : [],
         proximaInspeccion: p.proximaInspeccion || null,
     };
