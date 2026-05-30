@@ -49,8 +49,8 @@ const lugarToFront = (l) => ({
     municipio:    l.municipio    || "",
     departamento: l.departamento || "",
     vereda:       l.vereda       || "",
-    // cultivos llega como array de objetos {id, nombre} desde el backend
     cultivos:     Array.isArray(l.cultivos) ? l.cultivos : [],
+    ica:          l.numRegistroICA || "",
 });
 
 // Convierte un objeto frontend de lugar al cuerpo que espera el backend (POST/PUT)
