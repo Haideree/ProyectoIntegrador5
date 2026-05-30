@@ -971,6 +971,7 @@ function ModalEliminarPredio({ predio, lotes, predios, onCancelar, onEliminarTod
 function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
     console.log("lugar.id:", lugar.id);
     console.log("predios lugarIds:", predios.map(p => ({ id: p.id, lugarId: p.lugarId })));
+    console.log("predios lugarIds:", JSON.stringify(predios.map(p => ({ id: p.id, lugarId: p.lugarId }))));
     const prediosLugar = predios.filter(p => p.lugarId === lugar.id);
     const areaTotal = prediosLugar.reduce((s, p) => s + (p.areaHa || 0), 0).toFixed(2);
 
