@@ -32,6 +32,23 @@ const getLugares = asyncHandler(async (req, res) => {
     res.json(lugares);
 });
 
+
+
+const getLugarById = asyncHandler(async (req, res) => {
+    const rows = await query("SELECT * FROM lugarproduccion WHERE id = ?", [req.params.id]);
+    if (!rows.length) return res.status(404).json({ mensaje: "Lugar no encontrado" });
+
+    const lugar = rows[0];
+    lugar.cultivos = await query(
+        `SELECT c.id, c.nombre FROM cultivo c
+         JOIN lugarproduccion_cultivo lc ON c.id = lc.cultivo_id
+         WHERE lc.lugarproduccion_id = ?`,
+        [lugar.id]
+    );
+
+    res.json(lugar);
+});
+
 const createLugar = asyncHandler(async (req, res) => {
     const { nombre, municipio_id, vereda, departamento, municipio, cultivos, productor_id } = req.body;
 
@@ -50,44 +67,6 @@ const createLugar = asyncHandler(async (req, res) => {
             );
         }
     }
-    res.status(201).json({ mensaje: "Lugar creado", id: lugarId });
-});
-
-const getLugarById = asyncHandler(async (req, res) => {
-    const rows = await query("SELECT * FROM lugarproduccion WHERE id = ?", [req.params.id]);
-    if (!rows.length) return res.status(404).json({ mensaje: "Lugar no encontrado" });
-
-    const lugar = rows[0];
-    lugar.cultivos = await query(
-        `SELECT c.id, c.nombre FROM cultivo c
-         JOIN lugarproduccion_cultivo lc ON c.id = lc.cultivo_id
-         WHERE lc.lugarproduccion_id = ?`,
-        [lugar.id]
-    );
-
-    res.json(lugar);
-});
-
-const createLugar = asyncHandler(async (req, res) => {
-    const { nombre, municipio_id, vereda, departamento, municipio, cultivos } = req.body;
-
-    const result = await query(
-        `INSERT INTO lugarproduccion (nombre, municipio_id, vereda, departamento, municipio)
-         VALUES (?, ?, ?, ?, ?)`,
-        [nombre, municipio_id, vereda, departamento, municipio]
-    );
-
-    const lugarId = result.insertId;
-
-    if (Array.isArray(cultivos) && cultivos.length) {
-        for (const cultivoId of cultivos) {
-            await query(
-                "INSERT INTO lugarproduccion_cultivo (lugarproduccion_id, cultivo_id) VALUES (?, ?)",
-                [lugarId, cultivoId]
-            );
-        }
-    }
-
     res.status(201).json({ mensaje: "Lugar creado", id: lugarId });
 });
 
