@@ -46,53 +46,42 @@ async function apiFetch(path, options = {}) {
 const lugarToFront = (l) => ({
     id:           l.id,
     nombre:       l.nombre,
-    ica:          l.numRegistroICA || l.ica || "",
-    municipio:    l.municipio      || "",
-    departamento: l.departamento   || "",
-    vereda:       l.vereda         || "",
-    areaHa:       parseFloat(l.area || l.areaHa || 0),
-    // cultivos puede llegar como array o como string CSV
-    cultivos:     Array.isArray(l.cultivos)
-                    ? l.cultivos
-                    : (l.cultivos ? l.cultivos.split(",").map(c => c.trim()) : []),
-    prediosIds:   l.prediosIds  || [],
-    estado:       l.estado      || "Sin alertas",
-    estadoType:   l.estadoType  || "success",
+    municipio:    l.municipio    || "",
+    departamento: l.departamento || "",
+    vereda:       l.vereda       || "",
+    // cultivos llega como array de objetos {id, nombre} desde el backend
+    cultivos:     Array.isArray(l.cultivos) ? l.cultivos : [],
 });
 
 // Convierte un objeto frontend de lugar al cuerpo que espera el backend (POST/PUT)
 const lugarToBack = (f, municipioId) => ({
-    nombre:         f.nombre,
-    municipio_id:   municipioId || f.municipioId || null,
-    numRegistroICA: f.ica,
-    vereda:         f.vereda,
-    area:           f.areaHa,
-    cultivos:       Array.isArray(f.cultivos) ? f.cultivos.join(",") : f.cultivos,
-    departamento:   f.departamento,
-    municipio:      f.municipio,
-    estado:         f.estado     || "Sin alertas",
-    estadoType:     f.estadoType || "success",
+    nombre:       f.nombre,
+    municipio_id: municipioId || f.municipioId || null,
+    vereda:       f.vereda,
+    departamento: f.departamento,
+    municipio:    f.municipio,
+    // se envían solo los IDs al backend
+    cultivos:     f.cultivos.map(c => typeof c === "object" ? c.id : c),
 });
 
 // --- Predio ---
 // Backend: { id, nombre, numRegistroICA, vereda, lugarProduccion_id, area, cultivos (csv), ... }
 // Frontend: { id, nombre, matricula, vereda, lugarId, lugarNombre, areaHa, cultivos (array), ... }
 const predioToFront = (p, lugares = []) => {
-    const lugar = lugares.find(l => l.id === (p.lugarProduccion_id || p.lugarId));
+    const lugar = lugares.find(l => l.id === (p.lugarproduccion_id || p.lugarId));
     return {
-        id:                p.id,
-        nombre:            p.nombre,
-        lugarId:           p.lugarProduccion_id || p.lugarId || null,
-        lugarNombre:       lugar?.nombre || p.lugarNombre || "",
-        matricula:         p.numRegistroICA || p.matricula || "",
-        areaHa:            parseFloat(p.area || p.areaHa || 0),
-        municipio:         p.municipio     || "",
-        departamento:      p.departamento  || "",
-        vereda:            p.vereda        || "",
-        cultivos:          Array.isArray(p.cultivos)
-                               ? p.cultivos
-                               : (p.cultivos ? p.cultivos.split(",").map(c => c.trim()) : []),
-        estadoSanitario:   p.estadoSanitario   || "Aprobado",
+        id:          p.id,
+        nombre:      p.nombre,
+        lugarId:     p.lugarproduccion_id || p.lugarId || null,
+        lugarNombre: lugar?.nombre || p.lugarNombre || "",
+        matricula:   p.numRegistroICA || p.matricula || "",
+        areaHa:      parseFloat(p.area || p.areaHa || 0),
+        // municipio y departamento vienen del JOIN con lugarproduccion
+        municipio:    p.municipio    || lugar?.municipio    || "",
+        departamento: p.departamento || lugar?.departamento || "",
+        vereda:       p.vereda       || "",
+        // cultivos llega como array de objetos {id, nombre}
+        cultivos:     Array.isArray(p.cultivos) ? p.cultivos : [],
         proximaInspeccion: p.proximaInspeccion || null,
     };
 };
@@ -105,10 +94,8 @@ const predioToBack = (f) => ({
     lugarProduccion_id: f.lugarId,
     propietario_id:     JSON.parse(localStorage.getItem("usuario") || "{}").id || null,
     area:               f.areaHa,
-    municipio:          f.municipio,
-    departamento:       f.departamento,
-    cultivos:           Array.isArray(f.cultivos) ? f.cultivos.join(",") : f.cultivos,
-    estadoSanitario:    f.estadoSanitario || "Aprobado",
+    // se envían solo los IDs
+    cultivos:           f.cultivos.map(c => typeof c === "object" ? c.id : c),
 });
 
 // --- Lote ---
@@ -123,9 +110,7 @@ const loteToFront = (l, predios = []) => {
         predioNombre: predio?.nombre      || l.predioNombre || "",
         lugarNombre:  predio?.lugarNombre || l.lugarNombre  || "",
         areaHa:       parseFloat(l.area || l.areaHa || 0),
-        cultivos:     Array.isArray(l.cultivos)
-                          ? l.cultivos
-                          : (l.cultivos ? l.cultivos.split(",").map(c => c.trim()) : []),
+        cultivos:     Array.isArray(l.cultivos) ? l.cultivos : [],
         estadoLote:   l.estado || l.estadoLote || "Activo",
     };
 };
@@ -136,7 +121,7 @@ const loteToBack = (f) => ({
     area:      f.areaHa,
     estado:    f.estadoLote,
     predio_id: f.predioId,
-    cultivos:  Array.isArray(f.cultivos) ? f.cultivos.join(",") : f.cultivos,
+    cultivos:  f.cultivos.map(c => typeof c === "object" ? c.id : c),
 });
 
 
@@ -640,64 +625,43 @@ function useMunicipios(departamentoId) {
 //   · Cuando se alcanza el límite, oculta el botón y muestra mensaje informativo.
 // ══════════════════════════════════════════════════════════════════════════════
 function SelectorCultivos({ cultivos, onChange, opcionesDisponibles = null, max = null }) {
-    // Límite real: si hay opciones fijas no puede superar su cantidad
     const limite = max !== null ? max : (opcionesDisponibles ? opcionesDisponibles.length : 10);
-
-    // Aviso que aparece SOLO si el usuario intenta agregar con la última ranura vacía
-    const [avisoVacia, setAvisoVacia] = useState(false);
 
     const agregarRanura = () => {
         if (cultivos.length >= limite) return;
-        if (cultivos.length > 0 && cultivos[cultivos.length - 1].trim() === "") {
-            setAvisoVacia(true);
-            return;
-        }
-        setAvisoVacia(false);
-        onChange([...cultivos, ""]);
+        if (cultivos.length > 0 && !cultivos[cultivos.length - 1]) return;
+        onChange([...cultivos, null]);
     };
 
-    const actualizarCultivo = (index, valor) => {
+    const actualizarCultivo = (index, id) => {
+        const opcion = opcionesDisponibles?.find(o => o.id === Number(id));
         const nuevo = [...cultivos];
-        nuevo[index] = valor;
+        nuevo[index] = opcion || null;
         onChange(nuevo);
-        if (avisoVacia) setAvisoVacia(false); // limpia aviso al escribir
     };
 
     const eliminarRanura = (index) => {
         onChange(cultivos.filter((_, i) => i !== index));
-        setAvisoVacia(false);
     };
 
-    // El botón se bloquea visualmente si la última ranura está vacía
-    const ultimaVacia = cultivos.length > 0 && cultivos[cultivos.length - 1].trim() === "";
+    // IDs ya seleccionados para ocultar duplicados
+    const idsSeleccionados = cultivos.filter(Boolean).map(c => c.id);
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {cultivos.map((cultivo, index) => (
                 <div key={index} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    {opcionesDisponibles ? (
-                        /* Select restringido: solo muestra cultivos del padre y oculta los ya elegidos */
-                        <select
-                            value={cultivo}
-                            onChange={e => actualizarCultivo(index, e.target.value)}
-                            style={{ ...inputStyle(false), flex: 1 }}
-                        >
-                            <option value="">Seleccione cultivo...</option>
-                            {opcionesDisponibles
-                                .filter(op => op === cultivo || !cultivos.includes(op))
-                                .map(op => <option key={op} value={op}>{op}</option>)
-                            }
-                        </select>
-                    ) : (
-                        /* Input libre (usado en Lugar de producción) */
-                        <input
-                            value={cultivo}
-                            onChange={e => actualizarCultivo(index, e.target.value)}
-                            placeholder={`Cultivo ${index + 1}`}
-                            style={{ ...inputStyle(false), flex: 1 }}
-                        />
-                    )}
-                    {/* Botón × para eliminar la ranura (no se muestra si es la única) */}
+                    <select
+                        value={cultivo?.id || ""}
+                        onChange={e => actualizarCultivo(index, e.target.value)}
+                        style={{ ...inputStyle(false), flex: 1 }}
+                    >
+                        <option value="">Seleccione cultivo...</option>
+                        {opcionesDisponibles
+                            ?.filter(op => op.id === cultivo?.id || !idsSeleccionados.includes(op.id))
+                            .map(op => <option key={op.id} value={op.id}>{op.nombre}</option>)
+                        }
+                    </select>
                     {cultivos.length > 1 && (
                         <button
                             onClick={() => eliminarRanura(index)}
@@ -706,46 +670,27 @@ function SelectorCultivos({ cultivos, onChange, opcionesDisponibles = null, max 
                                 borderRadius: 7, width: 32, height: 36, cursor: "pointer",
                                 fontWeight: 700, fontSize: 16, flexShrink: 0,
                             }}
-                        >
-                            ×
-                        </button>
+                        >×</button>
                     )}
                 </div>
             ))}
 
-            {/* Botón "+ Agregar cultivo": oculto cuando se alcanzó el límite */}
             {cultivos.length < limite && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <button
-                        onClick={agregarRanura}
-                        style={{
-                            display: "inline-flex", alignItems: "center", gap: 6,
-                            /* Se oscurece visualmente cuando está bloqueado por ranura vacía */
-                            background: ultimaVacia ? "#1a3a5c" : "#dbeeff",
-                            color:      ultimaVacia ? "#7aafd4" : "#1565C0",
-                            border: `1px dashed ${ultimaVacia ? "#2d5986" : "#5b9bd5"}`,
-                            borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700,
-                            cursor: ultimaVacia ? "not-allowed" : "pointer",
-                            width: "fit-content", alignSelf: "flex-end",
-                        }}
-                    >
-                        + Agregar cultivo
-                    </button>
-                    {/* Mensaje de error solo si se intentó agregar con ranura vacía */}
-                    {avisoVacia && (
-                        <span style={{ fontSize: 12, color: C.rojo }}>
-                            Escribe un cultivo antes de agregar otro.
-                        </span>
-                    )}
-                </div>
+                <button
+                    onClick={agregarRanura}
+                    style={{
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        background: "#dbeeff", color: "#1565C0",
+                        border: "1px dashed #5b9bd5", borderRadius: 8,
+                        padding: "7px 14px", fontSize: 13, fontWeight: 700,
+                        cursor: "pointer", width: "fit-content", alignSelf: "flex-end",
+                    }}
+                >+ Agregar cultivo</button>
             )}
 
-            {/* Aviso informativo cuando se alcanzó el límite máximo */}
             {cultivos.length >= limite && limite > 0 && (
                 <div style={{ fontSize: 12, color: C.textoMuted, fontStyle: "italic" }}>
-                    {opcionesDisponibles
-                        ? "Has seleccionado todos los cultivos disponibles."
-                        : `Límite de ${limite} cultivos alcanzado.`}
+                    Has seleccionado todos los cultivos disponibles.
                 </div>
             )}
         </div>
@@ -1036,15 +981,15 @@ function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                    <FilaInfo label="Registro ICA"      valor={lugar.ica} />
-                    <FilaInfo label="Área total"        valor={`${lugar.areaHa} ha`} />
+                    <FilaInfo label="Área total" valor={`${predios.filter(p => p.lugarId === lugar.id).reduce((s, p) => s + (p.areaHa || 0), 0).toFixed(2)} ha`} />
                     <FilaInfo label="Departamento"      valor={lugar.departamento} />
                     <FilaInfo label="Municipio"         valor={lugar.municipio} />
                     <FilaInfo label="Vereda"            valor={lugar.vereda || "—"} />
                     <FilaInfo label="Número de predios" valor={prediosLugar.length} />
                 </div>
                 <Divider />
-                <FilaInfo label="Cultivos" valor={lugar.cultivos.join(", ")} />
+                <FilaInfo label="Cultivos" valor={lugar.cultivos.map(c => c.nombre || c).join(", ")} />
+
                 <Divider />
 
                 {/* Lista de predios que pertenecen a este lugar */}
@@ -1060,12 +1005,12 @@ function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
                                 <Badge estado={p.estadoSanitario} />
                             </div>
                             <div style={{ padding: "10px 14px", display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                {p.cultivos.map((c, i) => {
-                                    const cols = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
-                                    const [bg, col] = cols[i % 4];
-                                    return <span key={i} style={{ background: bg, color: col, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{c}</span>;
-                                })}
-                            </div>
+    {p.cultivos.map((c, i) => {
+        const cols = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
+        const [bg, col] = cols[i % 4];
+        return <span key={i} style={{ background: bg, color: col, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>{c.nombre || c}</span>;
+    })}
+</div>
                         </div>
                     ))}
                     {prediosLugar.length === 0 && (
@@ -1089,56 +1034,43 @@ function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
 // Cultivos: input libre con límite de CULTIVOS_MAX_LUGAR.
 // Departamento/Municipio: cargados en cascada desde la API geográfica.
 // Validaciones: nombre, ICA, ubicación, área (con límites reales), al menos un cultivo.
-function ModalFormLugar({ lugar, onClose, onGuardar }) {
+function ModalFormLugar({ lugar, onClose, onGuardar, cultivosDisponibles = [] }) {
     const esEdicion     = !!lugar;
     const departamentos = useDepartamentos();
 
     const [form, setForm] = useState({
-        nombre:         lugar?.nombre        || "",
-        ica:            lugar?.ica           || "",
-        departamento:   lugar?.departamento  || "",
+        nombre:         lugar?.nombre       || "",
+        departamento:   lugar?.departamento || "",
         departamentoId: "",
-        municipio:      lugar?.municipio     || "",
+        municipio:      lugar?.municipio    || "",
         municipioId:    "",
-        vereda:         lugar?.vereda        || "",
-        areaHa:         lugar?.areaHa        || "",
-        cultivos:       lugar?.cultivos?.length > 0 ? lugar.cultivos : [""],
+        vereda:         lugar?.vereda       || "",
+        // cultivos es array de objetos {id, nombre}
+        cultivos:       lugar?.cultivos?.length > 0 ? lugar.cultivos : [null],
     });
     const [errores, setErrores] = useState({});
     const municipios = useMunicipios(form.departamentoId);
-    const set        = (k, v) => setForm(f => ({ ...f, [k]: v }));
+    const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-    /* Al cambiar departamento, reinicia municipio */
     const handleDpto = (e) => {
         const id     = e.target.value;
         const nombre = departamentos.find(d => String(d.id) === id)?.nombre || "";
         setForm(f => ({ ...f, departamentoId: id, departamento: nombre, municipioId: "", municipio: "" }));
     };
 
-    /* Al cambiar municipio, guarda id + nombre */
     const handleMun = (e) => {
         const id     = e.target.value;
         const nombre = municipios.find(m => String(m.id) === id)?.nombre || "";
         setForm(f => ({ ...f, municipioId: id, municipio: nombre }));
     };
 
-    /* Validación completa antes de guardar */
     const validar = () => {
         const e = {};
         if (!form.nombre.trim())  e.nombre      = "Nombre requerido";
-        if (!form.ica.trim())     e.ica         = "Registro ICA requerido";
         if (!form.departamento)   e.departamento = "Departamento requerido";
-        if (!form.municipio)      e.municipio   = "Municipio requerido";
-        if (form.vereda && form.vereda.trim().length < 3) e.vereda = "Ingrese al menos 3 caracteres para la vereda";
-        if (!form.areaHa) {
-            e.areaHa = "Área requerida";
-        } else {
-            const ha = parseFloat(form.areaHa);
-            if (isNaN(ha) || ha < AREA_MIN_HA) e.areaHa = `El área mínima es ${AREA_MIN_HA} ha`;
-            else if (ha > AREA_MAX_HA)         e.areaHa = `El área máxima es ${AREA_MAX_HA} ha`;
-        }
-        const cultivosValidos = form.cultivos.filter(c => c.trim() !== "");
-        if (cultivosValidos.length === 0) e.cultivos = "Ingrese al menos un cultivo";
+        if (!form.municipio)      e.municipio    = "Municipio requerido";
+        const cultivosValidos = form.cultivos.filter(Boolean);
+        if (cultivosValidos.length === 0) e.cultivos = "Seleccione al menos un cultivo";
         setErrores(e);
         return Object.keys(e).length === 0;
     };
@@ -1147,16 +1079,12 @@ function ModalFormLugar({ lugar, onClose, onGuardar }) {
         if (!validar()) return;
         onGuardar({
             ...lugar,
-            nombre:      form.nombre.trim(),
-            ica:         form.ica.trim(),
+            nombre:       form.nombre.trim(),
             departamento: form.departamento,
-            municipio:   form.municipio,
-            municipioId: form.municipioId,
-            vereda:      form.vereda.trim(),
-            areaHa:      parseFloat(form.areaHa),
-            cultivos:    form.cultivos.filter(c => c.trim() !== ""),
-            estado:      lugar?.estado     || "Sin alertas",
-            estadoType:  lugar?.estadoType || "success",
+            municipio:    form.municipio,
+            municipioId:  form.municipioId,
+            vereda:       form.vereda.trim(),
+            cultivos:     form.cultivos.filter(Boolean),
         });
     };
 
@@ -1171,11 +1099,11 @@ function ModalFormLugar({ lugar, onClose, onGuardar }) {
                     <CampoForm label="Nombre *" error={errores.nombre}>
                         <input value={form.nombre} onChange={e => { set("nombre", e.target.value); setErrores(er => ({ ...er, nombre: "" })); }} style={inputStyle(errores.nombre)} />
                     </CampoForm>
-                    <CampoForm label="Registro ICA *" error={errores.ica}>
-                        <input value={form.ica} onChange={e => { set("ica", e.target.value); setErrores(er => ({ ...er, ica: "" })); }} style={inputStyle(errores.ica)} />
+
+                    <CampoForm label="Vereda">
+                        <input value={form.vereda} onChange={e => set("vereda", e.target.value)} placeholder="Ej. Vereda El Carmen" style={inputStyle(false)} />
                     </CampoForm>
 
-                    {/* Select de departamento cargado desde la API */}
                     <CampoForm label="Departamento *" error={errores.departamento}>
                         <select value={form.departamentoId} onChange={handleDpto} style={inputStyle(errores.departamento)}>
                             <option value="">Seleccione...</option>
@@ -1183,7 +1111,6 @@ function ModalFormLugar({ lugar, onClose, onGuardar }) {
                         </select>
                     </CampoForm>
 
-                    {/* Select de municipio: solo habilitado si hay departamento elegido */}
                     <CampoForm label="Municipio *" error={errores.municipio}>
                         <select value={form.municipioId} onChange={handleMun} disabled={!form.departamentoId} style={inputStyle(errores.municipio)}>
                             <option value="">Seleccione...</option>
@@ -1191,21 +1118,13 @@ function ModalFormLugar({ lugar, onClose, onGuardar }) {
                         </select>
                     </CampoForm>
 
-                    <CampoForm label="Vereda" error={errores.vereda}>
-                        <input value={form.vereda} onChange={e => { set("vereda", e.target.value); setErrores(er => ({ ...er, vereda: "" })); }} placeholder="Ej. Vereda El Carmen" style={inputStyle(errores.vereda)} />
-                    </CampoForm>
-                    <CampoForm label={`Área (ha) * (máx. ${AREA_MAX_HA})`} error={errores.areaHa}>
-                        <input type="number" min={AREA_MIN_HA} max={AREA_MAX_HA} step="0.01" value={form.areaHa} onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }} style={inputStyle(errores.areaHa)} />
-                    </CampoForm>
-
-                    {/* Cultivos: input libre sin restricciones de padre, límite CULTIVOS_MAX_LUGAR */}
                     <div style={{ gridColumn: "1 / -1" }}>
-                        <CampoForm label={`Cultivos (máx. ${CULTIVOS_MAX_LUGAR}) *`} error={errores.cultivos}>
+                        <CampoForm label="Cultivos *" error={errores.cultivos}>
                             <SelectorCultivos
                                 cultivos={form.cultivos}
                                 onChange={nuevos => { set("cultivos", nuevos); setErrores(er => ({ ...er, cultivos: "" })); }}
-                                opcionesDisponibles={null}
-                                max={CULTIVOS_MAX_LUGAR}
+                                opcionesDisponibles={cultivosDisponibles}
+                                max={5}
                             />
                         </CampoForm>
                     </div>
@@ -1294,45 +1213,26 @@ function ModalVerPredio({ predio, onClose, onEditar, onEliminar }) {
 // Departamento/Municipio en cascada desde API.
 // Al cambiar el lugar, cultivos se reinician para evitar valores inválidos.
 function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
-    const esEdicion     = !!predio;
-    const departamentos = useDepartamentos();
+    const esEdicion = !!predio;
 
     const [form, setForm] = useState({
-        nombre:         predio?.nombre       || "",
-        lugarId:        predio?.lugarId      || "",
-        matricula:      predio?.matricula    || "",
-        areaHa:         predio?.areaHa       || "",
-        departamento:   predio?.departamento || "",
-        departamentoId: "",
-        municipio:      predio?.municipio    || "",
-        municipioId:    "",
-        vereda:         predio?.vereda       || "",
-        cultivos:       predio?.cultivos?.length > 0 ? predio.cultivos : [""],
+        nombre:    predio?.nombre    || "",
+        lugarId:   predio?.lugarId   || "",
+        matricula: predio?.matricula || "",
+        areaHa:    predio?.areaHa    || "",
+        vereda:    predio?.vereda    || "",
+        cultivos:  predio?.cultivos?.length > 0 ? predio.cultivos : [null],
     });
     const [errores, setErrores] = useState({});
-    const municipios = useMunicipios(form.departamentoId);
-    const set        = (k, v) => setForm(f => ({ ...f, [k]: v }));
+    const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-    // Cultivos disponibles = los del lugar padre seleccionado
     const lugarSeleccionado   = lugares.find(l => l.id === Number(form.lugarId));
-    const cultivosDisponibles = lugarSeleccionado?.cultivos || null;
+    // cultivos disponibles para este predio = cultivos del lugar seleccionado
+    const cultivosDisponibles = lugarSeleccionado?.cultivos || [];
 
-    /* Al cambiar el lugar, reinicia cultivos para no dejar selecciones inválidas */
     const handleCambioLugar = (nuevoId) => {
-        setForm(f => ({ ...f, lugarId: nuevoId, cultivos: [""] }));
+        setForm(f => ({ ...f, lugarId: nuevoId, cultivos: [null] }));
         setErrores(er => ({ ...er, lugarId: "" }));
-    };
-
-    const handleDpto = (e) => {
-        const id     = e.target.value;
-        const nombre = departamentos.find(d => String(d.id) === id)?.nombre || "";
-        setForm(f => ({ ...f, departamentoId: id, departamento: nombre, municipioId: "", municipio: "" }));
-    };
-
-    const handleMun = (e) => {
-        const id     = e.target.value;
-        const nombre = municipios.find(m => String(m.id) === id)?.nombre || "";
-        setForm(f => ({ ...f, municipioId: id, municipio: nombre }));
     };
 
     const validar = () => {
@@ -1344,10 +1244,9 @@ function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
             e.areaHa = "Área requerida";
         } else {
             const ha = parseFloat(form.areaHa);
-            if (isNaN(ha) || ha < AREA_MIN_HA) e.areaHa = `El área mínima es ${AREA_MIN_HA} ha`;
-            else if (ha > AREA_MAX_HA)         e.areaHa = `El área máxima es ${AREA_MAX_HA} ha`;
+            if (isNaN(ha) || ha < 0.01) e.areaHa = "El área mínima es 0.01 ha";
+            else if (ha > 5000)         e.areaHa = "El área máxima es 5000 ha";
         }
-        if (form.vereda && form.vereda.trim().length < 3) e.vereda = "Ingrese al menos 3 caracteres para la vereda";
         setErrores(e);
         return Object.keys(e).length === 0;
     };
@@ -1357,20 +1256,16 @@ function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
         const lugarSel = lugares.find(l => l.id === Number(form.lugarId));
         onGuardar({
             ...predio,
-            nombre:            form.nombre.trim(),
-            lugarId:           Number(form.lugarId),
-            lugarNombre:       lugarSel?.nombre || "",
-            matricula:         form.matricula.trim(),
-            areaHa:            parseFloat(form.areaHa),
-            municipio:         form.municipio,
-            departamento:      form.departamento,
-            vereda:            form.vereda.trim(),
-            cultivos:          form.cultivos.filter(c => c.trim() !== ""),
-            // Campos no editables desde este form; se conservan del registro previo
-            tipoProduccion:    predio?.tipoProduccion    || "Convencional",
-            ultimaInspeccion:  predio?.ultimaInspeccion  || "",
-            proximaInspeccion: predio?.proximaInspeccion || "",
-            estadoSanitario:   predio?.estadoSanitario   || "Aprobado",
+            nombre:       form.nombre.trim(),
+            lugarId:      Number(form.lugarId),
+            lugarNombre:  lugarSel?.nombre      || "",
+            municipio:    lugarSel?.municipio   || "",
+            departamento: lugarSel?.departamento || "",
+            matricula:    form.matricula.trim(),
+            areaHa:       parseFloat(form.areaHa),
+            vereda:       form.vereda.trim(),
+            cultivos:     form.cultivos.filter(Boolean),
+            proximaInspeccion: predio?.proximaInspeccion || null,
         });
     };
 
@@ -1386,7 +1281,6 @@ function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
                         <input value={form.nombre} onChange={e => { set("nombre", e.target.value); setErrores(er => ({ ...er, nombre: "" })); }} style={inputStyle(errores.nombre)} />
                     </CampoForm>
 
-                    {/* Select de lugar: al cambiar, cultivos disponibles cambian automáticamente */}
                     <CampoForm label="Lugar de producción *" error={errores.lugarId}>
                         <select value={form.lugarId} onChange={e => handleCambioLugar(e.target.value)} style={inputStyle(errores.lugarId)}>
                             <option value="">Seleccione...</option>
@@ -1397,26 +1291,24 @@ function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
                     <CampoForm label="Matrícula *" error={errores.matricula}>
                         <input value={form.matricula} onChange={e => { set("matricula", e.target.value); setErrores(er => ({ ...er, matricula: "" })); }} style={inputStyle(errores.matricula)} />
                     </CampoForm>
-                    <CampoForm label={`Área (ha) * (máx. ${AREA_MAX_HA})`} error={errores.areaHa}>
-                        <input type="number" min={AREA_MIN_HA} max={AREA_MAX_HA} step="0.01" value={form.areaHa} onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }} style={inputStyle(errores.areaHa)} />
-                    </CampoForm>
-                    <CampoForm label="Departamento" error={errores.departamento}>
-                        <select value={form.departamentoId} onChange={handleDpto} style={inputStyle(errores.departamento)}>
-                            <option value="">Seleccione...</option>
-                            {departamentos.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}
-                        </select>
-                    </CampoForm>
-                    <CampoForm label="Municipio" error={errores.municipio}>
-                        <select value={form.municipioId} onChange={handleMun} disabled={!form.departamentoId} style={inputStyle(errores.municipio)}>
-                            <option value="">Seleccione...</option>
-                            {municipios.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
-                        </select>
-                    </CampoForm>
-                    <CampoForm label="Vereda" error={errores.vereda}>
-                        <input value={form.vereda} onChange={e => { set("vereda", e.target.value); setErrores(er => ({ ...er, vereda: "" })); }} placeholder="Ej. Vereda Alta" style={inputStyle(errores.vereda)} />
+
+                    <CampoForm label="Área (ha) * (máx. 5000)" error={errores.areaHa}>
+                        <input type="number" min="0.01" max="5000" step="0.01" value={form.areaHa} onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }} style={inputStyle(errores.areaHa)} />
                     </CampoForm>
 
-                    {/* Cultivos restringidos al lugar elegido; aviso si no hay lugar */}
+                    {/* Municipio y departamento readonly desde el lugar */}
+                    <CampoForm label="Departamento">
+                        <input value={lugarSeleccionado?.departamento || "—"} readOnly style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} />
+                    </CampoForm>
+
+                    <CampoForm label="Municipio">
+                        <input value={lugarSeleccionado?.municipio || "—"} readOnly style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} />
+                    </CampoForm>
+
+                    <CampoForm label="Vereda">
+                        <input value={form.vereda} onChange={e => set("vereda", e.target.value)} placeholder="Ej. Vereda Alta" style={inputStyle(false)} />
+                    </CampoForm>
+
                     <div style={{ gridColumn: "1 / -1" }}>
                         <CampoForm label="Cultivos">
                             {form.lugarId ? (
@@ -1496,19 +1388,18 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
         nombre:     lote?.nombre     || "",
         predioId:   lote?.predioId   || "",
         areaHa:     lote?.areaHa     || "",
-        cultivos:   lote?.cultivos?.length > 0 ? lote.cultivos : [""],
+        cultivos:   lote?.cultivos?.length > 0 ? lote.cultivos : [null],
         estadoLote: lote?.estadoLote || "Activo",
     });
     const [errores, setErrores] = useState({});
     const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-    // Cultivos disponibles = los del predio padre seleccionado
     const predioSeleccionado  = predios.find(p => p.id === Number(form.predioId));
-    const cultivosDisponibles = predioSeleccionado?.cultivos || null;
+    // cultivos disponibles para el lote = cultivos del predio seleccionado
+    const cultivosDisponibles = predioSeleccionado?.cultivos || [];
 
-    /* Al cambiar predio, reinicia cultivos */
     const handleCambioPredio = (nuevoId) => {
-        setForm(f => ({ ...f, predioId: nuevoId, cultivos: [""] }));
+        setForm(f => ({ ...f, predioId: nuevoId, cultivos: [null] }));
         setErrores(er => ({ ...er, predioId: "" }));
     };
 
@@ -1520,9 +1411,9 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
             e.areaHa = "Área requerida";
         } else {
             const ha      = parseFloat(form.areaHa);
-            const maxLote = predioSeleccionado ? predioSeleccionado.areaHa : AREA_MAX_HA;
-            if (isNaN(ha) || ha < AREA_MIN_HA) e.areaHa = `El área mínima es ${AREA_MIN_HA} ha`;
-            else if (ha > maxLote)             e.areaHa = `El lote no puede superar el área del predio (${maxLote} ha)`;
+            const maxLote = predioSeleccionado ? predioSeleccionado.areaHa : 5000;
+            if (isNaN(ha) || ha < 0.01) e.areaHa = "El área mínima es 0.01 ha";
+            else if (ha > maxLote)      e.areaHa = `El lote no puede superar el área del predio (${maxLote} ha)`;
         }
         setErrores(e);
         return Object.keys(e).length === 0;
@@ -1538,7 +1429,7 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
             predioNombre: predioSel?.nombre      || "",
             lugarNombre:  predioSel?.lugarNombre || "",
             areaHa:       parseFloat(form.areaHa),
-            cultivos:     form.cultivos.filter(c => c.trim() !== ""),
+            cultivos:     form.cultivos.filter(Boolean),
             estadoLote:   form.estadoLote,
         });
     };
@@ -1555,7 +1446,6 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
                         <input value={form.nombre} onChange={e => { set("nombre", e.target.value); setErrores(er => ({ ...er, nombre: "" })); }} placeholder="Ej: Lote A" style={inputStyle(errores.nombre)} />
                     </CampoForm>
 
-                    {/* Al cambiar predio, cultivos disponibles cambian automáticamente */}
                     <CampoForm label="Predio *" error={errores.predioId}>
                         <select value={form.predioId} onChange={e => handleCambioPredio(e.target.value)} style={inputStyle(errores.predioId)}>
                             <option value="">Seleccione...</option>
@@ -1563,9 +1453,8 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
                         </select>
                     </CampoForm>
 
-                    {/* Área máxima dinámica: se limita al área del predio elegido */}
                     <CampoForm label={`Área (ha) *${predioSeleccionado ? ` (máx. ${predioSeleccionado.areaHa} ha)` : ""}`} error={errores.areaHa}>
-                        <input type="number" min={AREA_MIN_HA} max={predioSeleccionado?.areaHa || AREA_MAX_HA} step="0.01" value={form.areaHa} onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }} style={inputStyle(errores.areaHa)} />
+                        <input type="number" min="0.01" max={predioSeleccionado?.areaHa || 5000} step="0.01" value={form.areaHa} onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }} style={inputStyle(errores.areaHa)} />
                     </CampoForm>
 
                     <CampoForm label="Estado del lote">
@@ -1576,7 +1465,6 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
                         </select>
                     </CampoForm>
 
-                    {/* Cultivos restringidos al predio elegido; aviso si no hay predio */}
                     <div style={{ gridColumn: "1 / -1" }}>
                         <CampoForm label="Cultivos">
                             {form.predioId ? (
@@ -1584,6 +1472,7 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
                                     cultivos={form.cultivos}
                                     onChange={nuevos => set("cultivos", nuevos)}
                                     opcionesDisponibles={cultivosDisponibles}
+                                    max={3}
                                 />
                             ) : (
                                 <div style={{ background: C.amarilloPastel, border: `1px solid ${C.amarillo}`, borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#B7770D", fontWeight: 600 }}>
@@ -1879,6 +1768,13 @@ function PaginaLugares({ lugares, setLugares, predios, setPredios, lotes, setLot
     const [modalVer,   setModalVer]   = useState(null);
     const [modalForm,  setModalForm]  = useState(null);
     const [modalElim,  setModalElim]  = useState(null);
+    const [todosLosCultivos, setTodosLosCultivos] = useState([]);
+
+        useEffect(() => {
+        apiFetch("/predial/cultivos")
+            .then(data => setTodosLosCultivos(Array.isArray(data) ? data : []))
+            .catch(() => {});
+    }, []);
 
     /* Filtra por tipo de alerta Y por texto de búsqueda */
     const filtrados = lugares.filter(l => {
@@ -1986,7 +1882,7 @@ function PaginaLugares({ lugares, setLugares, predios, setPredios, lotes, setLot
             </div>
 
             {modalVer  && <ModalVerLugar lugar={modalVer} predios={predios} onClose={() => setModalVer(null)} onEditar={l => { setModalVer(null); setModalForm(l); }} onEliminar={l => { setModalVer(null); setModalElim(l); }} />}
-            {modalForm && <ModalFormLugar lugar={modalForm === "crear" ? null : modalForm} onClose={() => setModalForm(null)} onGuardar={handleGuardar} />}
+            {modalForm && <ModalFormLugar lugar={modalForm === "crear" ? null : modalForm} onClose={() => setModalForm(null)} onGuardar={handleGuardar} cultivosDisponibles={todosLosCultivos}  />}
             {modalElim && <ModalEliminarLugar lugar={modalElim} predios={predios} lugares={lugares} onCancelar={() => setModalElim(null)} onEliminarTodo={handleEliminarTodo} onMover={handleMoverPredios} />}
         </div>
     );
