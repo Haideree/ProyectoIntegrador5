@@ -85,7 +85,7 @@ const getInspeccionesByTecnico = (req, res) => {
 dbPredial.query(
   `SELECT DISTINCT l.predio_id, c.nombre AS cultivo
    FROM lote l
-   JOIN lotecultivo lc ON l.id = lc.lote_id
+   JOIN lote_cultivo lc ON l.id = lc.lote_id
    JOIN cultivo c ON lc.cultivo_id = c.id
    WHERE l.predio_id IN (?)`,
   [predioIds],
@@ -174,7 +174,7 @@ const getLotesByPredio = (req, res) => {
     `SELECT l.id, l.nombre, l.area, l.estado, 
      GROUP_CONCAT(c.nombre SEPARATOR ', ') AS cultivos
      FROM lote l
-     LEFT JOIN lotecultivo lc ON l.id = lc.lote_id
+     LEFT JOIN lote_cultivo lc ON l.id = lc.lote_id
      LEFT JOIN cultivo c ON lc.cultivo_id = c.id
      WHERE l.predio_id = ?
      GROUP BY l.id`,
@@ -224,7 +224,7 @@ const getSolicitudesCompletas = (req, res) => {
               dbPredial.query(
                 `SELECT DISTINCT l.predio_id, c.nombre AS cultivo
                  FROM lote l
-                 JOIN lotecultivo lc ON l.id = lc.lote_id
+                 JOIN lote_cultivo lc ON l.id = lc.lote_id
                  JOIN cultivo c ON lc.cultivo_id = c.id
                  WHERE l.predio_id IN (?)`,
                 [predioIds],
@@ -354,7 +354,7 @@ const getSolicitudesByProductor = (req, res) => {
             `SELECT l.id, l.nombre, l.area, l.estado, l.predio_id,
              GROUP_CONCAT(c.nombre SEPARATOR ', ') AS cultivos
              FROM lote l
-             LEFT JOIN lotecultivo lc ON l.id = lc.lote_id
+             LEFT JOIN lote_cultivo lc ON l.id = lc.lote_id
              LEFT JOIN cultivo c ON lc.cultivo_id = c.id
              WHERE l.predio_id IN (?)
              GROUP BY l.id`,
