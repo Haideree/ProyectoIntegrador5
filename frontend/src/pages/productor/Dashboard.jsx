@@ -1856,6 +1856,10 @@ function PaginaLugares({ lugares, setLugares, predios, setPredios, lotes, setLot
     const [modalElim,  setModalElim]  = useState(null);
     const [todosLosCultivos, setTodosLosCultivos] = useState([]);
 
+    // Al inicio del componente PaginaLugares, agrega:
+console.log("lugares:", lugares);
+console.log("cultivos del primer lugar:", lugares[0]?.cultivos);
+
         useEffect(() => {
         apiFetch("/predial/cultivos")
             .then(data => setTodosLosCultivos(Array.isArray(data) ? data : []))
