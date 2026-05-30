@@ -40,6 +40,18 @@ const getLugares = asyncHandler(async (req, res) => {
              WHERE lc.lugarproduccion_id = ?`,
             [lugar.id]
         );
+
+        // Trae el nivelRiesgo de la última inspección de cada predio del lugar
+        lugar.nivelesRiesgo = await query(
+            `SELECT i.nivelRiesgo
+             FROM inspeccionsanitaria i
+             JOIN solicitudinspeccion s ON i.solicitud_id = s.id
+             JOIN predio p ON s.predio_id = p.id
+             WHERE p.lugarproduccion_id = ?
+             AND s.estado = 'completada'
+             ORDER BY i.fechaInspeccion DESC`,
+            [lugar.id]
+        );
     }
     res.json(lugares);
 });

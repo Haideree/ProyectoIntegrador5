@@ -333,7 +333,18 @@ const createSolicitud = (req, res) => {
 const getSolicitudesByProductor = (req, res) => {
   const { productor_id } = req.params;
   dbInspecciones.query(
-    `SELECT s.* FROM solicitudinspeccion s WHERE s.productor_id = ? ORDER BY s.fechaSolicitud DESC`,
+    `SELECT s.*, 
+            i.id AS inspeccion_id,
+            i.observaciones AS observacionesInspeccion,
+            i.resultado,
+            i.nivelRiesgo,
+            i.estadoFitosanitario,
+            i.plagaDetectada,
+            i.fechaInspeccion
+     FROM solicitudinspeccion s
+     LEFT JOIN inspeccionsanitaria i ON i.solicitud_id = s.id
+     WHERE s.productor_id = ? 
+     ORDER BY s.fechaSolicitud DESC`,
     [productor_id],
     (err, solicitudes) => {
       if (err) return res.status(500).json({ error: err.message });

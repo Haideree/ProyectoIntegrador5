@@ -43,15 +43,28 @@ async function apiFetch(path, options = {}) {
 // --- Lugar de producción ---
 // Backend: { id, nombre, municipio_id, numRegistroICA, area, cultivos (csv), ... }
 // Frontend: { id, nombre, municipio, ica, areaHa, cultivos (array), ... }
-const lugarToFront = (l) => ({
-    id:           l.id,
-    nombre:       l.nombre,
-    municipio:    l.municipio    || "",
-    departamento: l.departamento || "",
-    vereda:       l.vereda       || "",
-    cultivos:     Array.isArray(l.cultivos) ? l.cultivos : [],
-    ica:          l.numRegistroICA || "",
-});
+const calcularEstadoLugar = (nivelesRiesgo = []) => {
+    if (!nivelesRiesgo.length) return { estado: "Sin alertas", estadoType: "success" };
+    const niveles = nivelesRiesgo.map(n => n.nivelRiesgo?.toLowerCase());
+    if (niveles.some(n => n === "alto"))   return { estado: "Alerta",       estadoType: "danger" };
+    if (niveles.some(n => n === "medio"))  return { estado: "Alerta media", estadoType: "warning" };
+    return { estado: "Sin alertas", estadoType: "success" };
+};
+
+const lugarToFront = (l) => {
+    const { estado, estadoType } = calcularEstadoLugar(l.nivelesRiesgo);
+    return {
+        id:           l.id,
+        nombre:       l.nombre,
+        municipio:    l.municipio    || "",
+        departamento: l.departamento || "",
+        vereda:       l.vereda       || "",
+        cultivos:     Array.isArray(l.cultivos) ? l.cultivos : [],
+        ica:          l.numRegistroICA || "",
+        estado,
+        estadoType,
+    };
+};
 
 // Convierte un objeto frontend de lugar al cuerpo que espera el backend (POST/PUT)
 const lugarToBack = (f, municipioId) => ({
@@ -1655,15 +1668,24 @@ function ModalInspeccion({ ins, onClose }) {
                     <FilaInfo label="Lugar de producción" valor={ins.lugarproduccion} />
                     <FilaInfo label="Predio"              valor={ins.nombrePredio} />
                     <FilaInfo label="Fecha de solicitud"  valor={new Date(ins.fechaSolicitud).toLocaleDateString("es-CO")} />
-                    <FilaInfo label="Observaciones"       valor={ins.observaciones || "Sin observaciones"} />
+                    <FilaInfo label="Observaciones de solicitud" valor={ins.observaciones || "Sin observaciones"} />
+
+                    {ins.inspeccion_id && <>
+                        <FilaInfo label="Fecha de inspección"   valor={ins.fechaInspeccion ? new Date(ins.fechaInspeccion).toLocaleDateString("es-CO") : "—"} />
+                        <FilaInfo label="Observaciones"         valor={ins.observacionesInspeccion || "—"} />
+                        <FilaInfo label="Nivel de riesgo"       valor={ins.nivelRiesgo        || "—"} />
+                        <FilaInfo label="Estado fitosanitario"  valor={ins.estadoFitosanitario || "—"} />
+                        <FilaInfo label="Plaga detectada"       valor={ins.plagaDetectada      || "—"} />
+                        <FilaInfo label="Resultado"             valor={ins.resultado           || "—"} />
+                    </>}
+
                     <div>
                         <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Estado</div>
-                        {/* Normaliza los valores de estado del backend a los que entiende Badge */}
                         <Badge estado={
-                            ins.estado === "pendiente"                              ? "Pendiente"  :
-                            ins.estado === "asignada"                               ? "En revisión":
-                            ins.estado === "aprobada" || ins.estado === "completada"? "Aprobada"   :
-                            ins.estado === "rechazada"                              ? "rechazada"  :
+                            ins.estado === "pendiente"                               ? "Pendiente"  :
+                            ins.estado === "asignada"                                ? "En revisión":
+                            ins.estado === "aprobada" || ins.estado === "completada" ? "Aprobada"   :
+                            ins.estado === "rechazada"                               ? "rechazada"  :
                             ins.estado
                         } />
                     </div>
