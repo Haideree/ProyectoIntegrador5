@@ -1219,13 +1219,13 @@ function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
     const esEdicion = !!predio;
 
     const [form, setForm] = useState({
-        nombre:    predio?.nombre    || "",
-        lugarId:   predio?.lugarId   || "",
-        matricula: predio?.matricula || "",
-        areaHa:    predio?.areaHa    || "",
-        vereda:    predio?.vereda    || "",
-        cultivos:  predio?.cultivos?.length > 0 ? predio.cultivos : [null],
-    });
+    nombre:    predio?.nombre    || "",
+    lugarId:   predio?.lugarId   || "",
+    matricula: predio?.matricula || "",
+    areaHa:    predio?.areaHa    || "",
+    vereda:    predio?.vereda    || "",  // ← ya está, no hay que cambiar nada
+    cultivos:  predio?.cultivos?.length > 0 ? predio.cultivos : [null],
+});
     const [errores, setErrores] = useState({});
     const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -1233,10 +1233,16 @@ function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
     // cultivos disponibles para este predio = cultivos del lugar seleccionado
     const cultivosDisponibles = lugarSeleccionado?.cultivos || [];
 
-    const handleCambioLugar = (nuevoId) => {
-        setForm(f => ({ ...f, lugarId: nuevoId, cultivos: [null] }));
-        setErrores(er => ({ ...er, lugarId: "" }));
-    };
+const handleCambioLugar = (nuevoId) => {
+    const lugarSel = lugares.find(l => l.id === Number(nuevoId));
+    setForm(f => ({ 
+        ...f, 
+        lugarId: nuevoId, 
+        cultivos: [null],
+        vereda: lugarSel?.vereda || "",
+    }));
+    setErrores(er => ({ ...er, lugarId: "" }));
+};
 
     const validar = () => {
         const e = {};
@@ -1291,9 +1297,13 @@ function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
                         </select>
                     </CampoForm>
 
-                    <CampoForm label="Matrícula *" error={errores.matricula}>
-                        <input value={form.matricula} onChange={e => { set("matricula", e.target.value); setErrores(er => ({ ...er, matricula: "" })); }} style={inputStyle(errores.matricula)} />
-                    </CampoForm>
+                    <CampoForm label="Matrícula ICA">
+    <input 
+        value={form.matricula} 
+        readOnly 
+        style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} 
+    />
+</CampoForm>
 
                     <CampoForm label="Área (ha) * (máx. 5000)" error={errores.areaHa}>
                         <input type="number" min="0.01" max="5000" step="0.01" value={form.areaHa} onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }} style={inputStyle(errores.areaHa)} />
@@ -1309,8 +1319,12 @@ function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
                     </CampoForm>
 
                     <CampoForm label="Vereda">
-                        <input value={form.vereda} onChange={e => set("vereda", e.target.value)} placeholder="Ej. Vereda Alta" style={inputStyle(false)} />
-                    </CampoForm>
+    <input 
+        value={form.vereda} 
+        readOnly 
+        style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} 
+    />
+</CampoForm>
 
                     <div style={{ gridColumn: "1 / -1" }}>
                         <CampoForm label="Cultivos">
@@ -1939,7 +1953,7 @@ function PaginaLugares({ lugares, setLugares, predios, setPredios, lotes, setLot
                     <div key={l.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.7fr 1.4fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                         <div>
                             <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
-                            <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
+                            <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>
                         </div>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.municipio}</span>
@@ -2038,7 +2052,7 @@ function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarT
                         <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                             <div>
                                 <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
-                                <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.join(", ")}</div>
+                                <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>
                             </div>
                             <span style={{ fontSize: 13, color: C.textoMuted }}>{p.lugarNombre}</span>
                             <span style={{ fontSize: 14, color: C.texto }}>{p.areaHa} ha</span>
@@ -2132,7 +2146,7 @@ function PaginaLotes({ lotes, setLotes, predios, mostrarToast }) {
                     <div key={l.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1fr 1fr 1fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                         <div>
                             <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
-                            <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.join(", ")}</div>
+                            <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>
                         </div>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.predioNombre}</span>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.lugarNombre}</span>
