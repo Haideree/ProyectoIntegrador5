@@ -2052,7 +2052,7 @@ function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarT
                         <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                             <div>
                                 <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
-                                <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>                            </div>
+                                <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>                            </div>
                             <span style={{ fontSize: 13, color: C.textoMuted }}>{p.lugarNombre}</span>
                             <span style={{ fontSize: 14, color: C.texto }}>{p.areaHa} ha</span>
                             <Badge estado={p.estadoSanitario} />
@@ -2145,7 +2145,7 @@ function PaginaLotes({ lotes, setLotes, predios, mostrarToast }) {
                     <div key={l.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1fr 1fr 1fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                         <div>
                             <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
-                            <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>
+                            <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
                         </div>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.predioNombre}</span>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.lugarNombre}</span>
