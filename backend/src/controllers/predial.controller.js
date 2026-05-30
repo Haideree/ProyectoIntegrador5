@@ -109,14 +109,14 @@ const getPredios = asyncHandler(async (req, res) => {
 
     const predios = propietarioId
         ? await query(
-            `SELECT p.*, lp.departamento, lp.municipio
+            `SELECT p.*, lp.nombre AS lugarNombre, lp.departamento, lp.municipio
              FROM predio p
              JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id
              WHERE p.propietario_id = ?`,
             [propietarioId]
           )
         : await query(
-            `SELECT p.*, lp.departamento, lp.municipio
+            `SELECT p.*, lp.nombre AS lugarNombre, lp.departamento, lp.municipio
              FROM predio p
              JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id`
           );
@@ -135,7 +135,7 @@ const getPredios = asyncHandler(async (req, res) => {
 
 const getPredioById = asyncHandler(async (req, res) => {
     const rows = await query(
-        `SELECT p.*, lp.departamento, lp.municipio
+        `SELECT p.*, lp.nombre AS lugarNombre, lp.departamento, lp.municipio
          FROM predio p
          JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id
          WHERE p.id = ?`,
@@ -364,6 +364,7 @@ const getCultivosByPredio = asyncHandler(async (req, res) => {
 const getPrediosConRiesgo = asyncHandler(async (req, res) => {
     const predios = await query(
         `SELECT p.id, p.nombre, p.vereda,
+                lp.nombre AS lugarNombre,
                 lp.nombre AS lugarproduccion,
                 lp.municipio_id, lp.departamento, lp.municipio
          FROM predio p
