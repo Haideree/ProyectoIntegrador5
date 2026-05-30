@@ -1373,12 +1373,12 @@ function ModalVerLote({ lote, onClose, onEditar, onEliminar }) {
                 <Divider />
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Cultivos del lote</div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
-                    {lote.cultivos.map((c, i) => {
-                        const cols = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
-                        const [bg, col] = cols[i % 4];
-                        return <span key={i} style={{ background: bg, color: col, fontSize: 13, fontWeight: 700, padding: "4px 12px", borderRadius: 20 }}>{c}</span>;
-                    })}
-                </div>
+    {lote.cultivos.map((c, i) => {
+        const cols = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
+        const [bg, col] = cols[i % 4];
+        return <span key={i} style={{ background: bg, color: col, fontSize: 13, fontWeight: 700, padding: "4px 12px", borderRadius: 20 }}>{c.nombre || c}</span>;
+    })}
+</div>
                 <div style={{ background: C.verdePastel, borderRadius: 10, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>Estado del lote</span>
                     <Badge estado={lote.estadoLote} />
@@ -1953,7 +1953,7 @@ function PaginaLugares({ lugares, setLugares, predios, setPredios, lotes, setLot
                     <div key={l.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.7fr 1.4fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                         <div>
                             <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
-                            <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>
+                            <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
                         </div>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.municipio}</span>
@@ -2052,8 +2052,7 @@ function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarT
                         <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                             <div>
                                 <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
-                                <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>
-                            </div>
+                                <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>                            </div>
                             <span style={{ fontSize: 13, color: C.textoMuted }}>{p.lugarNombre}</span>
                             <span style={{ fontSize: 14, color: C.texto }}>{p.areaHa} ha</span>
                             <Badge estado={p.estadoSanitario} />
