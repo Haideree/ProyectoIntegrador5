@@ -1939,7 +1939,7 @@ function PaginaLugares({ lugares, setLugares, predios, setPredios, lotes, setLot
                     <div key={l.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.7fr 1.4fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
                         <div>
                             <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
-                            <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.join(", ")}</div>
+                            <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
                         </div>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.municipio}</span>
@@ -2313,10 +2313,9 @@ export default function DashboardProductor() {
                 const prediosF = prediosRaw.map(p => predioToFront(p, lugaresF));
                 const lotesF   = lotesRaw.map(l => loteToFront(l, prediosF));
 
-                // Si el backend devuelve arrays vacíos, usa los datos de prueba
-                setLugares(lugaresF.length > 0 ? lugaresF : LUGARES_INIT);
-                setPredios(prediosF.length > 0 ? prediosF : PREDIOS_INIT);
-                setLotes(lotesF.length   > 0 ? lotesF   : generarLotes(PREDIOS_INIT));
+               setLugares(lugaresF);
+setPredios(prediosF);
+setLotes(lotesF);
 
             } 
              catch (err) {

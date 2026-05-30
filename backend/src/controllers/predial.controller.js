@@ -105,11 +105,21 @@ const deleteLugar = asyncHandler(async (req, res) => {
 // =============================================================================
 
 const getPredios = asyncHandler(async (req, res) => {
-    const predios = await query(
-        `SELECT p.*, lp.departamento, lp.municipio
-         FROM predio p
-         JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id`
-    );
+    const propietarioId = req.query.propietario_id;
+
+    const predios = propietarioId
+        ? await query(
+            `SELECT p.*, lp.departamento, lp.municipio
+             FROM predio p
+             JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id
+             WHERE p.propietario_id = ?`,
+            [propietarioId]
+          )
+        : await query(
+            `SELECT p.*, lp.departamento, lp.municipio
+             FROM predio p
+             JOIN lugarproduccion lp ON p.lugarproduccion_id = lp.id`
+          );
 
     for (const predio of predios) {
         predio.cultivos = await query(
