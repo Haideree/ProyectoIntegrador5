@@ -15,7 +15,11 @@ const asyncHandler = (fn) => (req, res, next) =>
 // =============================================================================
 
 const getLugares = asyncHandler(async (req, res) => {
-    const lugares = await query("SELECT * FROM lugarproduccion");
+    const productorId = req.query.productor_id;
+
+    const lugares = productorId
+        ? await query("SELECT * FROM lugarproduccion WHERE productor_id = ?", [productorId])
+        : await query("SELECT * FROM lugarproduccion");
 
     for (const lugar of lugares) {
         lugar.cultivos = await query(
@@ -25,8 +29,28 @@ const getLugares = asyncHandler(async (req, res) => {
             [lugar.id]
         );
     }
-
     res.json(lugares);
+});
+
+const createLugar = asyncHandler(async (req, res) => {
+    const { nombre, municipio_id, vereda, departamento, municipio, cultivos, productor_id } = req.body;
+
+    const result = await query(
+        `INSERT INTO lugarproduccion (nombre, municipio_id, vereda, departamento, municipio, productor_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [nombre, municipio_id, vereda, departamento, municipio, productor_id]
+    );
+    const lugarId = result.insertId;
+
+    if (Array.isArray(cultivos) && cultivos.length) {
+        for (const cultivoId of cultivos) {
+            await query(
+                "INSERT INTO lugarproduccion_cultivo (lugarproduccion_id, cultivo_id) VALUES (?, ?)",
+                [lugarId, cultivoId]
+            );
+        }
+    }
+    res.status(201).json({ mensaje: "Lugar creado", id: lugarId });
 });
 
 const getLugarById = asyncHandler(async (req, res) => {

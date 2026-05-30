@@ -60,7 +60,7 @@ const lugarToBack = (f, municipioId) => ({
     vereda:       f.vereda,
     departamento: f.departamento,
     municipio:    f.municipio,
-    // se envían solo los IDs al backend
+    productor_id: JSON.parse(localStorage.getItem("usuario") || "{}").id || null, // ← cambiado
     cultivos:     f.cultivos.map(c => typeof c === "object" ? c.id : c),
 });
 
@@ -2298,15 +2298,15 @@ export default function DashboardProductor() {
 
     // Carga inicial: intenta traer datos del backend.
     // Si falla (red caída, endpoint inexistente, respuesta vacía), usa INIT data.
-    useEffect(() => {
-        const cargar = async () => {
-            try {
-                const [lugaresRaw, prediosRaw, lotesRaw] = await Promise.all([
-                    apiFetch("/predial/lugares"),
-                    apiFetch("/predial/predios"),
-                    // Ajustar endpoint si el backend expone todos los lotes de otro modo
-                    apiFetch("/predial/lotes/lugar/0"),
-                ]);
+   useEffect(() => {
+    const cargar = async () => {
+        const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+        try {
+            const [lugaresRaw, prediosRaw, lotesRaw] = await Promise.all([
+                apiFetch(`/predial/lugares?productor_id=${usuario.id}`),
+                apiFetch(`/predial/predios?propietario_id=${usuario.id}`),
+                apiFetch("/predial/lotes/lugar/0"),
+            ]);
 
                 // Mapeo backend → frontend
                 const lugaresF = lugaresRaw.map(lugarToFront);
