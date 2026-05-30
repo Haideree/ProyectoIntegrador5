@@ -1990,6 +1990,8 @@ function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarT
 
     /* Crear (POST) o actualizar (PUT) un predio */
     const handleGuardar = async (datos) => {
+        console.log("datos a guardar:", datos);          // ← agrega esto
+    console.log("body enviado:", predioToBack(datos)); // ← y esto
         try {
             if (datos.id) {
                 await apiFetch(`/predial/predios/${datos.id}`, { method: "PUT", body: JSON.stringify(predioToBack(datos)) });
