@@ -41,17 +41,29 @@ const getLugares = asyncHandler(async (req, res) => {
             [lugar.id]
         );
 
-        // Trae el nivelRiesgo de la última inspección de cada predio del lugar
-        lugar.nivelesRiesgo = await query(
-            `SELECT i.nivelRiesgo
-             FROM inspeccionsanitaria i
-             JOIN solicitudinspeccion s ON i.solicitud_id = s.id
-             JOIN predio p ON s.predio_id = p.id
-             WHERE p.lugarproduccion_id = ?
-             AND s.estado = 'completada'
-             ORDER BY i.fechaInspeccion DESC`,
+        // Paso 1: trae los predio_ids del lugar
+        const prediosLugar = await query(
+            `SELECT id FROM predio WHERE lugarproduccion_id = ?`,
             [lugar.id]
         );
+        const predioIds = prediosLugar.map(p => p.id);
+
+        // Paso 2: consulta inspecciones en dbInspecciones
+        if (predioIds.length > 0) {
+            lugar.nivelesRiesgo = await new Promise((resolve, reject) =>
+                dbInspecciones.query(
+                    `SELECT i.nivelRiesgo
+                     FROM inspeccionsanitaria i
+                     JOIN solicitudinspeccion s ON i.solicitud_id = s.id
+                     WHERE s.predio_id IN (?) AND s.estado = 'completada'
+                     ORDER BY i.fechaInspeccion DESC`,
+                    [predioIds],
+                    (err, results) => err ? reject(err) : resolve(results)
+                )
+            );
+        } else {
+            lugar.nivelesRiesgo = [];
+        }
     }
     res.json(lugares);
 });
