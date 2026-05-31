@@ -206,52 +206,130 @@ function InfoFila({ label, valor }) {
 }
 
 function ModalLotes({ item, lotes, onClose, onAbrirFormularioLote, esCompletada }) {
+  const [lotesDetalle, setLotesDetalle] = useState([]);
+  const [cargandoDetalle, setCargandoDetalle] = useState(false);
+
+  useEffect(() => {
+    if (!esCompletada || !item?.id) return;
+    setCargandoDetalle(true);
+    fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${item.id}/lotes`)
+      .then(res => res.json())
+      .then(data => setLotesDetalle(Array.isArray(data) ? data : []))
+      .catch(err => console.error(err))
+      .finally(() => setCargandoDetalle(false));
+  }, [esCompletada, item?.id]);
+
   if (!item) return null;
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
-      <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 28, width: 500, maxWidth: "90vw", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 28, width: 540, maxWidth: "90vw", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }} onClick={e => e.stopPropagation()}>
+        
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: COLORES.texto }}>Formularios</h2>
+          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: COLORES.texto }}>
+            {esCompletada ? "Resultado de inspección" : "Formularios"}
+          </h2>
           <button onClick={onClose} style={{ background: COLORES.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: COLORES.gris }}>×</button>
         </div>
+
         <p style={{ margin: "0 0 16px", fontSize: 15, color: COLORES.textoMuted }}>
-          Lugar de producción: <strong style={{ color: COLORES.texto }}>{item.lugar}</strong> · cantidad de lotes: <strong>{lotes.length}</strong>
+          Lugar de producción: <strong style={{ color: COLORES.texto }}>{item.lugarproduccion || item.lugar}</strong>
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 1fr", gap: 8, padding: "8px 12px", background: "#C8E6C9", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
-          <span>Lote</span><span>Estado</span><span style={{ textAlign: "right" }}>Ver informe</span>
-        </div>
-        <div style={{ display: "grid", gap: 6 }}>
-          {lotes.map(lote => (
-  <div key={lote.id} style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 1fr", gap: 8, alignItems: "center", padding: "10px 12px", borderRadius: 8, border: `1px solid ${COLORES.borde}` }}>
-    <div>
-      <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{lote.nombre}</span>
-      {lote.cultivos && (
-        <div style={{ fontSize: 13, color: COLORES.textoMuted, marginTop: 2 }}>🌱 {lote.cultivos}</div>
-      )}
-    </div>
-    <Badge estado={lote.estado} />
-    <div style={{ display: "flex", justifyContent: "flex-end" }}>
-      {!esCompletada && (
-        <button
-          onClick={() => onAbrirFormularioLote(item, lote)}
-          style={{
-            background: lote.estado === "PENDIENTE" ? COLORES.grisPastel : lote.estado === "EN PROCESO" ? COLORES.azul : COLORES.verde,
-            color: lote.estado === "PENDIENTE" ? COLORES.gris : COLORES.blanco,
-            border: "none", borderRadius: 6, padding: "5px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer"
-          }}>
-          {lote.estado === "EN PROCESO" ? "SEGUIR" : lote.estado === "PENDIENTE" ? "+" : "VER"}
-        </button>
-      )}
-      {esCompletada && (
-        <span style={{ fontSize: 13, fontWeight: 700, color: COLORES.verde }}>✓ Revisado</span>
-      )}
-    </div>
-  </div>
-))}
-          <div style={{ textAlign: "center", padding: "8px 0", fontSize: 15, color: COLORES.textoMuted, fontWeight: 500 }}>
-        
+
+        {/* Vista de inspección completada */}
+        {esCompletada && (
+          <div style={{ display: "grid", gap: 14 }}>
+            {/* Info general */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, background: COLORES.grisPastel, borderRadius: 10, padding: "14px 16px" }}>
+              <InfoFila label="Fecha inspección" valor={item.fechaInspeccion ? new Date(item.fechaInspeccion).toLocaleDateString('es-CO') : '—'} />
+              <InfoFila label="Fecha finalización" valor={item.fechaFin ? new Date(item.fechaFin).toLocaleDateString('es-CO') : '—'} />
+              <InfoFila label="Nivel de riesgo" valor={item.nivelRiesgo || '—'} />
+              <InfoFila label="Estado fitosanitario" valor={item.estadoFitosanitario || '—'} />
+            </div>
+
+            {/* Detalle por lote */}
+            <div style={{ fontSize: 12, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              Detalle por lote
+            </div>
+
+            {cargandoDetalle && (
+              <p style={{ fontSize: 14, color: COLORES.textoMuted, margin: 0 }}>Cargando lotes...</p>
+            )}
+            {!cargandoDetalle && lotesDetalle.length === 0 && (
+              <p style={{ fontSize: 14, color: COLORES.textoMuted, margin: 0 }}>Sin detalle por lote registrado.</p>
+            )}
+            {lotesDetalle.map(lote => (
+              <div key={lote.id} style={{ borderRadius: 10, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
+                <div style={{ background: "#A5D6A7", padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>🌿</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: "#1B5E20" }}>
+                    {lote.nombreLote || `Lote #${lote.lote_id}`}
+                  </span>
+                </div>
+                <div style={{ padding: "12px 14px", display: "grid", gap: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Observaciones</div>
+                    <div style={{ fontSize: 14, color: COLORES.texto }}>{lote.observaciones || "Sin observaciones"}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>🦗 Plagas detectadas</div>
+                    {lote.plagasDetectadas ? (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {lote.plagasDetectadas.split(",").map((p, pi) => (
+                          <span key={pi} style={{ background: COLORES.rojoPastel, color: COLORES.rojo, fontSize: 13, fontWeight: 600, padding: "3px 10px", borderRadius: 20 }}>
+                            {p.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 14, color: "#2E7D32", fontWeight: 600 }}>✅ Sin plagas</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
+
+        {/* Vista normal (inspección pendiente) */}
+        {!esCompletada && (
+          <>
+            <p style={{ margin: "0 0 16px", fontSize: 15, color: COLORES.textoMuted }}>
+              Cantidad de lotes: <strong>{lotes.length}</strong>
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 1fr", gap: 8, padding: "8px 12px", background: "#C8E6C9", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              <span>Lote</span><span>Estado</span><span style={{ textAlign: "right" }}>Ver informe</span>
+            </div>
+            <div style={{ display: "grid", gap: 6 }}>
+              {lotes.map(lote => (
+                <div key={lote.id} style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 1fr", gap: 8, alignItems: "center", padding: "10px 12px", borderRadius: 8, border: `1px solid ${COLORES.borde}` }}>
+                  <div>
+                    <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{lote.nombre}</span>
+                    {lote.cultivos && (
+                      <div style={{ fontSize: 13, color: COLORES.textoMuted, marginTop: 2 }}>🌱 {lote.cultivos}</div>
+                    )}
+                  </div>
+                  <Badge estado={lote.estado} />
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      onClick={() => onAbrirFormularioLote(item, lote)}
+                      style={{
+                        background: lote.estado === "PENDIENTE" ? COLORES.grisPastel : lote.estado === "EN PROCESO" ? COLORES.azul : COLORES.verde,
+                        color: lote.estado === "PENDIENTE" ? COLORES.gris : COLORES.blanco,
+                        border: "none", borderRadius: 6, padding: "5px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer"
+                      }}>
+                      {lote.estado === "EN PROCESO" ? "SEGUIR" : lote.estado === "PENDIENTE" ? "+" : "VER"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        <button onClick={onClose} style={{ marginTop: 20, background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", width: "100%" }}>
+          Cerrar
+        </button>
       </div>
     </div>
   );
