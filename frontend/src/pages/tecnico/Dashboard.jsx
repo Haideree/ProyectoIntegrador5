@@ -534,7 +534,7 @@ function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
   );
 }
 
-function PaginaFormulario({ inspecciones, onGuardado }) {
+function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
   const inspeccionHoy = inspecciones?.[0] || null;
 
   const PLAGAS_LISTA = ["Broca","Roya","Gusano Cogollero","Mosca Blanca","Pulgón","Trips","Ácaros","Sin plagas"];
