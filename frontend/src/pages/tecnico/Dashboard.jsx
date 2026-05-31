@@ -552,7 +552,7 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
   const [autoGuardado, setAutoGuardado] = useState(null); // null | "guardando" | "guardado"
- const soloLectura = modoLectura;
+ const soloLectura = !!modoLectura;
   const debounceRef = useRef(null);
 
   // Carga datos del lugar y lotes, luego restaura progreso si existe
@@ -614,7 +614,7 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
   // Autoguardado con debounce de 2 segundos cada vez que cambia algo
   useEffect(() => {
     if (!inspeccionHoy?.id || Object.keys(inspeccionLotes).length === 0) return;
-    if (soloLectura) return;
+    if (modoLectura) return;
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -1140,12 +1140,13 @@ const handleVerFormulario = (insp) => {
     onVerFormulario={handleVerFormulario}
 onVerProgreso={(insp) => {
   setInspeccionSeleccionada({ ...insp, _soloLectura: true });
-  setTimeout(() => setPaginaActual("formulario"), 0);
+  setPaginaActual("formulario");
 }}
   />
 )}
           {paginaActual === "historial" && <PaginaHistorial onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
-     {paginaActual === "formulario" && (
+     
+{paginaActual === "formulario" && (
   <PaginaFormulario 
     key={inspeccionSeleccionada?.id}
     inspecciones={
@@ -1153,7 +1154,7 @@ onVerProgreso={(insp) => {
         ? [inspeccionSeleccionada] 
         : inspecciones.filter(i => i.resultado !== 'Completada')
     }
-    modoLectura={inspeccionSeleccionada?._soloLectura === true}
+    modoLectura={inspeccionSeleccionada?._soloLectura === true}  // ya está bien
     onGuardado={() => { 
       cargarInspecciones(); 
       setInspeccionSeleccionada(null);
