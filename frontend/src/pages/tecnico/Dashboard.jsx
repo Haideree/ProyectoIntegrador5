@@ -1004,6 +1004,7 @@ export default function App() {
 const navigate = useNavigate()
   const [inspecciones, setInspecciones] = useState([]);
   const [inspeccionSeleccionada, setInspeccionSeleccionada] = useState(null);
+const [soloLecturaSeleccionada, setSoloLecturaSeleccionada] = useState(false); 
 
   const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
@@ -1096,7 +1097,13 @@ const handleVerFormulario = (insp) => {
           </div>
           <nav style={{ padding: "12px 0" }}>
             {navItems.map(item => (
-              <button key={item.id} onClick={() => setPaginaActual(item.id)} style={{
+  <button key={item.id} onClick={() => {
+    if (item.id === "formulario") {
+      setInspeccionSeleccionada(null);
+      setSoloLecturaSeleccionada(false);
+    }
+    setPaginaActual(item.id);
+  }} style={{
                 display: "flex", alignItems: "center", gap: 12, width: "100%",
                 padding: menuAbierto ? "13px 16px" : "13px 0",
                 justifyContent: menuAbierto ? "flex-start" : "center",
@@ -1149,9 +1156,11 @@ const handleVerFormulario = (insp) => {
         ? [inspeccionSeleccionada] 
         : inspecciones.filter(i => i.resultado !== 'Completada')
     }
+    modoLectura={soloLecturaSeleccionada}
     onGuardado={() => { 
       cargarInspecciones(); 
       setInspeccionSeleccionada(null);
+      setSoloLecturaSeleccionada(false);
       setPaginaActual("inicio"); 
     }}
   />
