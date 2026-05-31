@@ -1660,10 +1660,23 @@ function ModalSolicitar({ onClose, onSolicitudEnviada, prediosApi }) {
 
 // Modal de detalle de una solicitud de inspección (solo lectura)
 function ModalInspeccion({ ins, onClose }) {
+    const [lotesDetalle, setLotesDetalle] = useState([]);
+    const [cargandoLotes, setCargandoLotes] = useState(false);
+
+    useEffect(() => {
+        if (!ins?.inspeccion_id) return;
+        setCargandoLotes(true);
+        fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${ins.inspeccion_id}/lotes`)
+            .then(r => r.json())
+            .then(data => setLotesDetalle(Array.isArray(data) ? data : []))
+            .catch(() => {})
+            .finally(() => setCargandoLotes(false));
+    }, [ins?.inspeccion_id]);
+
     if (!ins) return null;
     return (
         <Overlay onClose={onClose}>
-            <ModalShell titulo={`Solicitud #${ins.id}`} subtitulo="Detalle de solicitud" onClose={onClose} ancho={480}>
+            <ModalShell titulo={`Solicitud #${ins.id}`} subtitulo="Detalle de solicitud" onClose={onClose} ancho={520}>
                 <div style={{ display: "grid", gap: 14 }}>
                     <FilaInfo label="Lugar de producción" valor={ins.lugarproduccion} />
                     <FilaInfo label="Predio"              valor={ins.nombrePredio} />
@@ -1671,12 +1684,59 @@ function ModalInspeccion({ ins, onClose }) {
                     <FilaInfo label="Observaciones de solicitud" valor={ins.observaciones || "Sin observaciones"} />
 
                     {ins.inspeccion_id && <>
-                        <FilaInfo label="Fecha de inspección"   valor={ins.fechaInspeccion ? new Date(ins.fechaInspeccion).toLocaleDateString("es-CO") : "—"} />
-                        <FilaInfo label="Observaciones"         valor={ins.observacionesInspeccion || "—"} />
-                        <FilaInfo label="Nivel de riesgo"       valor={ins.nivelRiesgo        || "—"} />
-                        <FilaInfo label="Estado fitosanitario"  valor={ins.estadoFitosanitario || "—"} />
-                        <FilaInfo label="Plaga detectada"       valor={ins.plagaDetectada      || "—"} />
-                        <FilaInfo label="Resultado"             valor={ins.resultado           || "—"} />
+                        <Divider />
+                        <div style={{ fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>Resultado de la inspección</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                            <FilaInfo label="Fecha de inspección" valor={ins.fechaInspeccion ? new Date(ins.fechaInspeccion).toLocaleDateString("es-CO") : "—"} />
+                            <FilaInfo label="Nivel de riesgo"     valor={ins.nivelRiesgo || "—"} />
+                            <FilaInfo label="Estado fitosanitario" valor={ins.estadoFitosanitario || "—"} />
+                            <FilaInfo label="Resultado"           valor={ins.resultado || "—"} />
+                        </div>
+
+                        <Divider />
+                        <div style={{ fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                            Detalle por lote
+                        </div>
+                        {cargandoLotes && (
+                            <p style={{ fontSize: 14, color: C.textoMuted, margin: 0 }}>Cargando lotes...</p>
+                        )}
+                        {!cargandoLotes && lotesDetalle.length === 0 && (
+                            <p style={{ fontSize: 14, color: C.textoMuted, margin: 0 }}>Sin detalle por lote registrado.</p>
+                        )}
+                        {lotesDetalle.map((lote, i) => (
+                            <div key={lote.id} style={{
+                                borderRadius: 10, border: `1px solid ${C.borde}`, overflow: "hidden", marginBottom: 8
+                            }}>
+                                <div style={{ background: "#A5D6A7", padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+                                    <span style={{ fontSize: 16 }}>🌿</span>
+                                    <span style={{ fontWeight: 700, fontSize: 14, color: "#1B5E20" }}>Lote #{lote.lote_id}</span>
+                                </div>
+                                <div style={{ padding: "12px 14px", display: "grid", gap: 10 }}>
+                                    <div>
+                                        <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Observaciones</div>
+                                        <div style={{ fontSize: 14, color: C.texto }}>
+                                            {lote.observaciones || "Sin observaciones"}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>🦗 Plagas detectadas</div>
+                                        {lote.plagasDetectadas ? (
+                                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                                {lote.plagasDetectadas.split(",").map((p, pi) => (
+                                                    <span key={pi} style={{
+                                                        background: C.rojoPastel, color: C.rojo,
+                                                        fontSize: 13, fontWeight: 600,
+                                                        padding: "3px 10px", borderRadius: 20
+                                                    }}>{p.trim()}</span>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <span style={{ fontSize: 14, color: C.verde, fontWeight: 600 }}>✅ Sin plagas</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </>}
 
                     <div>
