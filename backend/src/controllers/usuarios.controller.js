@@ -2,7 +2,7 @@ const { dbUsuarios } = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const SECRET_KEY = process.env.JWT_SECRET || 'clave_secreta'; // mejor en .env
+const SECRET_KEY = process.env.JWT_SECRET || 'clave_secreta';
 
 // Obtener todos los usuarios
 const getUsuarios = (req, res) => {
@@ -28,7 +28,7 @@ const getUsuarioById = (req, res) => {
   });
 };
 
-// Crear usuario (con contraseña hasheada)
+// Crear usuario (productor desde registro público)
 const createUsuario = (req, res) => {
   const { numeroDocumento, nombre, correo, contrasena, telefono } = req.body;
 
@@ -40,10 +40,7 @@ const createUsuario = (req, res) => {
       [numeroDocumento, nombre, correo, hash, telefono],
       (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
-        
         const nuevoId = results.insertId;
-        
-        // Asignar rol productor (id 2)
         dbUsuarios.query(
           'INSERT INTO usuariorol (usuario_id, rol_id) VALUES (?, ?)',
           [nuevoId, 2],
@@ -112,6 +109,22 @@ const deleteUsuario = (req, res) => {
   });
 };
 
+// Actualizar usuario
+const updateUsuario = (req, res) => {
+  const { id } = req.params;
+  const { nombre, correo, telefono, numeroDocumento, tarjetaProfesional } = req.body;
+
+  dbUsuarios.query(
+    'UPDATE usuario SET nombre=?, correo=?, telefono=?, numeroDocumento=?, tarjetaProfesional=? WHERE id=?',
+    [nombre, correo, telefono, numeroDocumento, tarjetaProfesional || null, id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ mensaje: 'Usuario actualizado' });
+    }
+  );
+};
+
+// Crear usuario con rol (técnico o admin desde el panel)
 const createUsuarioConRol = (req, res) => {
   const { numeroDocumento, nombre, correo, contrasena, telefono, rol_id, tarjetaProfesional } = req.body;
 
@@ -139,4 +152,4 @@ const createUsuarioConRol = (req, res) => {
   });
 };
 
-module.exports = { getUsuarios, getUsuarioById, createUsuario, loginUsuario, deleteUsuario, createUsuarioConRol };
+module.exports = { getUsuarios, getUsuarioById, createUsuario, loginUsuario, deleteUsuario, updateUsuario, createUsuarioConRol };

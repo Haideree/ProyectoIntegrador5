@@ -100,6 +100,152 @@ function SeccionTitulo({ children }) {
   );
 }
 
+// ── MODAL EDITAR USUARIO ──────────────────────────────────────────────────────
+function ModalEditarUsuario({ usuario, onClose, onGuardar }) {
+  const [form, setForm] = useState({
+    nombre: usuario.nombre || "",
+    correo: usuario.correo || "",
+    telefono: usuario.telefono || "",
+    numeroDocumento: usuario.numeroDocumento || "",
+    tarjetaProfesional: usuario.tarjetaProfesional || "",
+  });
+  const [errores, setErrores] = useState({});
+  const [enviando, setEnviando] = useState(false);
+  const [exito, setExito] = useState(false);
+
+  const inputStyle = { width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 14, color: COLORES.texto, boxSizing: "border-box" };
+  const labelStyle = { fontSize: 13, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 4 };
+
+  const validar = () => {
+    const e = {};
+    if (!form.nombre.trim()) e.nombre = "Requerido";
+    else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(form.nombre.trim())) e.nombre = "Solo letras y espacios";
+    if (!form.correo.trim()) e.correo = "Requerido";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo)) e.correo = "Correo inválido";
+    if (!form.telefono.trim()) e.telefono = "Requerido";
+    else if (!/^\d{10}$/.test(form.telefono.trim())) e.telefono = "Exactamente 10 dígitos";
+    if (!form.numeroDocumento.trim()) e.numeroDocumento = "Requerido";
+    return e;
+  };
+
+  const handleGuardar = async () => {
+    const e = validar();
+    setErrores(e);
+    if (Object.keys(e).length > 0) return;
+    setEnviando(true);
+    try {
+      const res = await fetch(`https://proyectointegrador5.onrender.com/api/usuarios/${usuario.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      if (!res.ok) throw new Error('Error al actualizar');
+      setExito(true);
+      setTimeout(() => { onGuardar(); onClose(); }, 1200);
+    } catch (err) {
+      setErrores({ general: err.message });
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
+      <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 28, width: 460, maxWidth: "95vw", boxShadow: "0 8px 40px rgba(0,0,0,0.2)" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORES.naranja, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>Editar usuario</div>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: COLORES.texto }}>{usuario.nombre}</h2>
+          </div>
+          <button onClick={onClose} style={{ background: COLORES.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: COLORES.gris }}>×</button>
+        </div>
+
+        {exito ? (
+          <div style={{ textAlign: "center", padding: "24px 0" }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.verde }}>Guardado exitosamente</div>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gap: 14 }}>
+            {[
+              { key: "nombre",            label: "Nombre completo"      },
+              { key: "numeroDocumento",   label: "Número de documento"  },
+              { key: "correo",            label: "Correo electrónico"   },
+              { key: "telefono",          label: "Teléfono"             },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <label style={labelStyle}>{label}</label>
+                <input value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  style={{ ...inputStyle, borderColor: errores[key] ? COLORES.rojo : COLORES.borde }} />
+                {errores[key] && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores[key]}</span>}
+              </div>
+            ))}
+
+            {usuario.rol === 'tecnico' && (
+              <div>
+                <label style={labelStyle}>Tarjeta profesional</label>
+                <input value={form.tarjetaProfesional} onChange={e => setForm(f => ({ ...f, tarjetaProfesional: e.target.value }))}
+                  placeholder="Ej. ICA-2024-0341"
+                  style={{ ...inputStyle, borderColor: errores.tarjetaProfesional ? COLORES.rojo : COLORES.borde }} />
+              </div>
+            )}
+
+            {errores.general && (
+              <div style={{ background: COLORES.rojoPastel, color: COLORES.rojo, borderRadius: 8, padding: "10px 14px", fontSize: 14, fontWeight: 600 }}>
+                ⚠️ {errores.general}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button onClick={onClose} style={{ flex: 1, background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+              <button onClick={handleGuardar} style={{ flex: 1, background: enviando ? COLORES.gris : COLORES.naranja, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: enviando ? 0.7 : 1 }}>
+                {enviando ? "Guardando..." : "✓ Guardar cambios"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── MODAL CONFIRMAR ELIMINAR ──────────────────────────────────────────────────
+function ModalConfirmarEliminar({ usuario, onClose, onConfirmar }) {
+  const [eliminando, setEliminando] = useState(false);
+
+  const handleEliminar = async () => {
+    setEliminando(true);
+    try {
+      const res = await fetch(`https://proyectointegrador5.onrender.com/api/usuarios/${usuario.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al eliminar');
+      onConfirmar();
+      onClose();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setEliminando(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
+      <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 28, width: 400, maxWidth: "95vw", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🗑️</div>
+        <h2 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: COLORES.texto }}>¿Eliminar usuario?</h2>
+        <p style={{ margin: "0 0 24px", color: COLORES.textoMuted, fontSize: 15 }}>
+          Se eliminará permanentemente a <strong>{usuario.nombre}</strong>. Esta acción no se puede deshacer.
+        </p>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={onClose} style={{ flex: 1, background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+          <button onClick={handleEliminar} style={{ flex: 1, background: COLORES.rojo, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: eliminando ? 0.7 : 1 }}>
+            {eliminando ? "Eliminando..." : "✕ Eliminar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── MODAL SOLICITUD ───────────────────────────────────────────────────────────
 function ModalSolicitud({ sol, tecnicos, onClose, onRechazar, onAsignarTecnico }) {
   const [tecnicoSel, setTecnicoSel] = useState("");
@@ -454,13 +600,16 @@ function PaginaUsuarios() {
   const [tab, setTab] = useState("tecnicos");
   const [usuarios, setUsuarios] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [modalAbierto, setModalAbierto] = useState(false);
+  const [modalCrear, setModalCrear] = useState(false);
   const [rolModal, setRolModal] = useState(1);
-  const [form, setForm] = useState({ 
-  numeroDocumento: "", nombre: "", correo: "", 
-  contrasena: "", telefono: "", confirmContrasena: "",
-  tipoTecnico: "", tarjetaProfesional: ""
-});
+  const [usuarioEditar, setUsuarioEditar] = useState(null);
+  const [usuarioEliminar, setUsuarioEliminar] = useState(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [form, setForm] = useState({
+    numeroDocumento: "", nombre: "", correo: "",
+    contrasena: "", telefono: "", confirmContrasena: "",
+    tipoTecnico: "", tarjetaProfesional: ""
+  });
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState("");
@@ -476,319 +625,281 @@ function PaginaUsuarios() {
 
   useEffect(() => { cargarUsuarios(); }, []);
 
-  const tecnicos = usuarios.filter(u => u.rol === 'tecnico');
-  const admins   = usuarios.filter(u => u.rol === 'admin');
+  const tecnicos   = usuarios.filter(u => u.rol === 'tecnico');
+  const admins     = usuarios.filter(u => u.rol === 'admin');
+  const productores = usuarios.filter(u => u.rol === 'productor');
 
-const abrirModal = (rol_id) => {
-  setRolModal(rol_id);
-  setForm({ 
-    numeroDocumento: "", nombre: "", correo: "", 
-    contrasena: "", telefono: "", confirmContrasena: "",
-    tipoTecnico: "", tarjetaProfesional: ""
-  });
-  setErrores({});
-  setExito("");
-  setModalAbierto(true);
-};
+  const abrirModalCrear = (rol_id) => {
+    setRolModal(rol_id);
+    setForm({ numeroDocumento: "", nombre: "", correo: "", contrasena: "", telefono: "", confirmContrasena: "", tipoTecnico: "", tarjetaProfesional: "" });
+    setErrores({});
+    setExito("");
+    setModalCrear(true);
+  };
 
-const validar = () => {
-  const e = {};
+  const validar = () => {
+    const e = {};
+    if (!form.nombre.trim()) e.nombre = "Requerido";
+    else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(form.nombre.trim())) e.nombre = "Solo letras y espacios";
+    if (!form.numeroDocumento.trim()) e.numeroDocumento = "Requerido";
+    else if (!/^[A-Za-z0-9]{6,20}$/.test(form.numeroDocumento.trim())) e.numeroDocumento = "Entre 6 y 20 caracteres";
+    if (!form.correo.trim()) e.correo = "Requerido";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo)) e.correo = "Correo inválido";
+    if (!form.telefono.trim()) e.telefono = "Requerido";
+    else if (!/^\d{10}$/.test(form.telefono.trim())) e.telefono = "Exactamente 10 dígitos";
+    if (!form.contrasena) e.contrasena = "Requerido";
+    else {
+      const errs = [];
+      if (form.contrasena.length < 8)             errs.push("mínimo 8 caracteres");
+      if (!/[A-Z]/.test(form.contrasena))         errs.push("una mayúscula");
+      if (!/[a-z]/.test(form.contrasena))         errs.push("una minúscula");
+      if (!/[0-9]/.test(form.contrasena))         errs.push("un número");
+      if (!/[^A-Za-z0-9]/.test(form.contrasena)) errs.push("un símbolo");
+      if (errs.length > 0) e.contrasena = "Debe tener: " + errs.join(" · ");
+    }
+    if (!form.confirmContrasena) e.confirmContrasena = "Requerido";
+    else if (form.contrasena !== form.confirmContrasena) e.confirmContrasena = "Las contraseñas no coinciden";
+    if (rolModal === 3 && !form.tipoTecnico) e.tipoTecnico = "Selecciona el tipo";
+    if (rolModal === 3 && form.tipoTecnico === "oficial" && !form.tarjetaProfesional.trim()) e.tarjetaProfesional = "Requerida";
+    return e;
+  };
 
-  // Nombre — solo letras y espacios
-  if (!form.nombre.trim()) {
-    e.nombre = "Requerido";
-  } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(form.nombre.trim())) {
-    e.nombre = "Solo se permiten letras y espacios";
-  }
-
-  // Documento
-  if (!form.numeroDocumento.trim()) {
-    e.numeroDocumento = "Requerido";
-  } else if (!/^[A-Za-z0-9]{6,20}$/.test(form.numeroDocumento.trim())) {
-    e.numeroDocumento = "Entre 6 y 20 caracteres (números o formato pasaporte)";
-  }
-
-  // Correo
-  if (!form.correo.trim()) {
-    e.correo = "Requerido";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo)) {
-    e.correo = "Ingresa un correo válido";
-  }
-
-  // Teléfono
-  if (!form.telefono.trim()) {
-    e.telefono = "Requerido";
-  } else if (!/^\d{10}$/.test(form.telefono.trim())) {
-    e.telefono = "Exactamente 10 dígitos";
-  }
-
-  // Contraseña
-  if (!form.contrasena) {
-    e.contrasena = "Requerido";
-  } else {
-    const errs = [];
-    if (form.contrasena.length < 8)             errs.push("mínimo 8 caracteres");
-    if (!/[A-Z]/.test(form.contrasena))         errs.push("una mayúscula");
-    if (!/[a-z]/.test(form.contrasena))         errs.push("una minúscula");
-    if (!/[0-9]/.test(form.contrasena))         errs.push("un número");
-    if (!/[^A-Za-z0-9]/.test(form.contrasena)) errs.push("un símbolo (!@#$%)");
-    if (errs.length > 0) e.contrasena = "Debe tener: " + errs.join(" · ");
-  }
-
-  // Confirmar contraseña
-  if (!form.confirmContrasena) {
-    e.confirmContrasena = "Requerido";
-  } else if (form.contrasena !== form.confirmContrasena) {
-    e.confirmContrasena = "Las contraseñas no coinciden";
-  }
-
-  // Tipo de técnico (solo si es técnico)
-  if (rolModal === 3 && !form.tipoTecnico) {
-    e.tipoTecnico = "Selecciona el tipo de técnico";
-  }
-
-  // Tarjeta profesional (solo si es técnico oficial)
-  if (rolModal === 3 && form.tipoTecnico === "oficial" && !form.tarjetaProfesional.trim()) {
-    e.tarjetaProfesional = "Ingresa el número de tarjeta profesional";
-  }
-
-  return e;
-};
-
-const handleEnviar = async () => {
-  const e = validar();
-  setErrores(e);
-  if (Object.keys(e).length > 0) return;
-  setEnviando(true);
-
-  const tarjeta = rolModal === 3
-    ? (form.tipoTecnico === "particular"
-        ? `ICA-PART-${Date.now().toString().slice(-6)}`
-        : form.tarjetaProfesional)
-    : "";
-
-  try {
-    const res = await fetch('https://proyectointegrador5.onrender.com/api/usuarios/crear-con-rol', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        numeroDocumento: form.numeroDocumento,
-        nombre: form.nombre,
-        correo: form.correo,
-        contrasena: form.contrasena,
-        telefono: form.telefono,
-        rol_id: rolModal,
-        tarjetaProfesional: tarjeta,
-        tipoTecnico: rolModal === 3 ? form.tipoTecnico : undefined
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al crear');
-    setExito(`${rolModal === 3 ? 'Técnico' : 'Administrador'} creado exitosamente`);
-    cargarUsuarios();
-    setTimeout(() => setModalAbierto(false), 1500);
-  } catch (err) {
-    setErrores({ general: err.message });
-  } finally {
-    setEnviando(false);
-  }
-};
+  const handleEnviar = async () => {
+    const e = validar();
+    setErrores(e);
+    if (Object.keys(e).length > 0) return;
+    setEnviando(true);
+    const tarjeta = rolModal === 3
+      ? (form.tipoTecnico === "particular" ? `ICA-PART-${Date.now().toString().slice(-6)}` : form.tarjetaProfesional)
+      : "";
+    try {
+      const res = await fetch('https://proyectointegrador5.onrender.com/api/usuarios/crear-con-rol', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, rol_id: rolModal, tarjetaProfesional: tarjeta, tipoTecnico: rolModal === 3 ? form.tipoTecnico : undefined })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al crear');
+      setExito(`${rolModal === 3 ? 'Técnico' : 'Administrador'} creado exitosamente`);
+      cargarUsuarios();
+      setTimeout(() => setModalCrear(false), 1500);
+    } catch (err) {
+      setErrores({ general: err.message });
+    } finally {
+      setEnviando(false);
+    }
+  };
 
   const inputStyle = { width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 14, color: COLORES.texto, boxSizing: "border-box" };
   const labelStyle = { fontSize: 13, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 4 };
 
   const TabBtn = ({ id, label, count }) => (
-    <button onClick={() => setTab(id)} style={{ padding: "9px 20px", borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: "pointer", border: "none", background: tab === id ? COLORES.verde : COLORES.blanco, color: tab === id ? COLORES.blanco : COLORES.gris, display: "flex", alignItems: "center", gap: 8 }}>
+    <button onClick={() => { setTab(id); setBusqueda(""); }}
+      style={{ padding: "9px 20px", borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: "pointer", border: "none", background: tab === id ? COLORES.verde : COLORES.blanco, color: tab === id ? COLORES.blanco : COLORES.gris, display: "flex", alignItems: "center", gap: 8 }}>
       {label}
       <span style={{ background: tab === id ? "rgba(255,255,255,0.25)" : COLORES.verdePastel, color: tab === id ? COLORES.blanco : COLORES.verde, fontSize: 13, fontWeight: 800, padding: "1px 7px", borderRadius: 10 }}>{count}</span>
     </button>
   );
 
- const TablaUsuarios = ({ lista, tipo }) => {
-  const esTecnico = tipo === 'Técnico';
-  const cols = esTecnico ? "2fr 1.5fr 1fr 1fr 1.2fr" : "2fr 1.5fr 1fr 1fr";
+  const TablaUsuarios = ({ lista, tipo, conTarjeta = false, soloEliminar = false }) => {
+    const cols = conTarjeta ? "2fr 1.5fr 1fr 1fr 1.2fr auto" : "2fr 1.5fr 1fr 1fr auto";
+    const listaFiltrada = lista.filter(u =>
+      u.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.correo?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.numeroDocumento?.toLowerCase().includes(busqueda.toLowerCase())
+    );
 
-  return (
-    <div style={{ background: COLORES.blanco, borderRadius: 14, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
-      <div style={{ padding: "14px 20px", borderBottom: `1px solid ${COLORES.borde}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto }}>{tipo}s registrados</span>
-        <button onClick={() => abrirModal(esTecnico ? 3 : 1)}
-          style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "7px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-          + Registrar {tipo}
-        </button>
-      </div>
-
-      {/* Header */}
-      <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
-        <span>Nombre</span>
-        <span>Correo</span>
-        <span>Teléfono</span>
-        <span>Documento</span>
-        {esTecnico && <span>Tarjeta prof.</span>}
-      </div>
-
-      {cargando ? (
-        <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}>Cargando...</div>
-      ) : lista.length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>👤</div>
-          <p style={{ margin: 0, fontWeight: 600 }}>No hay {tipo.toLowerCase()}s registrados</p>
-        </div>
-      ) : lista.map((u, i) => (
-        <div key={u.id} style={{ display: "grid", gridTemplateColumns: cols, gap: 8, alignItems: "center", padding: "13px 20px", borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
+    return (
+      <div style={{ background: COLORES.blanco, borderRadius: 14, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
+        {/* Toolbar */}
+        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${COLORES.borde}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: "50%", background: esTecnico ? COLORES.verdePastel : COLORES.azulPastel, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
-              {esTecnico ? "⚙️" : "🛡️"}
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{u.nombre}</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto }}>{tipo}s registrados</span>
+            <span style={{ background: COLORES.grisPastel, color: COLORES.gris, fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 10 }}>{listaFiltrada.length}</span>
           </div>
-          <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{u.correo}</span>
-          <span style={{ fontSize: 14, color: COLORES.texto }}>{u.telefono}</span>
-          <span style={{ fontSize: 14, color: COLORES.texto }}>{u.numeroDocumento}</span>
-          {esTecnico && (
-            <span>
-              {u.tarjetaProfesional
-                ? <span style={{ background: COLORES.azulPastel, color: COLORES.azul, padding: "3px 9px", borderRadius: 10, fontSize: 13, fontWeight: 600 }}>
-                    {u.tarjetaProfesional}
-                  </span>
-                : <span style={{ color: COLORES.textoMuted, fontSize: 14 }}>—</span>
-              }
-            </span>
-          )}
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <input type="text" placeholder="Buscar..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
+              style={{ border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "7px 12px", fontSize: 14, outline: "none", width: 180 }} />
+            {!soloEliminar && (
+              <button onClick={() => abrirModalCrear(tipo === 'Técnico' ? 3 : 1)}
+                style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "7px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                + Registrar {tipo}
+              </button>
+            )}
+          </div>
         </div>
-      ))}
-    </div>
-  );
-};
+
+        {/* Header */}
+        <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
+          <span>Nombre</span>
+          <span>Correo</span>
+          <span>Teléfono</span>
+          <span>Documento</span>
+          {conTarjeta && <span>Tarjeta prof.</span>}
+          <span>Acciones</span>
+        </div>
+
+        {/* Filas */}
+        {cargando ? (
+          <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}>Cargando...</div>
+        ) : listaFiltrada.length === 0 ? (
+          <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>👤</div>
+            <p style={{ margin: 0, fontWeight: 600 }}>{busqueda ? "Sin resultados" : `No hay ${tipo.toLowerCase()}s registrados`}</p>
+          </div>
+        ) : listaFiltrada.map((u, i) => (
+          <div key={u.id} style={{ display: "grid", gridTemplateColumns: cols, gap: 8, alignItems: "center", padding: "13px 20px", borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: tipo === 'Técnico' ? COLORES.verdePastel : tipo === 'Administrador' ? COLORES.azulPastel : COLORES.naranjaPastel, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
+                {tipo === 'Técnico' ? "⚙️" : tipo === 'Administrador' ? "🛡️" : "🌾"}
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{u.nombre}</span>
+            </div>
+            <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{u.correo}</span>
+            <span style={{ fontSize: 14, color: COLORES.texto }}>{u.telefono}</span>
+            <span style={{ fontSize: 14, color: COLORES.texto }}>{u.numeroDocumento}</span>
+            {conTarjeta && (
+              <span>
+                {u.tarjetaProfesional
+                  ? <span style={{ background: COLORES.azulPastel, color: COLORES.azul, padding: "3px 9px", borderRadius: 10, fontSize: 13, fontWeight: 600 }}>{u.tarjetaProfesional}</span>
+                  : <span style={{ color: COLORES.textoMuted, fontSize: 14 }}>—</span>}
+              </span>
+            )}
+            {/* Botones acción */}
+            <div style={{ display: "flex", gap: 6 }}>
+              {!soloEliminar && (
+                <button onClick={() => setUsuarioEditar(u)}
+                  style={{ background: COLORES.naranjaPastel, color: COLORES.naranja, border: "none", borderRadius: 7, padding: "5px 11px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  ✏️
+                </button>
+              )}
+              <button onClick={() => setUsuarioEliminar(u)}
+                style={{ background: COLORES.rojoPastel, color: COLORES.rojo, border: "none", borderRadius: 7, padding: "5px 11px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                🗑️
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div style={{ padding: "28px 32px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
         <div style={{ width: 4, height: 24, background: COLORES.verde, borderRadius: 2 }} />
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: COLORES.texto }}>Registro de técnicos y administradores</h1>
+        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: COLORES.texto }}>Gestión de usuarios</h1>
       </div>
 
+      {/* Tabs */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20, background: COLORES.grisPastel, padding: 6, borderRadius: 10, width: "fit-content" }}>
-        <TabBtn id="tecnicos" label="Técnicos"       count={tecnicos.length} />
-        <TabBtn id="admins"   label="Administradores" count={admins.length}  />
+        <TabBtn id="tecnicos"    label="Técnicos"        count={tecnicos.length}   />
+        <TabBtn id="admins"      label="Administradores" count={admins.length}     />
+        <TabBtn id="productores" label="Productores"     count={productores.length}/>
       </div>
 
-      {tab === "tecnicos" && <TablaUsuarios lista={tecnicos} tipo="Técnico" />}
-      {tab === "admins"   && <TablaUsuarios lista={admins}   tipo="Administrador" />}
+      {tab === "tecnicos"    && <TablaUsuarios lista={tecnicos}    tipo="Técnico"        conTarjeta />}
+      {tab === "admins"      && <TablaUsuarios lista={admins}      tipo="Administrador"              />}
+      {tab === "productores" && <TablaUsuarios lista={productores} tipo="Productor"      soloEliminar />}
 
-      {/* Modal registro */}
-      {modalAbierto && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setModalAbierto(false)}>
-          <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 28, width: 460, maxWidth: "95vw", boxShadow: "0 8px 40px rgba(0,0,0,0.2)" }} onClick={e => e.stopPropagation()}>
+      {/* Modal crear */}
+      {modalCrear && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setModalCrear(false)}>
+          <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 28, width: 460, maxWidth: "95vw", boxShadow: "0 8px 40px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: COLORES.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>Nuevo registro</div>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: COLORES.texto }}>Registrar {rolModal === 3 ? 'Técnico' : 'Administrador'}</h2>
               </div>
-              <button onClick={() => setModalAbierto(false)} style={{ background: COLORES.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: COLORES.gris }}>×</button>
+              <button onClick={() => setModalCrear(false)} style={{ background: COLORES.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: COLORES.gris }}>×</button>
             </div>
 
-{exito ? (
-  <div style={{ textAlign: "center", padding: "24px 0" }}>
-    <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-    <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.verde }}>{exito}</div>
-  </div>
-) : (
-  <div style={{ display: "grid", gap: 14 }}>
+            {exito ? (
+              <div style={{ textAlign: "center", padding: "24px 0" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.verde }}>{exito}</div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 14 }}>
+                {rolModal === 3 && (
+                  <div>
+                    <label style={labelStyle}>Tipo de técnico</label>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      {[{ val: "particular", label: "🧑‍🌾 Particular" }, { val: "oficial", label: "🏛️ Oficial ICA" }].map(op => (
+                        <button key={op.val} type="button"
+                          onClick={() => setForm(f => ({ ...f, tipoTecnico: op.val, tarjetaProfesional: op.val === "particular" ? `ICA-PART-${Date.now().toString().slice(-6)}` : "" }))}
+                          style={{ flex: 1, padding: "10px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer", border: `2px solid ${form.tipoTecnico === op.val ? COLORES.verde : COLORES.borde}`, background: form.tipoTecnico === op.val ? COLORES.verdePastel : COLORES.blanco, color: form.tipoTecnico === op.val ? COLORES.verde : COLORES.textoMuted }}>
+                          {op.label}
+                        </button>
+                      ))}
+                    </div>
+                    {errores.tipoTecnico && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores.tipoTecnico}</span>}
+                  </div>
+                )}
 
-    {/* Selector tipo técnico — solo si es técnico */}
-    {rolModal === 3 && (
-      <div>
-        <label style={labelStyle}>Tipo de técnico</label>
-        <div style={{ display: "flex", gap: 10 }}>
-          {[
-            { val: "particular", label: "🧑‍🌾 Particular" },
-            { val: "oficial",    label: "🏛️ Oficial ICA"  }
-          ].map(op => (
-            <button key={op.val} type="button"
-              onClick={() => {
-                setForm(f => ({ 
-                  ...f, 
-                  tipoTecnico: op.val,
-                  tarjetaProfesional: op.val === "particular" ? `ICA-PART-${Date.now().toString().slice(-6)}` : ""
-                }));
-              }}
-              style={{
-                flex: 1, padding: "10px", borderRadius: 8, fontSize: 14, fontWeight: 700,
-                cursor: "pointer",
-                border: `2px solid ${form.tipoTecnico === op.val ? COLORES.verde : COLORES.borde}`,
-                background: form.tipoTecnico === op.val ? COLORES.verdePastel : COLORES.blanco,
-                color: form.tipoTecnico === op.val ? COLORES.verde : COLORES.textoMuted,
-              }}>
-              {op.label}
-            </button>
-          ))}
-        </div>
-        {errores.tipoTecnico && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores.tipoTecnico}</span>}
-      </div>
-    )}
+                {[
+                  { key: "nombre",            label: "Nombre completo",      placeholder: "Ej. Carlos Ramírez" },
+                  { key: "numeroDocumento",   label: "Número de documento",  placeholder: "Cédula o pasaporte" },
+                  { key: "correo",            label: "Correo electrónico",   placeholder: "correo@ejemplo.com" },
+                  { key: "telefono",          label: "Teléfono",             placeholder: "3001234567" },
+                  { key: "contrasena",        label: "Contraseña",           placeholder: "Mínimo 8 caracteres", type: "password" },
+                  { key: "confirmContrasena", label: "Confirmar contraseña", placeholder: "Repite la contraseña", type: "password" },
+                ].map(({ key, label, placeholder, type = "text" }) => (
+                  <div key={key}>
+                    <label style={labelStyle}>{label}</label>
+                    <input type={type} placeholder={placeholder} value={form[key]}
+                      onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                      style={{ ...inputStyle, borderColor: errores[key] ? COLORES.rojo : COLORES.borde }} />
+                    {errores[key] && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores[key]}</span>}
+                  </div>
+                ))}
 
-    {/* Campos del formulario */}
-    {[
-      { key: "nombre",            label: "Nombre completo",       placeholder: "Ej. Carlos Ramírez" },
-      { key: "numeroDocumento",   label: "Número de documento",   placeholder: "Cédula o pasaporte" },
-      { key: "correo",            label: "Correo electrónico",    placeholder: "correo@ejemplo.com" },
-      { key: "telefono",          label: "Teléfono",              placeholder: "3001234567" },
-      { key: "contrasena",        label: "Contraseña",            placeholder: "Mínimo 8 caracteres", type: "password" },
-      { key: "confirmContrasena", label: "Confirmar contraseña",  placeholder: "Repite la contraseña", type: "password" },
-    ].map(({ key, label, placeholder, type = "text" }) => (
-      <div key={key}>
-        <label style={labelStyle}>{label}</label>
-        <input type={type} placeholder={placeholder} value={form[key]}
-          onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-          style={{ ...inputStyle, borderColor: errores[key] ? COLORES.rojo : COLORES.borde }} />
-        {errores[key] && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores[key]}</span>}
-      </div>
-    ))}
+                {rolModal === 3 && form.tipoTecnico && (
+                  <div>
+                    <label style={labelStyle}>
+                      Tarjeta profesional
+                      {form.tipoTecnico === "particular" && <span style={{ marginLeft: 8, fontSize: 11, background: COLORES.verdePastel, color: COLORES.verde, padding: "1px 7px", borderRadius: 10 }}>Automática</span>}
+                    </label>
+                    <input readOnly={form.tipoTecnico === "particular"} value={form.tarjetaProfesional}
+                      onChange={e => form.tipoTecnico === "oficial" && setForm(f => ({ ...f, tarjetaProfesional: e.target.value }))}
+                      placeholder={form.tipoTecnico === "oficial" ? "Ej. ICA-2024-0341" : ""}
+                      style={{ ...inputStyle, background: form.tipoTecnico === "particular" ? "#F5F5F5" : COLORES.blanco, color: form.tipoTecnico === "particular" ? COLORES.textoMuted : COLORES.texto }} />
+                    {errores.tarjetaProfesional && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores.tarjetaProfesional}</span>}
+                  </div>
+                )}
 
-    {/* Campo tarjeta profesional — solo si es técnico y se eligió tipo */}
-    {rolModal === 3 && form.tipoTecnico && (
-      <div>
-        <label style={labelStyle}>
-          Tarjeta profesional
-          {form.tipoTecnico === "particular" &&
-            <span style={{ marginLeft: 8, fontSize: 11, background: COLORES.verdePastel, color: COLORES.verde, padding: "1px 7px", borderRadius: 10, fontWeight: 600 }}>
-              Asignada automáticamente
-            </span>
-          }
-        </label>
-        <input
-          readOnly={form.tipoTecnico === "particular"}
-          value={form.tarjetaProfesional}
-          onChange={e => form.tipoTecnico === "oficial" && setForm(f => ({ ...f, tarjetaProfesional: e.target.value }))}
-          placeholder={form.tipoTecnico === "oficial" ? "Ej. ICA-2024-0341" : ""}
-          style={{
-            ...inputStyle,
-            background: form.tipoTecnico === "particular" ? "#F5F5F5" : COLORES.blanco,
-            color: form.tipoTecnico === "particular" ? COLORES.textoMuted : COLORES.texto,
-            borderColor: errores.tarjetaProfesional ? COLORES.rojo : COLORES.borde,
-          }}
-        />
-        {errores.tarjetaProfesional && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores.tarjetaProfesional}</span>}
-      </div>
-    )}
+                {errores.general && (
+                  <div style={{ background: COLORES.rojoPastel, color: COLORES.rojo, borderRadius: 8, padding: "10px 14px", fontSize: 14, fontWeight: 600 }}>⚠️ {errores.general}</div>
+                )}
 
-    {errores.general && (
-      <div style={{ background: COLORES.rojoPastel, color: COLORES.rojo, borderRadius: 8, padding: "10px 14px", fontSize: 14, fontWeight: 600 }}>
-        ⚠️ {errores.general}
-      </div>
-    )}
-
-    <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-      <button onClick={() => setModalAbierto(false)} style={{ flex: 1, background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
-      <button onClick={handleEnviar} style={{ flex: 1, background: enviando ? COLORES.gris : COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: enviando ? 0.7 : 1 }}>
-        {enviando ? "Guardando..." : "✓ Registrar"}
-      </button>
-    </div>
-  </div>
-)}
+                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                  <button onClick={() => setModalCrear(false)} style={{ flex: 1, background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+                  <button onClick={handleEnviar} style={{ flex: 1, background: enviando ? COLORES.gris : COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: enviando ? 0.7 : 1 }}>
+                    {enviando ? "Guardando..." : "✓ Registrar"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+      )}
+
+      {/* Modal editar */}
+      {usuarioEditar && (
+        <ModalEditarUsuario
+          usuario={usuarioEditar}
+          onClose={() => setUsuarioEditar(null)}
+          onGuardar={cargarUsuarios}
+        />
+      )}
+
+      {/* Modal confirmar eliminar */}
+      {usuarioEliminar && (
+        <ModalConfirmarEliminar
+          usuario={usuarioEliminar}
+          onClose={() => setUsuarioEliminar(null)}
+          onConfirmar={cargarUsuarios}
+        />
       )}
     </div>
   );
