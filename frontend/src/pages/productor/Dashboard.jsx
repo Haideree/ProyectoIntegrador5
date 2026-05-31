@@ -1811,7 +1811,7 @@ function PaginaDashboard({ setActiva, lugares, setLugares, predios, setPredios, 
                         <span style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</span>
                         <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
                         <span style={{ fontSize: 14, fontWeight: 600, color: C.texto }}>{predios.filter(p => p.lugarId === l.id).length}</span>
-                        <span style={{ fontSize: 13, color: C.textoMuted }}>{l.cultivos?.length || 0} cultivos</span>
+                        <Badge estado={l.estado} />
                         <BtnOutline onClick={() => setLugarVer(l)}>Ver</BtnOutline>
                     </div>
                 ))}
