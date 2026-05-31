@@ -542,8 +542,12 @@ function PaginaFormulario({ inspecciones, onGuardado }) {
   });
   const [lotes, setLotes] = useState([]);
   const [inspeccionLotes, setInspeccionLotes] = useState({});
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
+  const [fechaInicio, setFechaInicio] = useState(
+  inspeccionHoy?.fechaInspeccion 
+    ? new Date(inspeccionHoy.fechaInspeccion).toISOString().split('T')[0]
+    : ""
+);
+  
   const [nivelRiesgo, setNivelRiesgo] = useState("Bajo");
   const [estadoFitosanitario, setEstadoFitosanitario] = useState("");
   const [errores, setErrores] = useState({});
@@ -613,7 +617,7 @@ function PaginaFormulario({ inspecciones, onGuardado }) {
   const validar = () => {
     const e = {};
     if (!fechaInicio) e.fechaInicio = "Requerido";
-    if (!fechaFin)    e.fechaFin    = "Requerido";
+    
     setErrores(e);
     return Object.keys(e).length === 0;
   };
@@ -621,8 +625,8 @@ function PaginaFormulario({ inspecciones, onGuardado }) {
 const guardar = async () => {
   if (!validar()) return;
   setGuardando(true);
+  const hoy = new Date().toISOString().split('T')[0]; // ← fecha actual
   try {
-    // 1. Actualiza la inspección principal
     const res = await fetch(
       `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}`,
       {
@@ -630,7 +634,7 @@ const guardar = async () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fechaInspeccion:     fechaInicio,
-          fechaFin:            fechaFin,
+          fechaFin:            hoy,          // ← se llena al guardar
           observaciones:       "Inspección por lotes completada",
           resultado:           "Completada",
           estado:              "completada",
@@ -913,17 +917,21 @@ const guardar = async () => {
             {/* Fechas */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
-                <label style={labelStyle}>Fecha de inicio *</label>
-                <input type="date" value={fechaInicio} onChange={e => { setFechaInicio(e.target.value); setErrores(er => ({ ...er, fechaInicio: "" })); }}
-                  style={{ width: "100%", border: `1px solid ${errores.fechaInicio ? COLORES.rojo : COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 15, outline: "none", boxSizing: "border-box" }} />
-                {errores.fechaInicio && <span style={{ fontSize: 13, color: COLORES.rojo }}>Requerido</span>}
-              </div>
-              <div>
-                <label style={labelStyle}>Fecha de finalización *</label>
-                <input type="date" value={fechaFin} onChange={e => { setFechaFin(e.target.value); setErrores(er => ({ ...er, fechaFin: "" })); }}
-                  style={{ width: "100%", border: `1px solid ${errores.fechaFin ? COLORES.rojo : COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 15, outline: "none", boxSizing: "border-box" }} />
-                {errores.fechaFin && <span style={{ fontSize: 13, color: COLORES.rojo }}>Requerido</span>}
-              </div>
+  <label style={labelStyle}>Fecha de inspección</label>
+  <input
+    type="date"
+    value={fechaInicio}
+    readOnly
+    style={{
+      width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
+      padding: "8px 12px", fontSize: 15, outline: "none",
+      boxSizing: "border-box", background: "#F5F5F5", color: COLORES.textoMuted,
+    }}
+  />
+  <span style={{ fontSize: 12, color: COLORES.textoMuted, marginTop: 4, display: "block" }}>
+    📅 La fecha de finalización se registra automáticamente al guardar.
+  </span>
+</div>
             </div>
           </div>
         </div>
