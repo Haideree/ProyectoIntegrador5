@@ -604,18 +604,29 @@ const handleEnviar = async () => {
     </button>
   );
 
-  const TablaUsuarios = ({ lista, tipo }) => (
+ const TablaUsuarios = ({ lista, tipo }) => {
+  const esTecnico = tipo === 'Técnico';
+  const cols = esTecnico ? "2fr 1.5fr 1fr 1fr 1.2fr" : "2fr 1.5fr 1fr 1fr";
+
+  return (
     <div style={{ background: COLORES.blanco, borderRadius: 14, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
       <div style={{ padding: "14px 20px", borderBottom: `1px solid ${COLORES.borde}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto }}>{tipo}s registrados</span>
-        <button onClick={() => abrirModal(tipo === 'Técnico' ? 3 : 1)}
+        <button onClick={() => abrirModal(esTecnico ? 3 : 1)}
           style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "7px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
           + Registrar {tipo}
         </button>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr", gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
-        <span>Nombre</span><span>Correo</span><span>Teléfono</span><span>Documento</span>
+
+      {/* Header */}
+      <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "10px 20px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
+        <span>Nombre</span>
+        <span>Correo</span>
+        <span>Teléfono</span>
+        <span>Documento</span>
+        {esTecnico && <span>Tarjeta prof.</span>}
       </div>
+
       {cargando ? (
         <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted }}>Cargando...</div>
       ) : lista.length === 0 ? (
@@ -624,20 +635,31 @@ const handleEnviar = async () => {
           <p style={{ margin: 0, fontWeight: 600 }}>No hay {tipo.toLowerCase()}s registrados</p>
         </div>
       ) : lista.map((u, i) => (
-        <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr", gap: 8, alignItems: "center", padding: "13px 20px", borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
+        <div key={u.id} style={{ display: "grid", gridTemplateColumns: cols, gap: 8, alignItems: "center", padding: "13px 20px", borderTop: `1px solid ${COLORES.borde}`, background: i % 2 === 0 ? COLORES.blanco : "#FAFAFA" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: "50%", background: tipo === 'Técnico' ? COLORES.verdePastel : COLORES.azulPastel, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
-              {tipo === 'Técnico' ? "⚙️" : "🛡️"}
+            <div style={{ width: 34, height: 34, borderRadius: "50%", background: esTecnico ? COLORES.verdePastel : COLORES.azulPastel, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
+              {esTecnico ? "⚙️" : "🛡️"}
             </div>
             <span style={{ fontSize: 15, fontWeight: 700, color: COLORES.texto }}>{u.nombre}</span>
           </div>
           <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{u.correo}</span>
           <span style={{ fontSize: 14, color: COLORES.texto }}>{u.telefono}</span>
           <span style={{ fontSize: 14, color: COLORES.texto }}>{u.numeroDocumento}</span>
+          {esTecnico && (
+            <span>
+              {u.tarjetaProfesional
+                ? <span style={{ background: COLORES.azulPastel, color: COLORES.azul, padding: "3px 9px", borderRadius: 10, fontSize: 13, fontWeight: 600 }}>
+                    {u.tarjetaProfesional}
+                  </span>
+                : <span style={{ color: COLORES.textoMuted, fontSize: 14 }}>—</span>
+              }
+            </span>
+          )}
         </div>
       ))}
     </div>
   );
+};
 
   return (
     <div style={{ padding: "28px 32px" }}>

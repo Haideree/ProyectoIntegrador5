@@ -7,7 +7,7 @@ const SECRET_KEY = process.env.JWT_SECRET || 'clave_secreta'; // mejor en .env
 // Obtener todos los usuarios
 const getUsuarios = (req, res) => {
   dbUsuarios.query(
-    `SELECT u.*, r.nombre AS rol 
+    `SELECT u.id, u.numeroDocumento, u.nombre, u.correo, u.telefono, u.tarjetaProfesional, r.nombre AS rol 
      FROM usuario u
      LEFT JOIN usuariorol ur ON u.id = ur.usuario_id
      LEFT JOIN rol r ON ur.rol_id = r.id`,
@@ -101,21 +101,26 @@ const loginUsuario = (req, res) => {
 // Eliminar usuario
 const deleteUsuario = (req, res) => {
   const { id } = req.params;
-  dbUsuarios.query('DELETE FROM usuario WHERE id = ?', [id], (err) => {
+
+  dbUsuarios.query('DELETE FROM usuariorol WHERE usuario_id = ?', [id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json({ mensaje: 'Usuario eliminado' });
+
+    dbUsuarios.query('DELETE FROM usuario WHERE id = ?', [id], (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ mensaje: 'Usuario eliminado' });
+    });
   });
 };
 
 const createUsuarioConRol = (req, res) => {
-  const { numeroDocumento, nombre, correo, contrasena, telefono, rol_id } = req.body;
+  const { numeroDocumento, nombre, correo, contrasena, telefono, rol_id, tarjetaProfesional } = req.body;
 
   bcrypt.hash(contrasena, 10, (err, hash) => {
     if (err) return res.status(500).json({ error: 'Error al hashear contraseña' });
 
     dbUsuarios.query(
-      'INSERT INTO usuario (numeroDocumento, nombre, correo, contrasena, telefono) VALUES (?, ?, ?, ?, ?)',
-      [numeroDocumento, nombre, correo, hash, telefono],
+      'INSERT INTO usuario (numeroDocumento, nombre, correo, contrasena, telefono, tarjetaProfesional) VALUES (?, ?, ?, ?, ?, ?)',
+      [numeroDocumento, nombre, correo, hash, telefono, tarjetaProfesional || null],
       (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
 
