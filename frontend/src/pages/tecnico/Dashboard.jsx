@@ -435,7 +435,7 @@ function CampoForm({ label, value, onChange, placeholder, tipo = "text", error }
   );
 }
 
-function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario }) {
+function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario, onVerProgreso }) {
   return (
     <div style={{ padding: "24px 28px" }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 40 }}>
@@ -468,7 +468,11 @@ function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario }) {
       <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{insp.lugarproduccion}</span>
       <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}</span>
       <Badge estado={insp.estado} />
-      <button onClick={() => onVerDetalle(insp)} style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
+<button 
+  onClick={() => onVerProgreso(insp)} 
+  style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+  VER
+</button>
       <button onClick={() => onVerFormulario(insp)} style={{ background: insp.disponible ? COLORES.verde : COLORES.grisPastel, color: insp.disponible ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
     </div>
   ))}
@@ -532,8 +536,6 @@ function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
 
 function PaginaFormulario({ inspecciones, onGuardado }) {
   const inspeccionHoy = inspecciones?.[0] || null;
-  console.log("inspecciones recibidas:", inspecciones);
-  console.log("inspeccionHoy:", inspeccionHoy);
 
   const PLAGAS_LISTA = ["Broca","Roya","Gusano Cogollero","Mosca Blanca","Pulgón","Trips","Ácaros","Sin plagas"];
 
@@ -542,21 +544,20 @@ function PaginaFormulario({ inspecciones, onGuardado }) {
   });
   const [lotes, setLotes] = useState([]);
   const [inspeccionLotes, setInspeccionLotes] = useState({});
-  const [fechaInicio, setFechaInicio] = useState(
-  inspeccionHoy?.fechaInspeccion 
-    ? new Date(inspeccionHoy.fechaInspeccion).toISOString().split('T')[0]
-    : ""
-);
-  
+  const [fechaInicio, setFechaInicio] = useState("");
   const [nivelRiesgo, setNivelRiesgo] = useState("Bajo");
   const [estadoFitosanitario, setEstadoFitosanitario] = useState("");
   const [errores, setErrores] = useState({});
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
+  const [autoGuardado, setAutoGuardado] = useState(null); // null | "guardando" | "guardado"
+  const [soloLectura, setSoloLectura] = useState(false);
+  const debounceRef = useRef(null);
 
+  // Carga datos del lugar y lotes, luego restaura progreso si existe
   useEffect(() => {
     if (!inspeccionHoy) return;
-    // Carga datos del lugar e info general
+
     setInfoLugar({
       lugar:        inspeccionHoy.lugar        || inspeccionHoy.lugarproduccion || "",
       departamento: inspeccionHoy.departamento || "",
@@ -566,118 +567,178 @@ function PaginaFormulario({ inspecciones, onGuardado }) {
                       ? inspeccionHoy.cultivos.split(",").map(c => c.trim())
                       : [],
     });
-    // Carga lotes del predio
+
+    setFechaInicio(
+      inspeccionHoy.fechaInspeccion
+        ? new Date(inspeccionHoy.fechaInspeccion).toISOString().split('T')[0]
+        : ""
+    );
+
     fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/lotes/predio/${inspeccionHoy.predio_id}`)
       .then(res => res.json())
-      .then(data => {
-        const lotesArr = Array.isArray(data) ? data : [];
+      .then(lotesData => {
+        const lotesArr = Array.isArray(lotesData) ? lotesData : [];
         setLotes(lotesArr);
-        // Inicializa estado por lote
-        const init = {};
-        lotesArr.forEach(l => {
-          init[l.id] = { observaciones: "", plagas: [""] };
-        });
-        setInspeccionLotes(init);
+
+        // Intenta restaurar progreso guardado
+        fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}/progreso`)
+          .then(res => res.json())
+          .then(progreso => {
+            if (progreso?.datos) {
+              // Restaura estado desde progreso
+              const d = progreso.datos;
+              if (d.inspeccionLotes) setInspeccionLotes(d.inspeccionLotes);
+              if (d.nivelRiesgo)     setNivelRiesgo(d.nivelRiesgo);
+              if (d.estadoFitosanitario) setEstadoFitosanitario(d.estadoFitosanitario);
+            } else {
+              // Sin progreso, inicializa lotes vacíos
+              const init = {};
+              lotesArr.forEach(l => {
+                init[l.id] = { observaciones: "", plagas: [""], cantidadPlantas: "" };
+              });
+              setInspeccionLotes(init);
+            }
+          })
+          .catch(() => {
+            const init = {};
+            lotesArr.forEach(l => {
+              init[l.id] = { observaciones: "", plagas: [""], cantidadPlantas: "" };
+            });
+            setInspeccionLotes(init);
+          });
       })
       .catch(err => console.error(err));
   }, [inspeccionHoy]);
 
-  // Helpers para manejar el estado por lote
+  // Autoguardado con debounce de 2 segundos cada vez que cambia algo
+  useEffect(() => {
+    if (!inspeccionHoy?.id || Object.keys(inspeccionLotes).length === 0) return;
+    if (soloLectura) return;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    setAutoGuardado("guardando");
+    debounceRef.current = setTimeout(async () => {
+      try {
+        await fetch(
+          `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}/progreso`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              datos: { inspeccionLotes, nivelRiesgo, estadoFitosanitario }
+            }),
+          }
+        );
+        setAutoGuardado("guardado");
+        setTimeout(() => setAutoGuardado(null), 2000);
+      } catch (err) {
+        console.error("Error autoguardado:", err);
+        setAutoGuardado(null);
+      }
+    }, 2000);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [inspeccionLotes, nivelRiesgo, estadoFitosanitario]);
+
+  // Helpers lotes
   const setObsLote = (loteId, valor) =>
     setInspeccionLotes(prev => ({ ...prev, [loteId]: { ...prev[loteId], observaciones: valor } }));
 
   const setPlagaLote = (loteId, index, valor) =>
     setInspeccionLotes(prev => {
-      const plagas = [...prev[loteId].plagas];
+      const plagas = [...(prev[loteId]?.plagas || [""])];
       plagas[index] = valor;
       return { ...prev, [loteId]: { ...prev[loteId], plagas } };
     });
 
   const agregarPlagaLote = (loteId) =>
     setInspeccionLotes(prev => {
-      const plagas = prev[loteId].plagas;
+      const plagas = prev[loteId]?.plagas || [""];
       if (plagas.length >= 5) return prev;
       return { ...prev, [loteId]: { ...prev[loteId], plagas: [...plagas, ""] } };
     });
 
   const eliminarPlagaLote = (loteId, index) =>
     setInspeccionLotes(prev => {
-      const plagas = prev[loteId].plagas.filter((_, i) => i !== index);
+      const plagas = (prev[loteId]?.plagas || [""]).filter((_, i) => i !== index);
       return { ...prev, [loteId]: { ...prev[loteId], plagas: plagas.length ? plagas : [""] } };
     });
 
   if (!inspeccionHoy) return (
     <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
       <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
-      <h2 style={{ color: COLORES.texto, fontWeight: 700, margin: 0 }}>No hay inspecciones para hoy</h2>
+      <h2 style={{ color: COLORES.texto, fontWeight: 700, margin: 0 }}>No hay inspecciones pendientes</h2>
       <p style={{ color: COLORES.textoMuted, marginTop: 8 }}>Cuando tengas una inspección asignada aparecerá aquí.</p>
     </div>
   );
 
   const validar = () => {
     const e = {};
-    if (!fechaInicio) e.fechaInicio = "Requerido";
-    
     setErrores(e);
     return Object.keys(e).length === 0;
   };
 
-const guardar = async () => {
-  if (!validar()) return;
-  setGuardando(true);
-  const hoy = new Date().toISOString().split('T')[0]; // ← fecha actual
-  try {
-    const res = await fetch(
-      `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fechaInspeccion:     fechaInicio,
-          fechaFin:            hoy,          // ← se llena al guardar
-          observaciones:       "Inspección por lotes completada",
-          resultado:           "Completada",
-          estado:              "completada",
-          plagaDetectada:      "Ver detalle por lote",
-          nivelRiesgo,
-          estadoFitosanitario,
-        }),
-      }
-    );
-    if (!res.ok) throw new Error("Error al guardar inspección");
+  const guardar = async () => {
+    if (!validar()) return;
+    setGuardando(true);
+    const hoy = new Date().toISOString().split('T')[0];
+    try {
+      // 1. Actualiza inspección principal
+      const res = await fetch(
+        `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fechaInspeccion:     fechaInicio,
+            fechaFin:            hoy,
+            observaciones:       "Inspección por lotes completada",
+            resultado:           "Completada",
+            estado:              "completada",
+            plagaDetectada:      "Ver detalle por lote",
+            nivelRiesgo,
+            estadoFitosanitario,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error("Error al guardar inspección");
 
-    // 2. Guarda el detalle por lote
-  const lotesPayload = lotes.map(lote => {
-  const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""], cantidadPlantas: "" };
-  return {
-    lote_id:          lote.id,
-    observaciones:    datosLote.observaciones || "",
-    plagasDetectadas: datosLote.plagas.filter(Boolean).join(", ") || "Sin plagas",
-    cantidadPlantas:  datosLote.cantidadPlantas || null,
+      // 2. Guarda detalle por lote
+      const lotesPayload = lotes.map(lote => {
+        const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""], cantidadPlantas: "" };
+        return {
+          lote_id:          lote.id,
+          observaciones:    datosLote.observaciones || "",
+          plagasDetectadas: datosLote.plagas.filter(Boolean).join(", ") || "Sin plagas",
+          cantidadPlantas:  datosLote.cantidadPlantas || null,
+        };
+      });
+
+      const res2 = await fetch(
+        `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/lotes`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ inspeccion_id: inspeccionHoy.id, lotes: lotesPayload }),
+        }
+      );
+      if (!res2.ok) throw new Error("Error al guardar lotes");
+
+      // 3. Elimina el progreso guardado
+      await fetch(
+        `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}/progreso`,
+        { method: "DELETE" }
+      );
+
+      setGuardado(true);
+      setTimeout(() => onGuardado(), 2000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setGuardando(false);
+    }
   };
-});
-
-    const res2 = await fetch(
-      `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/lotes`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          inspeccion_id: inspeccionHoy.id,
-          lotes:         lotesPayload,
-        }),
-      }
-    );
-    if (!res2.ok) throw new Error("Error al guardar lotes");
-
-    setGuardado(true);
-    setTimeout(() => onGuardado(), 2000);
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setGuardando(false);
-  }
-};
 
   if (guardado) return (
     <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
@@ -687,7 +748,6 @@ const guardar = async () => {
     </div>
   );
 
-  // Estilo reutilizable para campos readonly
   const inputReadonly = {
     width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
     padding: "8px 12px", fontSize: 15, color: COLORES.textoMuted,
@@ -709,18 +769,28 @@ const guardar = async () => {
   return (
     <div style={{ padding: "24px 28px" }}>
       {/* HEADER */}
-      <div style={{ width: "100%", background: "#A5D6A7", padding: "14px 0", marginBottom: 24, borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", position: "relative" }}>
+      <div style={{ width: "100%", background: "#A5D6A7", padding: "14px 0", marginBottom: 24, borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative" }}>
         <div style={{ position: "absolute", left: 0, top: 0, width: 4, height: "100%", background: COLORES.verde, borderTopRightRadius: 4, borderBottomRightRadius: 4 }} />
         <div style={{ paddingLeft: 16 }}>
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1B5E20" }}>
             Formulario de inspección · {infoLugar.lugar}
+            {soloLectura && <span style={{ marginLeft: 10, fontSize: 13, background: COLORES.azulPastel, color: COLORES.azul, padding: "2px 10px", borderRadius: 20, fontWeight: 600 }}>Solo lectura</span>}
           </h2>
+        </div>
+        {/* Indicador de autoguardado */}
+        <div style={{ paddingRight: 16 }}>
+          {autoGuardado === "guardando" && (
+            <span style={{ fontSize: 13, color: "#2E7D32", fontWeight: 600 }}>💾 Guardando...</span>
+          )}
+          {autoGuardado === "guardado" && (
+            <span style={{ fontSize: 13, color: "#2E7D32", fontWeight: 600 }}>✅ Progreso guardado</span>
+          )}
         </div>
       </div>
 
       <div style={{ maxWidth: 720, margin: "0 auto", display: "grid", gap: 20 }}>
 
-        {/* ── SECCIÓN 1: INFORMACIÓN GENERAL ── */}
+        {/* SECCIÓN 1: INFO GENERAL */}
         <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
           {seccionHeader("Información general")}
           <div style={{ display: "grid", gap: 14 }}>
@@ -742,128 +812,112 @@ const guardar = async () => {
               <label style={labelStyle}>Vereda</label>
               <input readOnly value={infoLugar.vereda} style={inputReadonly} />
             </div>
+            <div>
+              <label style={labelStyle}>Fecha de inspección</label>
+              <input type="date" readOnly value={fechaInicio} style={inputReadonly} />
+              <span style={{ fontSize: 12, color: COLORES.textoMuted, marginTop: 4, display: "block" }}>
+                📅 La fecha de finalización se registra automáticamente al guardar.
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* ── SECCIÓN 2: CULTIVOS ── */}
+        {/* SECCIÓN 2: CULTIVOS */}
         <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
           {seccionHeader("Cultivos del predio")}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {infoLugar.cultivos.length > 0 ? infoLugar.cultivos.map((c, i) => {
               const cols = [["#C8E6C9","#1B5E20"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#F3E5F5","#6A1B9A"]];
               const [bg, col] = cols[i % 4];
-              return (
-                <span key={i} style={{ background: bg, color: col, fontSize: 14, fontWeight: 700, padding: "6px 16px", borderRadius: 20 }}>
-                  🌱 {c}
-                </span>
-              );
-            }) : (
-              <span style={{ fontSize: 14, color: COLORES.textoMuted }}>Sin cultivos registrados</span>
-            )}
+              return <span key={i} style={{ background: bg, color: col, fontSize: 14, fontWeight: 700, padding: "6px 16px", borderRadius: 20 }}>🌱 {c}</span>;
+            }) : <span style={{ fontSize: 14, color: COLORES.textoMuted }}>Sin cultivos registrados</span>}
           </div>
         </div>
 
-        {/* ── SECCIÓN 3: INSPECCIÓN POR LOTE ── */}
+        {/* SECCIÓN 3: INSPECCIÓN POR LOTE */}
         <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
           {seccionHeader(`Inspección por lote (${lotes.length} lotes)`)}
-          {lotes.length === 0 && (
-            <p style={{ color: COLORES.textoMuted, fontSize: 14 }}>No se encontraron lotes para este predio.</p>
-          )}
+          {lotes.length === 0 && <p style={{ color: COLORES.textoMuted, fontSize: 14 }}>No se encontraron lotes.</p>}
           <div style={{ display: "grid", gap: 16 }}>
-            {lotes.map((lote, idx) => {
-              const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""] };
+            {lotes.map(lote => {
+              const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""], cantidadPlantas: "" };
               return (
-                <div key={lote.id} style={{
-                  borderRadius: 10,
-                  border: `1px solid ${COLORES.borde}`,
-                  overflow: "hidden",
-                }}>
-                  {/* Header del lote */}
+                <div key={lote.id} style={{ borderRadius: 10, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
                   <div style={{ background: "#A5D6A7", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 18 }}>🌿</span>
                     <span style={{ fontWeight: 700, fontSize: 15, color: "#1B5E20" }}>{lote.nombre}</span>
-                    {lote.cultivos && (
-                      <span style={{ fontSize: 13, color: "#2E7D32", marginLeft: 4 }}>· {lote.cultivos}</span>
-                    )}
+                    {lote.cultivos && <span style={{ fontSize: 13, color: "#2E7D32" }}>· {lote.cultivos}</span>}
                   </div>
-
                   <div style={{ padding: 16, display: "grid", gap: 14 }}>
-                    {/* Observaciones del lote */}
+                    {/* Observaciones */}
                     <div>
                       <label style={labelStyle}>Observaciones (opcional)</label>
                       <textarea
+                        readOnly={soloLectura}
                         value={datosLote.observaciones}
-                        onChange={e => setObsLote(lote.id, e.target.value)}
+                        onChange={e => !soloLectura && setObsLote(lote.id, e.target.value)}
                         placeholder="Escriba observaciones para este lote..."
                         style={{
                           width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
                           padding: "10px 12px", fontSize: 14, color: COLORES.texto,
                           minHeight: 80, resize: "vertical", fontFamily: "inherit",
                           boxSizing: "border-box", outline: "none",
+                          background: soloLectura ? "#F5F5F5" : COLORES.blanco,
                         }}
                       />
                     </div>
-
-                    {/* Plagas del lote */}
+                    {/* Plagas */}
                     <div>
                       <label style={labelStyle}>🦗 Plagas detectadas (máx. 5)</label>
                       <div style={{ display: "grid", gap: 8 }}>
                         {datosLote.plagas.map((plaga, pIdx) => (
                           <div key={pIdx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                             <select
+                              disabled={soloLectura}
                               value={plaga}
                               onChange={e => setPlagaLote(lote.id, pIdx, e.target.value)}
                               style={{
                                 flex: 1, border: `1px solid ${COLORES.borde}`, borderRadius: 8,
                                 padding: "8px 12px", fontSize: 14, outline: "none",
-                                background: COLORES.blanco, boxSizing: "border-box",
+                                background: soloLectura ? "#F5F5F5" : COLORES.blanco,
+                                boxSizing: "border-box",
                               }}
                             >
                               <option value="">Seleccione una plaga...</option>
                               {PLAGAS_LISTA.map(p => <option key={p} value={p}>{p}</option>)}
                             </select>
-                            {datosLote.plagas.length > 1 && (
-                              <button
-                                onClick={() => eliminarPlagaLote(lote.id, pIdx)}
-                                style={{
-                                  background: COLORES.rojoPastel, color: COLORES.rojo,
-                                  border: "none", borderRadius: 7, width: 32, height: 36,
-                                  cursor: "pointer", fontWeight: 700, fontSize: 16, flexShrink: 0,
-                                }}
-                              >×</button>
+                            {!soloLectura && datosLote.plagas.length > 1 && (
+                              <button onClick={() => eliminarPlagaLote(lote.id, pIdx)} style={{ background: COLORES.rojoPastel, color: COLORES.rojo, border: "none", borderRadius: 7, width: 32, height: 36, cursor: "pointer", fontWeight: 700, fontSize: 16, flexShrink: 0 }}>×</button>
                             )}
                           </div>
                         ))}
-                        {datosLote.plagas.length < 5 && (
-                          <button
-                            onClick={() => agregarPlagaLote(lote.id)}
-                            style={{
-                              background: COLORES.azulPastel, color: COLORES.azul,
-                              border: `1px dashed ${COLORES.azul}`, borderRadius: 8,
-                              padding: "7px 14px", fontSize: 13, fontWeight: 700,
-                              cursor: "pointer", width: "fit-content",
-                            }}
-                          >+ Agregar plaga</button>
+                        {!soloLectura && datosLote.plagas.length < 5 && (
+                          <button onClick={() => agregarPlagaLote(lote.id)} style={{ background: COLORES.azulPastel, color: COLORES.azul, border: `1px dashed ${COLORES.azul}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "fit-content" }}>
+                            + Agregar plaga
+                          </button>
                         )}
                       </div>
-                      <div>
-  <label style={labelStyle}>🌱 Cantidad de plantas</label>
-  <input
-    type="number"
-    min="0"
-    value={datosLote.cantidadPlantas || ""}
-    onChange={e => setInspeccionLotes(prev => ({
-      ...prev,
-      [lote.id]: { ...prev[lote.id], cantidadPlantas: e.target.value }
-    }))}
-    placeholder="Ej: 120"
-    style={{
-      width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
-      padding: "8px 12px", fontSize: 14, outline: "none",
-      boxSizing: "border-box", background: COLORES.blanco,
-    }}
-  />
-</div>
+                    </div>
+                    {/* Cantidad de plantas */}
+                    <div>
+                      <label style={labelStyle}>🌱 Cantidad de plantas</label>
+                      <input
+                        type="number"
+                        min="0"
+                        readOnly={soloLectura}
+                        value={datosLote.cantidadPlantas || ""}
+                        onChange={e => !soloLectura && setInspeccionLotes(prev => ({
+                          ...prev,
+                          [lote.id]: { ...prev[lote.id], cantidadPlantas: e.target.value }
+                        }))}
+                        placeholder="Ej: 120"
+                        style={{
+                          width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
+                          padding: "8px 12px", fontSize: 14, outline: "none",
+                          boxSizing: "border-box",
+                          background: soloLectura ? "#F5F5F5" : COLORES.blanco,
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -872,11 +926,10 @@ const guardar = async () => {
           </div>
         </div>
 
-        {/* ── SECCIÓN 4: RESULTADO FINAL ── */}
+        {/* SECCIÓN 4: RESULTADO FINAL */}
         <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
           {seccionHeader("Resultado de la inspección")}
           <div style={{ display: "grid", gap: 16 }}>
-
             {/* Nivel de riesgo */}
             <div>
               <label style={labelStyle}>⚠️ Nivel de riesgo</label>
@@ -884,9 +937,11 @@ const guardar = async () => {
                 {["Bajo","Medio","Alto"].map(nivel => (
                   <button
                     key={nivel}
-                    onClick={() => setNivelRiesgo(nivel)}
+                    disabled={soloLectura}
+                    onClick={() => !soloLectura && setNivelRiesgo(nivel)}
                     style={{
-                      flex: 1, padding: "9px", borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer",
+                      flex: 1, padding: "9px", borderRadius: 8, fontWeight: 700, fontSize: 15,
+                      cursor: soloLectura ? "default" : "pointer",
                       border: `2px solid ${nivelRiesgo === nivel ? (nivel === "Bajo" ? COLORES.verde : nivel === "Medio" ? COLORES.amarillo : COLORES.rojo) : COLORES.borde}`,
                       background: nivelRiesgo === nivel ? (nivel === "Bajo" ? "#C8E6C9" : nivel === "Medio" ? COLORES.amarilloPastel : COLORES.rojoPastel) : COLORES.blanco,
                       color: nivelRiesgo === nivel ? (nivel === "Bajo" ? "#1B5E20" : nivel === "Medio" ? "#B7770D" : COLORES.rojo) : COLORES.textoMuted,
@@ -897,14 +952,19 @@ const guardar = async () => {
                 ))}
               </div>
             </div>
-
             {/* Estado fitosanitario */}
             <div>
               <label style={labelStyle}>Estado fitosanitario</label>
               <select
+                disabled={soloLectura}
                 value={estadoFitosanitario}
                 onChange={e => setEstadoFitosanitario(e.target.value)}
-                style={{ width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 15, outline: "none", background: COLORES.blanco, boxSizing: "border-box" }}
+                style={{
+                  width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
+                  padding: "9px 12px", fontSize: 15, outline: "none",
+                  background: soloLectura ? "#F5F5F5" : COLORES.blanco,
+                  boxSizing: "border-box",
+                }}
               >
                 <option value="">Seleccione un estado</option>
                 <option>Aprobado</option>
@@ -913,37 +973,19 @@ const guardar = async () => {
                 <option>Rechazado</option>
               </select>
             </div>
-
-            {/* Fechas */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-  <label style={labelStyle}>Fecha de inspección</label>
-  <input
-    type="date"
-    value={fechaInicio}
-    readOnly
-    style={{
-      width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
-      padding: "8px 12px", fontSize: 15, outline: "none",
-      boxSizing: "border-box", background: "#F5F5F5", color: COLORES.textoMuted,
-    }}
-  />
-  <span style={{ fontSize: 12, color: COLORES.textoMuted, marginTop: 4, display: "block" }}>
-    📅 La fecha de finalización se registra automáticamente al guardar.
-  </span>
-</div>
-            </div>
           </div>
         </div>
 
-        {/* BOTÓN GUARDAR */}
-        <button
-          onClick={guardar}
-          disabled={guardando}
-          style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "14px", fontSize: 16, fontWeight: 700, cursor: "pointer", opacity: guardando ? 0.7 : 1 }}
-        >
-          {guardando ? "Guardando..." : "✓ Guardar inspección"}
-        </button>
+        {/* BOTÓN GUARDAR — solo si no es solo lectura */}
+        {!soloLectura && (
+          <button
+            onClick={guardar}
+            disabled={guardando}
+            style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "14px", fontSize: 16, fontWeight: 700, cursor: "pointer", opacity: guardando ? 0.7 : 1 }}
+          >
+            {guardando ? "Guardando..." : "✓ Guardar inspección"}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1084,7 +1126,18 @@ const handleVerFormulario = (insp) => {
 
         {/* Contenido principal */}
         <main style={{ flex: 1, overflow: "auto" }}>
-          {paginaActual === "inicio" && <PaginaInicio inspecciones={inspecciones} onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
+         {paginaActual === "inicio" && (
+  <PaginaInicio 
+    inspecciones={inspecciones} 
+    onVerDetalle={setItemDetalle} 
+    onVerFormulario={handleVerFormulario}
+    onVerProgreso={(insp) => {
+      setInspeccionSeleccionada(insp);
+      setSoloLecturaSeleccionada(true);
+      setPaginaActual("formulario");
+    }}
+  />
+)}
           {paginaActual === "historial" && <PaginaHistorial onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
           {paginaActual === "formulario" && (
   <PaginaFormulario 

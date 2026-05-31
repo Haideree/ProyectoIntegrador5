@@ -444,10 +444,50 @@ const getInspeccionLotes = (req, res) => {
   );
 };
 
+const guardarProgreso = (req, res) => {
+  const { inspeccion_id } = req.params;
+  const { datos } = req.body;
+  
+  dbInspecciones.query(
+    `INSERT INTO inspeccion_progreso (inspeccion_id, datos) VALUES (?, ?)
+     ON DUPLICATE KEY UPDATE datos = ?, ultima_actualizacion = CURRENT_TIMESTAMP`,
+    [inspeccion_id, JSON.stringify(datos), JSON.stringify(datos)],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ mensaje: 'Progreso guardado' });
+    }
+  );
+};
+
+const getProgreso = (req, res) => {
+  const { inspeccion_id } = req.params;
+  dbInspecciones.query(
+    'SELECT * FROM inspeccion_progreso WHERE inspeccion_id = ?',
+    [inspeccion_id],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (results.length === 0) return res.json(null);
+      res.json({ ...results[0], datos: JSON.parse(results[0].datos) });
+    }
+  );
+};
+
+const eliminarProgreso = (req, res) => {
+  const { inspeccion_id } = req.params;
+  dbInspecciones.query(
+    'DELETE FROM inspeccion_progreso WHERE inspeccion_id = ?',
+    [inspeccion_id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ mensaje: 'Progreso eliminado' });
+    }
+  );
+};
+
 module.exports = { 
   getSolicitudes, getSolicitudById, createSolicitud, updateSolicitudEstado, 
   getInspecciones, createInspeccion, getInspeccionesByTecnico, updateInspeccion, 
   getLotesByPredio, getSolicitudesCompletas, getSolicitudesByProductor, 
-  getPrediosByProductor,
-  createInspeccionLotes, getInspeccionLotes
+  getPrediosByProductor, createInspeccionLotes, getInspeccionLotes,
+  guardarProgreso, getProgreso, eliminarProgreso  
 };

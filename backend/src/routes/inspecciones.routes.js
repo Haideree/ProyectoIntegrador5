@@ -5,7 +5,8 @@ const {
   getInspecciones, createInspeccion, getInspeccionesByTecnico, updateInspeccion, 
   getLotesByPredio, getSolicitudesCompletas,
   getPrediosByProductor, getSolicitudesByProductor,
-  createInspeccionLotes, getInspeccionLotes  // ← agrega estas dos
+  createInspeccionLotes, getInspeccionLotes,
+  guardarProgreso, getProgreso, eliminarProgreso  
 } = require('../controllers/inspecciones.controller');
 
 router.get('/solicitudes', getSolicitudes);
@@ -17,7 +18,10 @@ router.post('/solicitudes', createSolicitud);
 router.post('/solicitudes/nueva', createSolicitud);
 router.patch('/solicitudes/:id/estado', updateSolicitudEstado);
 router.get('/inspecciones/tecnico/:tecnico_id', getInspeccionesByTecnico);
-router.get('/inspecciones/:inspeccion_id/lotes', getInspeccionLotes);  // ← antes del GET general
+router.get('/inspecciones/:inspeccion_id/lotes', getInspeccionLotes);
+router.get('/inspecciones/:inspeccion_id/progreso', getProgreso);     
+router.post('/inspecciones/:inspeccion_id/progreso', guardarProgreso); 
+router.delete('/inspecciones/:inspeccion_id/progreso', eliminarProgreso); 
 router.get('/inspecciones', getInspecciones);
 router.post('/inspecciones', createInspeccion);
 router.post('/inspecciones/lotes', createInspeccionLotes);
