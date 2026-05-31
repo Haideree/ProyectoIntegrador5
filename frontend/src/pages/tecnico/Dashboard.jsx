@@ -1098,7 +1098,6 @@ const handleVerFormulario = (insp) => {
   <button key={item.id} onClick={() => {
     if (item.id === "formulario") {
       setInspeccionSeleccionada(null);
-      setSoloLecturaSeleccionada(false);
     }
     setPaginaActual(item.id);
   }} style={{
@@ -1139,28 +1138,25 @@ const handleVerFormulario = (insp) => {
     inspecciones={inspecciones} 
     onVerDetalle={setItemDetalle} 
     onVerFormulario={handleVerFormulario}
-  onVerProgreso={(insp) => {
-  console.log("onVerProgreso llamado", insp);
-  setInspeccionSeleccionada(insp);
-  setSoloLecturaSeleccionada(true);
+onVerProgreso={(insp) => {
+  setInspeccionSeleccionada({ ...insp, _soloLectura: true });
   setTimeout(() => setPaginaActual("formulario"), 0);
 }}
   />
 )}
           {paginaActual === "historial" && <PaginaHistorial onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
-          {paginaActual === "formulario" && (
+     {paginaActual === "formulario" && (
   <PaginaFormulario 
-    key={`${inspeccionSeleccionada?.id}-${soloLecturaSeleccionada}`}
+    key={inspeccionSeleccionada?.id}
     inspecciones={
       inspeccionSeleccionada 
         ? [inspeccionSeleccionada] 
         : inspecciones.filter(i => i.resultado !== 'Completada')
     }
-    modoLectura={soloLecturaSeleccionada}
+    modoLectura={inspeccionSeleccionada?._soloLectura === true}
     onGuardado={() => { 
       cargarInspecciones(); 
       setInspeccionSeleccionada(null);
-      setSoloLecturaSeleccionada(false);
       setPaginaActual("inicio"); 
     }}
   />
