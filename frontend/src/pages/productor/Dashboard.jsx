@@ -81,15 +81,15 @@ const lugarToBack = (f, municipioId) => ({
 // Backend: { id, nombre, numRegistroICA, vereda, lugarProduccion_id, area, cultivos (csv), ... }
 // Frontend: { id, nombre, matricula, vereda, lugarId, lugarNombre, areaHa, cultivos (array), ... }
 const predioToFront = (p, lugares = []) => {
-    const lugarId = p.lugarProduccion_id || p.lugarproduccion_id || p.lugarId || null;
+    const lugarId = p.lugarproduccion_id || p.lugarProduccion_id || p.lugarId || null;
     const lugar = lugares.find(l => l.id === lugarId);
     return {
-        id:          p.id,
-        nombre:      p.nombre,
-        lugarId:     lugarId,
-        lugarNombre: lugar?.nombre || p.lugarNombre || "",
-        matricula:   p.numRegistroICA || p.matricula || "",
-        areaHa:      parseFloat(p.area || p.areaHa || 0),
+        id:           p.id,
+        nombre:       p.nombre,
+        lugarId:      lugarId,
+        lugarNombre:  p.lugarNombre || lugar?.nombre || "",
+        matricula:    p.numRegistroICA || p.matricula || "",   // ← ya está bien
+        areaHa:       parseFloat(p.area || p.areaHa || 0),
         municipio:    p.municipio    || lugar?.municipio    || "",
         departamento: p.departamento || lugar?.departamento || "",
         vereda:       p.vereda       || "",
@@ -2084,7 +2084,8 @@ function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarT
                 mostrarToast("✅ Predio actualizado");
             } else {
                 const res = await apiFetch("/predial/predios", { method: "POST", body: JSON.stringify(predioToBack(datos)) });
-                setPredios(prev => [...prev, { ...datos, id: res.id }]);
+                const predioCreado = await apiFetch(`/predial/predios/${res.id}`);
+                setPredios(prev => [...prev, predioToFront(predioCreado, lugares)]);
                 mostrarToast("✅ Predio creado");
             }
             setModalForm(null);

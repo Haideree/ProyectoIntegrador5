@@ -175,7 +175,7 @@ const getPredios = asyncHandler(async (req, res) => {
             [predio.id]
         );
     }
-
+    console.log("primer predio raw:", JSON.stringify(predios[0]));
     res.json(predios);
 });
 
@@ -201,13 +201,31 @@ const getPredioById = asyncHandler(async (req, res) => {
 });
 
 const createPredio = asyncHandler(async (req, res) => {
-    const {
+    let {
         nombre, numRegistroICA, vereda,
         lugarProduccion_id, lugarproduccion_id,
         propietario_id, area, cultivos,
     } = req.body;
 
     const lugarId = lugarProduccion_id || lugarproduccion_id;
+
+    // ← NUEVO: genera matrícula automática si no viene
+    if (!numRegistroICA) {
+        const anio = new Date().getFullYear();
+        const rows = await query(
+            `SELECT numRegistroICA FROM predio 
+             WHERE numRegistroICA LIKE ? 
+             ORDER BY numRegistroICA DESC LIMIT 1`,
+            [`ICA-${anio}-%`]
+        );
+        let siguiente = 1;
+        if (rows.length > 0) {
+            const ultimo = rows[0].numRegistroICA; // "ICA-2026-0007"
+            const partes = ultimo.split("-");
+            siguiente = parseInt(partes[2]) + 1;
+        }
+        numRegistroICA = `ICA-${anio}-${String(siguiente).padStart(4, "0")}`;
+    }
 
     const result = await query(
         `INSERT INTO predio (nombre, numRegistroICA, vereda, lugarproduccion_id, propietario_id, area)
