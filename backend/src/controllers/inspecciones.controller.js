@@ -421,7 +421,24 @@ const getInspeccionLotes = (req, res) => {
     [inspeccion_id],
     (err, results) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json(results);
+      if (results.length === 0) return res.json([]);
+
+      const loteIds = results.map(r => r.lote_id);
+
+      dbPredial.query(
+        'SELECT id, nombre FROM lote WHERE id IN (?)',
+        [loteIds],
+        (err, lotes) => {
+          if (err) return res.status(500).json({ error: err.message });
+
+          const enriquecidos = results.map(r => {
+            const lote = lotes.find(l => l.id === r.lote_id) || {};
+            return { ...r, nombreLote: lote.nombre || `Lote #${r.lote_id}` };
+          });
+
+          res.json(enriquecidos);
+        }
+      );
     }
   );
 };

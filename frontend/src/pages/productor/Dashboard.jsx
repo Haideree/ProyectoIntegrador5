@@ -1709,7 +1709,7 @@ function ModalInspeccion({ ins, onClose }) {
                             }}>
                                 <div style={{ background: "#A5D6A7", padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
                                     <span style={{ fontSize: 16 }}>🌿</span>
-                                    <span style={{ fontWeight: 700, fontSize: 14, color: "#1B5E20" }}>Lote #{lote.lote_id}</span>
+                                    <span style={{ fontWeight: 700, fontSize: 14, color: "#1B5E20" }}>{lote.nombreLote || `Lote #${lote.lote_id}`}</span>
                                 </div>
                                 <div style={{ padding: "12px 14px", display: "grid", gap: 10 }}>
                                     <div>
