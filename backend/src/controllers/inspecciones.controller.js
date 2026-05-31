@@ -397,16 +397,17 @@ const createInspeccionLotes = (req, res) => {
   const { inspeccion_id, lotes } = req.body;
   if (!lotes?.length) return res.json({ mensaje: 'Sin lotes' });
 
-  const valores = lotes.map(l => [
-    inspeccion_id,
-    l.lote_id,
-    l.observaciones || '',
-    l.plagasDetectadas || ''
-  ]);
+ const valores = lotes.map(l => [
+  inspeccion_id,
+  l.lote_id,
+  l.observaciones || '',
+  l.plagasDetectadas || '',
+  l.cantidadPlantas || null
+]);
 
-  dbInspecciones.query(
-    'INSERT INTO inspeccion_lote (inspeccion_id, lote_id, observaciones, plagasDetectadas) VALUES ?',
-    [valores],
+dbInspecciones.query(
+  'INSERT INTO inspeccion_lote (inspeccion_id, lote_id, observaciones, plagasDetectadas, cantidadPlantas) VALUES ?',
+  [valores],
     (err) => {
       if (err) return res.status(500).json({ error: err.message });
       res.status(201).json({ mensaje: 'Lotes guardados' });

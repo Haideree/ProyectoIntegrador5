@@ -643,14 +643,15 @@ const guardar = async () => {
     if (!res.ok) throw new Error("Error al guardar inspección");
 
     // 2. Guarda el detalle por lote
-    const lotesPayload = lotes.map(lote => {
-      const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""] };
-      return {
-        lote_id:          lote.id,
-        observaciones:    datosLote.observaciones || "",
-        plagasDetectadas: datosLote.plagas.filter(Boolean).join(", ") || "Sin plagas",
-      };
-    });
+  const lotesPayload = lotes.map(lote => {
+  const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""], cantidadPlantas: "" };
+  return {
+    lote_id:          lote.id,
+    observaciones:    datosLote.observaciones || "",
+    plagasDetectadas: datosLote.plagas.filter(Boolean).join(", ") || "Sin plagas",
+    cantidadPlantas:  datosLote.cantidadPlantas || null,
+  };
+});
 
     const res2 = await fetch(
       `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/lotes`,
@@ -841,6 +842,24 @@ const guardar = async () => {
                           >+ Agregar plaga</button>
                         )}
                       </div>
+                      <div>
+  <label style={labelStyle}>🌱 Cantidad de plantas</label>
+  <input
+    type="number"
+    min="0"
+    value={datosLote.cantidadPlantas || ""}
+    onChange={e => setInspeccionLotes(prev => ({
+      ...prev,
+      [lote.id]: { ...prev[lote.id], cantidadPlantas: e.target.value }
+    }))}
+    placeholder="Ej: 120"
+    style={{
+      width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
+      padding: "8px 12px", fontSize: 14, outline: "none",
+      boxSizing: "border-box", background: COLORES.blanco,
+    }}
+  />
+</div>
                     </div>
                   </div>
                 </div>
