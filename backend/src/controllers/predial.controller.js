@@ -450,10 +450,18 @@ const getPrediosConRiesgo = asyncHandler(async (req, res) => {
         )
     );
 
-    const resultado = predios.map(p => ({
-        ...p,
-        nivelRiesgo: inspecciones.find(i => i.predio_id === p.id)?.nivelRiesgo || 'bajo',
-    }));
+    // Capitaliza la primera letra para que coincida con el frontend
+    const capitalizar = (str) => str
+        ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+        : null;
+
+    const resultado = predios.map(p => {
+        const inspeccion = inspecciones.find(i => i.predio_id === p.id);
+        return {
+            ...p,
+            nivelRiesgo: inspeccion ? capitalizar(inspeccion.nivelRiesgo) : null,
+        };
+    });
 
     res.json(resultado);
 });
