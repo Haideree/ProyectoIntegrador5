@@ -552,6 +552,9 @@ function PaginaFormulario({ inspecciones, onGuardado }) {
   const [guardado, setGuardado] = useState(false);
   const [autoGuardado, setAutoGuardado] = useState(null); // null | "guardando" | "guardado"
   const [soloLectura, setSoloLectura] = useState(false);
+  useEffect(() => {
+  setSoloLectura(modoLectura);
+}, [modoLectura]);
   const debounceRef = useRef(null);
 
   // Carga datos del lugar y lotes, luego restaura progreso si existe

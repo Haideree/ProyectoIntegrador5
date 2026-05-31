@@ -467,7 +467,12 @@ const getProgreso = (req, res) => {
     (err, results) => {
       if (err) return res.status(500).json({ error: err.message });
       if (results.length === 0) return res.json(null);
-      res.json({ ...results[0], datos: JSON.parse(results[0].datos) });
+      
+      const row = results[0];
+      // MySQL puede devolver datos ya como objeto o como string según la versión
+      const datos = typeof row.datos === 'string' ? JSON.parse(row.datos) : row.datos;
+      
+      res.json({ ...row, datos });
     }
   );
 };
