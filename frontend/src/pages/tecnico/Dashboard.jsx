@@ -552,7 +552,7 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
   const [autoGuardado, setAutoGuardado] = useState(null); // null | "guardando" | "guardado"
- const soloLectura = !!modoLectura;
+ const soloLectura = !!(inspeccionHoy?._soloLectura);
   const debounceRef = useRef(null);
 
   // Carga datos del lugar y lotes, luego restaura progreso si existe
@@ -609,7 +609,7 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
           });
       })
       .catch(err => console.error(err));
-  }, [inspeccionHoy]);
+ }, [inspeccionHoy?.id, inspeccionHoy?._soloLectura]);
 
   // Autoguardado con debounce de 2 segundos cada vez que cambia algo
   useEffect(() => {
@@ -640,7 +640,8 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
     }, 2000);
 
     return () => clearTimeout(debounceRef.current);
-  }, [inspeccionLotes, nivelRiesgo, estadoFitosanitario]);
+  }, [inspeccionLotes, nivelRiesgo, estadoFitosanitario, inspeccionHoy?.id, inspeccionHoy?._soloLectura]);
+
 
   // Helpers lotes
   const setObsLote = (loteId, valor) =>
@@ -1148,7 +1149,7 @@ onVerProgreso={(insp) => {
      
 {paginaActual === "formulario" && (
   <PaginaFormulario 
-    key={inspeccionSeleccionada?.id}
+  key={`${inspeccionSeleccionada?.id}-${inspeccionSeleccionada?._soloLectura ? 'lectura' : 'edicion'}`}
     inspecciones={
       inspeccionSeleccionada 
         ? [inspeccionSeleccionada] 
