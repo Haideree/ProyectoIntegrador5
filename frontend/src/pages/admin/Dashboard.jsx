@@ -456,7 +456,11 @@ function PaginaUsuarios() {
   const [cargando, setCargando] = useState(true);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [rolModal, setRolModal] = useState(1);
-  const [form, setForm] = useState({ numeroDocumento: "", nombre: "", correo: "", contrasena: "", telefono: "", confirmContrasena: "" });
+  const [form, setForm] = useState({ 
+  numeroDocumento: "", nombre: "", correo: "", 
+  contrasena: "", telefono: "", confirmContrasena: "",
+  tipoTecnico: "", tarjetaProfesional: ""
+});
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState("");
@@ -475,25 +479,29 @@ function PaginaUsuarios() {
   const tecnicos = usuarios.filter(u => u.rol === 'tecnico');
   const admins   = usuarios.filter(u => u.rol === 'admin');
 
-  const abrirModal = (rol_id) => {
-    setRolModal(rol_id);
-    setForm({ numeroDocumento: "", nombre: "", correo: "", contrasena: "", telefono: "" });
-    setErrores({});
-    setExito("");
-    setModalAbierto(true);
-  };
+const abrirModal = (rol_id) => {
+  setRolModal(rol_id);
+  setForm({ 
+    numeroDocumento: "", nombre: "", correo: "", 
+    contrasena: "", telefono: "", confirmContrasena: "",
+    tipoTecnico: "", tarjetaProfesional: ""
+  });
+  setErrores({});
+  setExito("");
+  setModalAbierto(true);
+};
 
-  const validar = () => {
+const validar = () => {
   const e = {};
 
-  // Nombre — no puede contener @ ni parecer un correo
+  // Nombre — solo letras y espacios
   if (!form.nombre.trim()) {
     e.nombre = "Requerido";
-  } else if (/@/.test(form.nombre)) {
-    e.nombre = "El nombre no puede contener una dirección de correo";
+  } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(form.nombre.trim())) {
+    e.nombre = "Solo se permiten letras y espacios";
   }
 
-  // Documento — números o formato pasaporte (letras+números), entre 6 y 20 chars
+  // Documento
   if (!form.numeroDocumento.trim()) {
     e.numeroDocumento = "Requerido";
   } else if (!/^[A-Za-z0-9]{6,20}$/.test(form.numeroDocumento.trim())) {
@@ -507,11 +515,11 @@ function PaginaUsuarios() {
     e.correo = "Ingresa un correo válido";
   }
 
-  // Teléfono — exactamente 10 dígitos
+  // Teléfono
   if (!form.telefono.trim()) {
     e.telefono = "Requerido";
   } else if (!/^\d{10}$/.test(form.telefono.trim())) {
-    e.telefono = "El teléfono debe tener exactamente 10 dígitos";
+    e.telefono = "Exactamente 10 dígitos";
   }
 
   // Contraseña
@@ -519,10 +527,10 @@ function PaginaUsuarios() {
     e.contrasena = "Requerido";
   } else {
     const errs = [];
-    if (form.contrasena.length < 8)          errs.push("mínimo 8 caracteres");
-    if (!/[A-Z]/.test(form.contrasena))      errs.push("una mayúscula");
-    if (!/[a-z]/.test(form.contrasena))      errs.push("una minúscula");
-    if (!/[0-9]/.test(form.contrasena))      errs.push("un número");
+    if (form.contrasena.length < 8)             errs.push("mínimo 8 caracteres");
+    if (!/[A-Z]/.test(form.contrasena))         errs.push("una mayúscula");
+    if (!/[a-z]/.test(form.contrasena))         errs.push("una minúscula");
+    if (!/[0-9]/.test(form.contrasena))         errs.push("un número");
     if (!/[^A-Za-z0-9]/.test(form.contrasena)) errs.push("un símbolo (!@#$%)");
     if (errs.length > 0) e.contrasena = "Debe tener: " + errs.join(" · ");
   }
@@ -534,38 +542,57 @@ function PaginaUsuarios() {
     e.confirmContrasena = "Las contraseñas no coinciden";
   }
 
+  // Tipo de técnico (solo si es técnico)
+  if (rolModal === 3 && !form.tipoTecnico) {
+    e.tipoTecnico = "Selecciona el tipo de técnico";
+  }
+
+  // Tarjeta profesional (solo si es técnico oficial)
+  if (rolModal === 3 && form.tipoTecnico === "oficial" && !form.tarjetaProfesional.trim()) {
+    e.tarjetaProfesional = "Ingresa el número de tarjeta profesional";
+  }
+
   return e;
 };
 
-  const handleEnviar = async () => {
-    const e = validar();
-    setErrores(e);
-    if (Object.keys(e).length > 0) return;
-    setEnviando(true);
-    try {
-      const res = await fetch('https://proyectointegrador5.onrender.com/api/usuarios/crear-con-rol', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-  numeroDocumento: form.numeroDocumento,
-  nombre: form.nombre,
-  correo: form.correo,
-  contrasena: form.contrasena,
-  telefono: form.telefono,
-  rol_id: rolModal 
-})
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al crear');
-      setExito(`${rolModal === 3 ? 'Técnico' : 'Administrador'} creado exitosamente`);
-      cargarUsuarios();
-      setTimeout(() => setModalAbierto(false), 1500);
-    } catch (err) {
-      setErrores({ general: err.message });
-    } finally {
-      setEnviando(false);
-    }
-  };
+const handleEnviar = async () => {
+  const e = validar();
+  setErrores(e);
+  if (Object.keys(e).length > 0) return;
+  setEnviando(true);
+
+  const tarjeta = rolModal === 3
+    ? (form.tipoTecnico === "particular"
+        ? `ICA-PART-${Date.now().toString().slice(-6)}`
+        : form.tarjetaProfesional)
+    : "";
+
+  try {
+    const res = await fetch('https://proyectointegrador5.onrender.com/api/usuarios/crear-con-rol', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        numeroDocumento: form.numeroDocumento,
+        nombre: form.nombre,
+        correo: form.correo,
+        contrasena: form.contrasena,
+        telefono: form.telefono,
+        rol_id: rolModal,
+        tarjetaProfesional: tarjeta,
+        tipoTecnico: rolModal === 3 ? form.tipoTecnico : undefined
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al crear');
+    setExito(`${rolModal === 3 ? 'Técnico' : 'Administrador'} creado exitosamente`);
+    cargarUsuarios();
+    setTimeout(() => setModalAbierto(false), 1500);
+  } catch (err) {
+    setErrores({ general: err.message });
+  } finally {
+    setEnviando(false);
+  }
+};
 
   const inputStyle = { width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 14, color: COLORES.texto, boxSizing: "border-box" };
   const labelStyle = { fontSize: 13, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 4 };
@@ -639,42 +666,105 @@ function PaginaUsuarios() {
               <button onClick={() => setModalAbierto(false)} style={{ background: COLORES.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: COLORES.gris }}>×</button>
             </div>
 
-            {exito ? (
-              <div style={{ textAlign: "center", padding: "24px 0" }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.verde }}>{exito}</div>
-              </div>
-            ) : (
-              <div style={{ display: "grid", gap: 14 }}>
-                {[
-                  { key: "nombre",           label: "Nombre completo",      placeholder: "Ej. Carlos Ramírez" },
-{ key: "numeroDocumento",  label: "Número de documento",  placeholder: "Cédula o pasaporte" },
-{ key: "correo",           label: "Correo electrónico",   placeholder: "correo@ejemplo.com" },
-{ key: "telefono",         label: "Teléfono",             placeholder: "3001234567" },
-{ key: "contrasena",       label: "Contraseña",           placeholder: "Mínimo 8 caracteres", type: "password" },
-{ key: "confirmContrasena",label: "Confirmar contraseña", placeholder: "Repite la contraseña", type: "password" },
-                ].map(({ key, label, placeholder, type = "text" }) => (
-                  <div key={key}>
-                    <label style={labelStyle}>{label}</label>
-                    <input type={type} placeholder={placeholder} value={form[key]}
-                      onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                      style={{ ...inputStyle, borderColor: errores[key] ? COLORES.rojo : COLORES.borde }} />
-                    {errores[key] && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores[key]}</span>}
-                  </div>
-                ))}
-                {errores.general && (
-                  <div style={{ background: COLORES.rojoPastel, color: COLORES.rojo, borderRadius: 8, padding: "10px 14px", fontSize: 14, fontWeight: 600 }}>
-                    ⚠️ {errores.general}
-                  </div>
-                )}
-                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-                  <button onClick={() => setModalAbierto(false)} style={{ flex: 1, background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
-                  <button onClick={handleEnviar} style={{ flex: 1, background: enviando ? COLORES.gris : COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: enviando ? 0.7 : 1 }}>
-                    {enviando ? "Guardando..." : "✓ Registrar"}
-                  </button>
-                </div>
-              </div>
-            )}
+{exito ? (
+  <div style={{ textAlign: "center", padding: "24px 0" }}>
+    <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+    <div style={{ fontSize: 15, fontWeight: 700, color: COLORES.verde }}>{exito}</div>
+  </div>
+) : (
+  <div style={{ display: "grid", gap: 14 }}>
+
+    {/* Selector tipo técnico — solo si es técnico */}
+    {rolModal === 3 && (
+      <div>
+        <label style={labelStyle}>Tipo de técnico</label>
+        <div style={{ display: "flex", gap: 10 }}>
+          {[
+            { val: "particular", label: "🧑‍🌾 Particular" },
+            { val: "oficial",    label: "🏛️ Oficial ICA"  }
+          ].map(op => (
+            <button key={op.val} type="button"
+              onClick={() => {
+                setForm(f => ({ 
+                  ...f, 
+                  tipoTecnico: op.val,
+                  tarjetaProfesional: op.val === "particular" ? `ICA-PART-${Date.now().toString().slice(-6)}` : ""
+                }));
+              }}
+              style={{
+                flex: 1, padding: "10px", borderRadius: 8, fontSize: 14, fontWeight: 700,
+                cursor: "pointer",
+                border: `2px solid ${form.tipoTecnico === op.val ? COLORES.verde : COLORES.borde}`,
+                background: form.tipoTecnico === op.val ? COLORES.verdePastel : COLORES.blanco,
+                color: form.tipoTecnico === op.val ? COLORES.verde : COLORES.textoMuted,
+              }}>
+              {op.label}
+            </button>
+          ))}
+        </div>
+        {errores.tipoTecnico && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores.tipoTecnico}</span>}
+      </div>
+    )}
+
+    {/* Campos del formulario */}
+    {[
+      { key: "nombre",            label: "Nombre completo",       placeholder: "Ej. Carlos Ramírez" },
+      { key: "numeroDocumento",   label: "Número de documento",   placeholder: "Cédula o pasaporte" },
+      { key: "correo",            label: "Correo electrónico",    placeholder: "correo@ejemplo.com" },
+      { key: "telefono",          label: "Teléfono",              placeholder: "3001234567" },
+      { key: "contrasena",        label: "Contraseña",            placeholder: "Mínimo 8 caracteres", type: "password" },
+      { key: "confirmContrasena", label: "Confirmar contraseña",  placeholder: "Repite la contraseña", type: "password" },
+    ].map(({ key, label, placeholder, type = "text" }) => (
+      <div key={key}>
+        <label style={labelStyle}>{label}</label>
+        <input type={type} placeholder={placeholder} value={form[key]}
+          onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+          style={{ ...inputStyle, borderColor: errores[key] ? COLORES.rojo : COLORES.borde }} />
+        {errores[key] && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores[key]}</span>}
+      </div>
+    ))}
+
+    {/* Campo tarjeta profesional — solo si es técnico y se eligió tipo */}
+    {rolModal === 3 && form.tipoTecnico && (
+      <div>
+        <label style={labelStyle}>
+          Tarjeta profesional
+          {form.tipoTecnico === "particular" &&
+            <span style={{ marginLeft: 8, fontSize: 11, background: COLORES.verdePastel, color: COLORES.verde, padding: "1px 7px", borderRadius: 10, fontWeight: 600 }}>
+              Asignada automáticamente
+            </span>
+          }
+        </label>
+        <input
+          readOnly={form.tipoTecnico === "particular"}
+          value={form.tarjetaProfesional}
+          onChange={e => form.tipoTecnico === "oficial" && setForm(f => ({ ...f, tarjetaProfesional: e.target.value }))}
+          placeholder={form.tipoTecnico === "oficial" ? "Ej. ICA-2024-0341" : ""}
+          style={{
+            ...inputStyle,
+            background: form.tipoTecnico === "particular" ? "#F5F5F5" : COLORES.blanco,
+            color: form.tipoTecnico === "particular" ? COLORES.textoMuted : COLORES.texto,
+            borderColor: errores.tarjetaProfesional ? COLORES.rojo : COLORES.borde,
+          }}
+        />
+        {errores.tarjetaProfesional && <span style={{ fontSize: 12, color: COLORES.rojo }}>{errores.tarjetaProfesional}</span>}
+      </div>
+    )}
+
+    {errores.general && (
+      <div style={{ background: COLORES.rojoPastel, color: COLORES.rojo, borderRadius: 8, padding: "10px 14px", fontSize: 14, fontWeight: 600 }}>
+        ⚠️ {errores.general}
+      </div>
+    )}
+
+    <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+      <button onClick={() => setModalAbierto(false)} style={{ flex: 1, background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
+      <button onClick={handleEnviar} style={{ flex: 1, background: enviando ? COLORES.gris : COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "10px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: enviando ? 0.7 : 1 }}>
+        {enviando ? "Guardando..." : "✓ Registrar"}
+      </button>
+    </div>
+  </div>
+)}
           </div>
         </div>
       )}
