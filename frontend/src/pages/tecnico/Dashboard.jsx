@@ -1140,6 +1140,7 @@ const handleVerFormulario = (insp) => {
     onVerDetalle={setItemDetalle} 
     onVerFormulario={handleVerFormulario}
     onVerProgreso={(insp) => {
+      console.log("onVerProgreso llamado", insp);
       setInspeccionSeleccionada(insp);
       setSoloLecturaSeleccionada(true);
       setPaginaActual("formulario");
