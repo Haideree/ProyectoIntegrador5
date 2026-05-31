@@ -1150,6 +1150,7 @@ const handleVerFormulario = (insp) => {
           {paginaActual === "historial" && <PaginaHistorial onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
           {paginaActual === "formulario" && (
   <PaginaFormulario 
+    key={`${inspeccionSeleccionada?.id}-${soloLecturaSeleccionada}`}
     inspecciones={
       inspeccionSeleccionada 
         ? [inspeccionSeleccionada] 
