@@ -724,13 +724,13 @@ useEffect(() => {
   }).catch(err => console.error(err));
 }, []);
 
-const nivelANum = n => n === 'alto' ? 3 : n === 'medio' ? 2 : 1;
+const nivelANum = n => n === 'Alto' ? 3 : n === 'Medio' ? 2 : 1;
 
 const prediosFiltrados = prediosData
   .filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()))
   .filter(p => {
-    if (filtro === "Más afectados")   return p.nivelRiesgo === 'alto' || p.nivelRiesgo === 'medio';
-    if (filtro === "Menos afectados") return p.nivelRiesgo === 'bajo';
+    if (filtro === "Más afectados")   return p.nivelRiesgo === 'Alto' || p.nivelRiesgo === 'Medio';
+    if (filtro === "Menos afectados") return p.nivelRiesgo === 'Bajo';
     return true;
   })
   .sort((a, b) => {
@@ -842,9 +842,9 @@ const prediosFiltrados = prediosData
       </span>
     </td>
     <td style={{ padding: "13px 20px" }}>
-      {p.nivelRiesgo === 'alto'  && <span style={{ background: COLORES.rojoPastel,     color: COLORES.rojo,    fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>🚨 Alerta</span>}
-      {p.nivelRiesgo === 'medio' && <span style={{ background: COLORES.amarilloPastel, color: COLORES.amarillo, fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>⚠️ Alerta media</span>}
-      {p.nivelRiesgo === 'bajo'  && <span style={{ background: COLORES.verdePastel,    color: COLORES.verde,   fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>✅ Sin alertas</span>}
+      {p.nivelRiesgo === 'Alto'  && <span style={{ background: COLORES.rojoPastel,     color: COLORES.rojo,    fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>🚨 Alerta</span>}
+      {p.nivelRiesgo === 'Medio' && <span style={{ background: COLORES.amarilloPastel, color: COLORES.amarillo, fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>⚠️ Alerta media</span>}
+      {p.nivelRiesgo === 'Bajo'  && <span style={{ background: COLORES.verdePastel,    color: COLORES.verde,   fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>✅ Sin alertas</span>}
       {!p.nivelRiesgo            && <span style={{ background: COLORES.grisPastel,     color: COLORES.gris,    fontSize: 15, fontWeight: 700, padding: "3px 10px", borderRadius: 20 }}>Sin inspección</span>}
     </td>
   </tr>
