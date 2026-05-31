@@ -1139,12 +1139,12 @@ const handleVerFormulario = (insp) => {
     inspecciones={inspecciones} 
     onVerDetalle={setItemDetalle} 
     onVerFormulario={handleVerFormulario}
-    onVerProgreso={(insp) => {
-      console.log("onVerProgreso llamado", insp);
-      setInspeccionSeleccionada(insp);
-      setSoloLecturaSeleccionada(true);
-      setPaginaActual("formulario");
-    }}
+  onVerProgreso={(insp) => {
+  console.log("onVerProgreso llamado", insp);
+  setInspeccionSeleccionada(insp);
+  setSoloLecturaSeleccionada(true);
+  setTimeout(() => setPaginaActual("formulario"), 0);
+}}
   />
 )}
           {paginaActual === "historial" && <PaginaHistorial onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
