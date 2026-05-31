@@ -455,582 +455,353 @@ function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
 function PaginaFormulario({ inspecciones, onGuardado }) {
   const inspeccionHoy = inspecciones?.[0] || null;
 
-  const [datos, setDatos] = useState({
-    lugar: "",
-    departamento: "",
-    municipio: "",
-    vereda: "",
-    cultivo: "",
-    plantas: "",
-    lotes: "",
-    observaciones: "",
-    fechaInicio: "",
-    fechaFin: "",
-    plagaDetectada: "",
-    nivelRiesgo: "Bajo",
-    estadoFitosanitario: "",
-  });
+  const PLAGAS_LISTA = ["Broca","Roya","Gusano Cogollero","Mosca Blanca","Pulgón","Trips","Ácaros","Sin plagas"];
 
+  const [infoLugar, setInfoLugar] = useState({
+    lugar: "", departamento: "", municipio: "", vereda: "", cultivos: [],
+  });
+  const [lotes, setLotes] = useState([]);
+  const [inspeccionLotes, setInspeccionLotes] = useState({});
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [nivelRiesgo, setNivelRiesgo] = useState("Bajo");
+  const [estadoFitosanitario, setEstadoFitosanitario] = useState("");
   const [errores, setErrores] = useState({});
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
 
   useEffect(() => {
-    if (inspeccionHoy) {
-      fetch(
-        `https://proyectointegrador5.onrender.com/api/inspecciones/lotes/predio/${inspeccionHoy.predio_id}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          setDatos((prev) => ({
-            ...prev,
-            lugar: inspeccionHoy.lugar || "",
-            departamento: inspeccionHoy.departamento || "",
-            municipio: inspeccionHoy.municipio || "",
-            vereda: inspeccionHoy.vereda || "",
-            cultivo: inspeccionHoy.cultivos || "",
-            lotes: data.length.toString(),
-          }));
-        })
-        .catch((err) => console.error(err));
-    }
+    if (!inspeccionHoy) return;
+    // Carga datos del lugar e info general
+    setInfoLugar({
+      lugar:        inspeccionHoy.lugar        || inspeccionHoy.lugarproduccion || "",
+      departamento: inspeccionHoy.departamento || "",
+      municipio:    inspeccionHoy.municipio    || "",
+      vereda:       inspeccionHoy.vereda       || "",
+      cultivos:     inspeccionHoy.cultivos
+                      ? inspeccionHoy.cultivos.split(",").map(c => c.trim())
+                      : [],
+    });
+    // Carga lotes del predio
+    fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/lotes/predio/${inspeccionHoy.predio_id}`)
+      .then(res => res.json())
+      .then(data => {
+        const lotesArr = Array.isArray(data) ? data : [];
+        setLotes(lotesArr);
+        // Inicializa estado por lote
+        const init = {};
+        lotesArr.forEach(l => {
+          init[l.id] = { observaciones: "", plagas: [""] };
+        });
+        setInspeccionLotes(init);
+      })
+      .catch(err => console.error(err));
   }, [inspeccionHoy]);
 
-  if (!inspeccionHoy)
-    return (
-      <div
-        style={{
-          padding: "28px 32px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: 400,
-        }}
-      >
-        <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+  // Helpers para manejar el estado por lote
+  const setObsLote = (loteId, valor) =>
+    setInspeccionLotes(prev => ({ ...prev, [loteId]: { ...prev[loteId], observaciones: valor } }));
 
-        <h2
-          style={{
-            color: COLORES.texto,
-            fontWeight: 700,
-            margin: 0,
-          }}
-        >
-          No hay inspecciones para hoy
-        </h2>
+  const setPlagaLote = (loteId, index, valor) =>
+    setInspeccionLotes(prev => {
+      const plagas = [...prev[loteId].plagas];
+      plagas[index] = valor;
+      return { ...prev, [loteId]: { ...prev[loteId], plagas } };
+    });
 
-        <p
-          style={{
-            color: COLORES.textoMuted,
-            marginTop: 8,
-          }}
-        >
-          Cuando tengas una inspección asignada para hoy aparecerá aquí.
-        </p>
-      </div>
-    );
+  const agregarPlagaLote = (loteId) =>
+    setInspeccionLotes(prev => {
+      const plagas = prev[loteId].plagas;
+      if (plagas.length >= 5) return prev;
+      return { ...prev, [loteId]: { ...prev[loteId], plagas: [...plagas, ""] } };
+    });
+
+  const eliminarPlagaLote = (loteId, index) =>
+    setInspeccionLotes(prev => {
+      const plagas = prev[loteId].plagas.filter((_, i) => i !== index);
+      return { ...prev, [loteId]: { ...prev[loteId], plagas: plagas.length ? plagas : [""] } };
+    });
+
+  if (!inspeccionHoy) return (
+    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+      <h2 style={{ color: COLORES.texto, fontWeight: 700, margin: 0 }}>No hay inspecciones para hoy</h2>
+      <p style={{ color: COLORES.textoMuted, marginTop: 8 }}>Cuando tengas una inspección asignada aparecerá aquí.</p>
+    </div>
+  );
 
   const validar = () => {
-    let e = {};
-
-    if (!datos.plantas) e.plantas = "Requerido";
-    if (!datos.observaciones) e.observaciones = "Requerido";
-    if (!datos.fechaInicio) e.fechaInicio = "Requerido";
-    if (!datos.fechaFin) e.fechaFin = "Requerido";
-
+    const e = {};
+    if (!fechaInicio) e.fechaInicio = "Requerido";
+    if (!fechaFin)    e.fechaFin    = "Requerido";
     setErrores(e);
-
     return Object.keys(e).length === 0;
   };
 
-  const guardar = async () => {
-    if (!validar()) return;
+const guardar = async () => {
+  if (!validar()) return;
+  setGuardando(true);
+  try {
+    // 1. Actualiza la inspección principal
+    const res = await fetch(
+      `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fechaInspeccion:     fechaInicio,
+          fechaFin:            fechaFin,
+          observaciones:       "Inspección por lotes completada",
+          resultado:           "Completada",
+          estado:              "completada",
+          plagaDetectada:      "Ver detalle por lote",
+          nivelRiesgo,
+          estadoFitosanitario,
+        }),
+      }
+    );
+    if (!res.ok) throw new Error("Error al guardar inspección");
 
-    setGuardando(true);
+    // 2. Guarda el detalle por lote
+    const lotesPayload = lotes.map(lote => {
+      const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""] };
+      return {
+        lote_id:          lote.id,
+        observaciones:    datosLote.observaciones || "",
+        plagasDetectadas: datosLote.plagas.filter(Boolean).join(", ") || "Sin plagas",
+      };
+    });
 
-    try {
-      const res = await fetch(
-        `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            fechaInspeccion:     datos.fechaInicio,
-            fechaFin:            datos.fechaFin,
-            observaciones:       datos.observaciones,
-            resultado:           "Completada",
-            estado:              "completada",
-            plagaDetectada:      datos.plagaDetectada,
-            nivelRiesgo:         datos.nivelRiesgo,
-            estadoFitosanitario: datos.estadoFitosanitario,
-            cantidadPlantas:     datos.plantas,
-          }),
-        }
-      );
+    const res2 = await fetch(
+      `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/lotes`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inspeccion_id: inspeccionHoy.id,
+          lotes:         lotesPayload,
+        }),
+      }
+    );
+    if (!res2.ok) throw new Error("Error al guardar lotes");
 
-      if (!res.ok) throw new Error("Error al guardar");
+    setGuardado(true);
+    setTimeout(() => onGuardado(), 2000);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setGuardando(false);
+  }
+};
 
-      setGuardado(true);
-setTimeout(() => onGuardado(), 2000);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setGuardando(false);
-    }
+  if (guardado) return (
+    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+      <h2 style={{ color: COLORES.verde, fontWeight: 700, margin: 0 }}>Inspección guardada</h2>
+      <p style={{ color: COLORES.textoMuted, marginTop: 8 }}>La inspección ha sido registrada exitosamente.</p>
+    </div>
+  );
+
+  // Estilo reutilizable para campos readonly
+  const inputReadonly = {
+    width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
+    padding: "8px 12px", fontSize: 15, color: COLORES.textoMuted,
+    background: "#F5F5F5", boxSizing: "border-box", outline: "none",
   };
 
-  if (guardado)
-    return (
-      <div
-        style={{
-          padding: "28px 32px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: 400,
-        }}
-      >
-        <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+  const labelStyle = {
+    fontSize: 13, color: COLORES.textoMuted, fontWeight: 600,
+    textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6,
+  };
 
-        <h2
-          style={{
-            color: COLORES.verde,
-            fontWeight: 700,
-            margin: 0,
-          }}
-        >
-          Inspección guardada
-        </h2>
-
-        <p
-          style={{
-            color: COLORES.textoMuted,
-            marginTop: 8,
-          }}
-        >
-          La inspección ha sido registrada exitosamente.
-        </p>
-      </div>
-    );
+  const seccionHeader = (texto) => (
+    <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.verde, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ width: 3, height: 14, background: COLORES.verde, borderRadius: 2 }} />
+      {texto}
+    </div>
+  );
 
   return (
     <div style={{ padding: "24px 28px" }}>
       {/* HEADER */}
-      <div
-        style={{
-          width: "100%",
-          background: "#A5D6A7",
-          padding: "14px 0",
-          marginBottom: 24,
-          borderBottom: `1px solid ${COLORES.borde}`,
-          display: "flex",
-          alignItems: "center",
-          position: "relative",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: 4,
-            height: "100%",
-            background: COLORES.verde,
-            borderTopRightRadius: 4,
-            borderBottomRightRadius: 4,
-          }}
-        />
-
+      <div style={{ width: "100%", background: "#A5D6A7", padding: "14px 0", marginBottom: 24, borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", position: "relative" }}>
+        <div style={{ position: "absolute", left: 0, top: 0, width: 4, height: "100%", background: COLORES.verde, borderTopRightRadius: 4, borderBottomRightRadius: 4 }} />
         <div style={{ paddingLeft: 16 }}>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 16,
-              fontWeight: 700,
-              color: "#1B5E20",
-            }}
-          >
-            Formulario de inspección · {inspeccionHoy.lugar}
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1B5E20" }}>
+            Formulario de inspección · {infoLugar.lugar}
           </h2>
         </div>
       </div>
 
-      {/* FORMULARIO ÚNICO */}
-      <div
-        style={{
-          maxWidth: 680,
-          margin: "0 auto",
-          background: COLORES.blanco,
-          borderRadius: 12,
-          border: `1px solid ${COLORES.borde}`,
-          padding: 24,
-          display: "grid",
-          gap: 28,
-        }}
-      >
-        {/* INFORMACIÓN GENERAL */}
-        <div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: COLORES.verde,
-              textTransform: "uppercase",
-              letterSpacing: 1,
-              marginBottom: 16,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <div
-              style={{
-                width: 3,
-                height: 14,
-                background: COLORES.verde,
-                borderRadius: 2,
-              }}
-            />
+      <div style={{ maxWidth: 720, margin: "0 auto", display: "grid", gap: 20 }}>
 
-            Información general
-          </div>
-
-          <div style={{ display: "grid", gap: 16 }}>
-            <CampoForm
-              label="Lugar de producción"
-              value={datos.lugar}
-              onChange={() => {}}
-              disabled
-            />
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 12,
-              }}
-            >
-              <CampoForm
-                label="Departamento"
-                value={datos.departamento}
-                onChange={() => {}}
-                disabled
-              />
-
-              <CampoForm
-                label="Municipio"
-                value={datos.municipio}
-                onChange={() => {}}
-                disabled
-              />
-            </div>
-
-            <CampoForm
-              label="Vereda"
-              value={datos.vereda}
-              onChange={() => {}}
-              disabled
-            />
-          </div>
-        </div>
-
-        {/* CULTIVOS */}
-        <div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: COLORES.verde,
-              textTransform: "uppercase",
-              letterSpacing: 1,
-              marginBottom: 16,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <div
-              style={{
-                width: 3,
-                height: 14,
-                background: COLORES.verde,
-                borderRadius: 2,
-              }}
-            />
-
-            Cultivos
-          </div>
-
-          <div style={{ display: "grid", gap: 16 }}>
-            <CampoForm
-              label="Cultivos"
-              value={datos.cultivo}
-              onChange={() => {}}
-              disabled
-            />
-
-            <CampoForm
-              label="Cantidad de plantas totales"
-              tipo="number"
-              value={datos.plantas}
-              onChange={(v) =>
-                setDatos({
-                  ...datos,
-                  plantas: v,
-                })
-              }
-              placeholder="Ej: 255"
-              error={errores.plantas}
-            />
-
-            <CampoForm
-              label="Cantidad de lotes"
-              value={datos.lotes}
-              onChange={() => {}}
-              disabled
-            />
-          </div>
-        </div>
-
-        {/* OBSERVACIONES */}
-        <div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: COLORES.verde,
-              textTransform: "uppercase",
-              letterSpacing: 1,
-              marginBottom: 16,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <div
-              style={{
-                width: 3,
-                height: 14,
-                background: COLORES.verde,
-                borderRadius: 2,
-              }}
-            />
-
-            Observaciones y resultado
-          </div>
-
-          <div style={{ display: "grid", gap: 16 }}>
-            {/* OBSERVACIONES */}
+        {/* ── SECCIÓN 1: INFORMACIÓN GENERAL ── */}
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
+          {seccionHeader("Información general")}
+          <div style={{ display: "grid", gap: 14 }}>
             <div>
-              <label
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: COLORES.textoMuted,
-                  display: "block",
-                  marginBottom: 6,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                Observaciones *
-              </label>
+              <label style={labelStyle}>Lugar de producción</label>
+              <input readOnly value={infoLugar.lugar} style={inputReadonly} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Departamento</label>
+                <input readOnly value={infoLugar.departamento} style={inputReadonly} />
+              </div>
+              <div>
+                <label style={labelStyle}>Municipio</label>
+                <input readOnly value={infoLugar.municipio} style={inputReadonly} />
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>Vereda</label>
+              <input readOnly value={infoLugar.vereda} style={inputReadonly} />
+            </div>
+          </div>
+        </div>
 
-              <textarea
-                value={datos.observaciones}
-                onChange={(e) =>
-                  setDatos({
-                    ...datos,
-                    observaciones: e.target.value,
-                  })
-                }
-                placeholder="Escriba las observaciones..."
-                style={{
-                  width: "100%",
-                  border: `1px solid ${
-                    errores.observaciones
-                      ? COLORES.rojo
-                      : COLORES.borde
-                  }`,
-                  borderRadius: 8,
-                  padding: "10px 12px",
-                  fontSize: 15,
-                  color: COLORES.texto,
-                  minHeight: 100,
-                  resize: "vertical",
-                  fontFamily: "inherit",
-                  boxSizing: "border-box",
-                }}
-              />
-
-              {errores.observaciones && (
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: COLORES.rojo,
-                  }}
-                >
-                  Requerido
+        {/* ── SECCIÓN 2: CULTIVOS ── */}
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
+          {seccionHeader("Cultivos del predio")}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {infoLugar.cultivos.length > 0 ? infoLugar.cultivos.map((c, i) => {
+              const cols = [["#C8E6C9","#1B5E20"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#F3E5F5","#6A1B9A"]];
+              const [bg, col] = cols[i % 4];
+              return (
+                <span key={i} style={{ background: bg, color: col, fontSize: 14, fontWeight: 700, padding: "6px 16px", borderRadius: 20 }}>
+                  🌱 {c}
                 </span>
-              )}
-            </div>
+              );
+            }) : (
+              <span style={{ fontSize: 14, color: COLORES.textoMuted }}>Sin cultivos registrados</span>
+            )}
+          </div>
+        </div>
 
-            {/* PLAGA */}
-            <div>
-              <label
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: COLORES.textoMuted,
-                  display: "block",
-                  marginBottom: 6,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                🦗 Plaga detectada
-              </label>
-
-              <select
-                value={datos.plagaDetectada}
-                onChange={(e) =>
-                  setDatos({
-                    ...datos,
-                    plagaDetectada: e.target.value,
-                  })
-                }
-                style={{
-                  width: "100%",
+        {/* ── SECCIÓN 3: INSPECCIÓN POR LOTE ── */}
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
+          {seccionHeader(`Inspección por lote (${lotes.length} lotes)`)}
+          {lotes.length === 0 && (
+            <p style={{ color: COLORES.textoMuted, fontSize: 14 }}>No se encontraron lotes para este predio.</p>
+          )}
+          <div style={{ display: "grid", gap: 16 }}>
+            {lotes.map((lote, idx) => {
+              const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""] };
+              return (
+                <div key={lote.id} style={{
+                  borderRadius: 10,
                   border: `1px solid ${COLORES.borde}`,
-                  borderRadius: 8,
-                  padding: "9px 12px",
-                  fontSize: 15,
-                  outline: "none",
-                  background: COLORES.blanco,
-                  boxSizing: "border-box",
-                }}
-              >
-                <option value="">Seleccione una plaga</option>
-                <option>Broca</option>
-                <option>Roya</option>
-                <option>Gusano Cogollero</option>
-                <option>Mosca Blanca</option>
-                <option>Pulgón</option>
-                <option>Trips</option>
-                <option>Ácaros</option>
-                <option>Sin plagas</option>
-              </select>
-            </div>
+                  overflow: "hidden",
+                }}>
+                  {/* Header del lote */}
+                  <div style={{ background: "#A5D6A7", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 18 }}>🌿</span>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: "#1B5E20" }}>{lote.nombre}</span>
+                    {lote.cultivos && (
+                      <span style={{ fontSize: 13, color: "#2E7D32", marginLeft: 4 }}>· {lote.cultivos}</span>
+                    )}
+                  </div>
 
-            {/* NIVEL RIESGO */}
+                  <div style={{ padding: 16, display: "grid", gap: 14 }}>
+                    {/* Observaciones del lote */}
+                    <div>
+                      <label style={labelStyle}>Observaciones (opcional)</label>
+                      <textarea
+                        value={datosLote.observaciones}
+                        onChange={e => setObsLote(lote.id, e.target.value)}
+                        placeholder="Escriba observaciones para este lote..."
+                        style={{
+                          width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
+                          padding: "10px 12px", fontSize: 14, color: COLORES.texto,
+                          minHeight: 80, resize: "vertical", fontFamily: "inherit",
+                          boxSizing: "border-box", outline: "none",
+                        }}
+                      />
+                    </div>
+
+                    {/* Plagas del lote */}
+                    <div>
+                      <label style={labelStyle}>🦗 Plagas detectadas (máx. 5)</label>
+                      <div style={{ display: "grid", gap: 8 }}>
+                        {datosLote.plagas.map((plaga, pIdx) => (
+                          <div key={pIdx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            <select
+                              value={plaga}
+                              onChange={e => setPlagaLote(lote.id, pIdx, e.target.value)}
+                              style={{
+                                flex: 1, border: `1px solid ${COLORES.borde}`, borderRadius: 8,
+                                padding: "8px 12px", fontSize: 14, outline: "none",
+                                background: COLORES.blanco, boxSizing: "border-box",
+                              }}
+                            >
+                              <option value="">Seleccione una plaga...</option>
+                              {PLAGAS_LISTA.map(p => <option key={p} value={p}>{p}</option>)}
+                            </select>
+                            {datosLote.plagas.length > 1 && (
+                              <button
+                                onClick={() => eliminarPlagaLote(lote.id, pIdx)}
+                                style={{
+                                  background: COLORES.rojoPastel, color: COLORES.rojo,
+                                  border: "none", borderRadius: 7, width: 32, height: 36,
+                                  cursor: "pointer", fontWeight: 700, fontSize: 16, flexShrink: 0,
+                                }}
+                              >×</button>
+                            )}
+                          </div>
+                        ))}
+                        {datosLote.plagas.length < 5 && (
+                          <button
+                            onClick={() => agregarPlagaLote(lote.id)}
+                            style={{
+                              background: COLORES.azulPastel, color: COLORES.azul,
+                              border: `1px dashed ${COLORES.azul}`, borderRadius: 8,
+                              padding: "7px 14px", fontSize: 13, fontWeight: 700,
+                              cursor: "pointer", width: "fit-content",
+                            }}
+                          >+ Agregar plaga</button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── SECCIÓN 4: RESULTADO FINAL ── */}
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
+          {seccionHeader("Resultado de la inspección")}
+          <div style={{ display: "grid", gap: 16 }}>
+
+            {/* Nivel de riesgo */}
             <div>
-              <label
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: COLORES.textoMuted,
-                  display: "block",
-                  marginBottom: 6,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                ⚠️ Nivel de riesgo
-              </label>
-
+              <label style={labelStyle}>⚠️ Nivel de riesgo</label>
               <div style={{ display: "flex", gap: 10 }}>
-                {["Bajo", "Medio", "Alto"].map((nivel) => (
+                {["Bajo","Medio","Alto"].map(nivel => (
                   <button
                     key={nivel}
-                    onClick={() =>
-                      setDatos({
-                        ...datos,
-                        nivelRiesgo: nivel,
-                      })
-                    }
+                    onClick={() => setNivelRiesgo(nivel)}
                     style={{
-                      flex: 1,
-                      padding: "9px",
-                      borderRadius: 8,
-                      border: `2px solid ${
-                        datos.nivelRiesgo === nivel
-                          ? nivel === "Bajo"
-                            ? COLORES.verde
-                            : nivel === "Medio"
-                            ? COLORES.amarillo
-                            : COLORES.rojo
-                          : COLORES.borde
-                      }`,
-                      background:
-                        datos.nivelRiesgo === nivel
-                          ? nivel === "Bajo"
-                            ? "#C8E6C9"
-                            : nivel === "Medio"
-                            ? COLORES.amarilloPastel
-                            : COLORES.rojoPastel
-                          : COLORES.blanco,
-                      color:
-                        datos.nivelRiesgo === nivel
-                          ? nivel === "Bajo"
-                            ? "#1B5E20"
-                            : nivel === "Medio"
-                            ? "#B7770D"
-                            : COLORES.rojo
-                          : COLORES.textoMuted,
-                      fontWeight: 700,
-                      fontSize: 15,
-                      cursor: "pointer",
+                      flex: 1, padding: "9px", borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer",
+                      border: `2px solid ${nivelRiesgo === nivel ? (nivel === "Bajo" ? COLORES.verde : nivel === "Medio" ? COLORES.amarillo : COLORES.rojo) : COLORES.borde}`,
+                      background: nivelRiesgo === nivel ? (nivel === "Bajo" ? "#C8E6C9" : nivel === "Medio" ? COLORES.amarilloPastel : COLORES.rojoPastel) : COLORES.blanco,
+                      color: nivelRiesgo === nivel ? (nivel === "Bajo" ? "#1B5E20" : nivel === "Medio" ? "#B7770D" : COLORES.rojo) : COLORES.textoMuted,
                     }}
                   >
-                    {nivel === "Bajo"
-                      ? "✅"
-                      : nivel === "Medio"
-                      ? "⚠️"
-                      : "🚨"}{" "}
-                    {nivel}
+                    {nivel === "Bajo" ? "✅" : nivel === "Medio" ? "⚠️" : "🚨"} {nivel}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* ESTADO */}
+            {/* Estado fitosanitario */}
             <div>
-              <label
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: COLORES.textoMuted,
-                  display: "block",
-                  marginBottom: 6,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                Estado fitosanitario
-              </label>
-
+              <label style={labelStyle}>Estado fitosanitario</label>
               <select
-                value={datos.estadoFitosanitario}
-                onChange={(e) =>
-                  setDatos({
-                    ...datos,
-                    estadoFitosanitario: e.target.value,
-                  })
-                }
-                style={{
-                  width: "100%",
-                  border: `1px solid ${COLORES.borde}`,
-                  borderRadius: 8,
-                  padding: "9px 12px",
-                  fontSize: 15,
-                  outline: "none",
-                  background: COLORES.blanco,
-                  boxSizing: "border-box",
-                }}
+                value={estadoFitosanitario}
+                onChange={e => setEstadoFitosanitario(e.target.value)}
+                style={{ width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 15, outline: "none", background: COLORES.blanco, boxSizing: "border-box" }}
               >
                 <option value="">Seleccione un estado</option>
                 <option>Aprobado</option>
@@ -1040,58 +811,29 @@ setTimeout(() => onGuardado(), 2000);
               </select>
             </div>
 
-            {/* FECHAS */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 12,
-              }}
-            >
-              <CampoForm
-                label="Fecha de inicio"
-                tipo="date"
-                value={datos.fechaInicio}
-                onChange={(v) =>
-                  setDatos({
-                    ...datos,
-                    fechaInicio: v,
-                  })
-                }
-                error={errores.fechaInicio}
-              />
-
-              <CampoForm
-                label="Fecha de finalización"
-                tipo="date"
-                value={datos.fechaFin}
-                onChange={(v) =>
-                  setDatos({
-                    ...datos,
-                    fechaFin: v,
-                  })
-                }
-                error={errores.fechaFin}
-              />
+            {/* Fechas */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Fecha de inicio *</label>
+                <input type="date" value={fechaInicio} onChange={e => { setFechaInicio(e.target.value); setErrores(er => ({ ...er, fechaInicio: "" })); }}
+                  style={{ width: "100%", border: `1px solid ${errores.fechaInicio ? COLORES.rojo : COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 15, outline: "none", boxSizing: "border-box" }} />
+                {errores.fechaInicio && <span style={{ fontSize: 13, color: COLORES.rojo }}>Requerido</span>}
+              </div>
+              <div>
+                <label style={labelStyle}>Fecha de finalización *</label>
+                <input type="date" value={fechaFin} onChange={e => { setFechaFin(e.target.value); setErrores(er => ({ ...er, fechaFin: "" })); }}
+                  style={{ width: "100%", border: `1px solid ${errores.fechaFin ? COLORES.rojo : COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 15, outline: "none", boxSizing: "border-box" }} />
+                {errores.fechaFin && <span style={{ fontSize: 13, color: COLORES.rojo }}>Requerido</span>}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* BOTÓN */}
+        {/* BOTÓN GUARDAR */}
         <button
           onClick={guardar}
           disabled={guardando}
-          style={{
-            background: COLORES.verde,
-            color: COLORES.blanco,
-            border: "none",
-            borderRadius: 8,
-            padding: "14px",
-            fontSize: 16,
-            fontWeight: 700,
-            cursor: "pointer",
-            opacity: guardando ? 0.7 : 1,
-          }}
+          style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "14px", fontSize: 16, fontWeight: 700, cursor: "pointer", opacity: guardando ? 0.7 : 1 }}
         >
           {guardando ? "Guardando..." : "✓ Guardar inspección"}
         </button>

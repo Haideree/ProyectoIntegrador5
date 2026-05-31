@@ -393,9 +393,43 @@ const getSolicitudesByProductor = (req, res) => {
   );
 };
 
+const createInspeccionLotes = (req, res) => {
+  const { inspeccion_id, lotes } = req.body;
+  if (!lotes?.length) return res.json({ mensaje: 'Sin lotes' });
+
+  const valores = lotes.map(l => [
+    inspeccion_id,
+    l.lote_id,
+    l.observaciones || '',
+    l.plagasDetectadas || ''
+  ]);
+
+  dbInspecciones.query(
+    'INSERT INTO inspeccion_lote (inspeccion_id, lote_id, observaciones, plagasDetectadas) VALUES ?',
+    [valores],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.status(201).json({ mensaje: 'Lotes guardados' });
+    }
+  );
+};
+
+const getInspeccionLotes = (req, res) => {
+  const { inspeccion_id } = req.params;
+  dbInspecciones.query(
+    'SELECT * FROM inspeccion_lote WHERE inspeccion_id = ?',
+    [inspeccion_id],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(results);
+    }
+  );
+};
 
 module.exports = { 
   getSolicitudes, getSolicitudById, createSolicitud, updateSolicitudEstado, 
   getInspecciones, createInspeccion, getInspeccionesByTecnico, updateInspeccion, 
-  getLotesByPredio, getSolicitudesCompletas, getSolicitudesByProductor, getPrediosByProductor
+  getLotesByPredio, getSolicitudesCompletas, getSolicitudesByProductor, 
+  getPrediosByProductor,
+  createInspeccionLotes, getInspeccionLotes
 };
