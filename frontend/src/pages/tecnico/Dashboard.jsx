@@ -532,6 +532,8 @@ function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
 
 function PaginaFormulario({ inspecciones, onGuardado }) {
   const inspeccionHoy = inspecciones?.[0] || null;
+  console.log("inspecciones recibidas:", inspecciones);
+  console.log("inspeccionHoy:", inspeccionHoy);
 
   const PLAGAS_LISTA = ["Broca","Roya","Gusano Cogollero","Mosca Blanca","Pulgón","Trips","Ácaros","Sin plagas"];
 
@@ -1058,13 +1060,18 @@ const handleVerFormulario = (insp) => {
           {paginaActual === "inicio" && <PaginaInicio inspecciones={inspecciones} onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
           {paginaActual === "historial" && <PaginaHistorial onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
           {paginaActual === "formulario" && (
-<PaginaFormulario 
-  inspecciones={inspeccionSeleccionada ? [inspeccionSeleccionada] : []}
-  onGuardado={() => { 
-    cargarInspecciones(); 
-    setPaginaActual("inicio"); 
-  }}
-/>
+  <PaginaFormulario 
+    inspecciones={
+      inspeccionSeleccionada 
+        ? [inspeccionSeleccionada] 
+        : inspecciones.filter(i => i.resultado !== 'Completada')
+    }
+    onGuardado={() => { 
+      cargarInspecciones(); 
+      setInspeccionSeleccionada(null);
+      setPaginaActual("inicio"); 
+    }}
+  />
 )}
         </main>
       </div>
