@@ -381,20 +381,20 @@ function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario }) {
           <div style={{ width: 4, height: 22, background: COLORES.verde, borderRadius: 2 }} />
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: COLORES.texto }}>Lista de inspecciones por realizar</h2>
         </div>
-        <div style={{ display: "grid", gap: 10 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1.4fr auto auto", gap: 8, padding: "6px 14px", fontSize: 13, fontWeight: 700, color: COLORES.textoMuted, textTransform: "uppercase", letterSpacing: 0.5 }}>
-            <span>Lugar de producción</span><span>Fecha de inspección</span><span>Estado</span><span>Detalles</span><span>Formulario</span>
-          </div>
-          {inspecciones.filter(insp => insp.resultado !== 'Completada').map(insp => (
-            <div key={insp.id} style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1.4fr auto auto", gap: 8, alignItems: "center", padding: "12px 14px", background: COLORES.blanco, borderRadius: 10, border: `1px solid ${COLORES.borde}` }}>
-              <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{insp.lugarproduccion}</span>
-              <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}</span>
-              <Badge estado={insp.estado} />
-              <button onClick={() => onVerDetalle(insp)} style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
-              <button onClick={() => onVerFormulario(insp)} style={{ background: insp.disponible ? COLORES.verde : COLORES.grisPastel, color: insp.disponible ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
-            </div>
-          ))}
-        </div>
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
+  <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1.4fr auto auto", gap: 8, padding: "10px 18px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
+    <span>Lugar de producción</span><span>Fecha de inspección</span><span>Estado</span><span>Detalles</span><span>Formulario</span>
+  </div>
+  {inspecciones.filter(insp => insp.resultado !== 'Completada').map(insp => (
+    <div key={insp.id} style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1.4fr auto auto", gap: 8, alignItems: "center", padding: "12px 18px", borderTop: `1px solid ${COLORES.borde}`, background: COLORES.blanco }}>
+      <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{insp.lugarproduccion}</span>
+      <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}</span>
+      <Badge estado={insp.estado} />
+      <button onClick={() => onVerDetalle(insp)} style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
+      <button onClick={() => onVerFormulario(insp)} style={{ background: insp.disponible ? COLORES.verde : COLORES.grisPastel, color: insp.disponible ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
+    </div>
+  ))}
+</div>
       </div>
     </div>
   );
