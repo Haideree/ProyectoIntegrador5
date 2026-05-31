@@ -700,7 +700,10 @@ export default function DashboardAdmin() {
 useEffect(() => {
   fetch('https://proyectointegrador5.onrender.com/api/predial/predios/riesgo')
     .then(r => r.json())
-    .then(data => setPrediosData(Array.isArray(data) ? data : []))
+    .then(data => {
+      console.log(data);
+      setPrediosData(Array.isArray(data) ? data : []);
+    })
     .catch(err => console.error(err));
 }, []);
 
