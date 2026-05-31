@@ -535,7 +535,6 @@ function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
 }
 
 function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
-  console.log("modoLectura:", modoLectura);
   const inspeccionHoy = inspecciones?.[0] || null;
 
   const PLAGAS_LISTA = ["Broca","Roya","Gusano Cogollero","Mosca Blanca","Pulgón","Trips","Ácaros","Sin plagas"];
@@ -552,7 +551,6 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
   const [autoGuardado, setAutoGuardado] = useState(null); // null | "guardando" | "guardado"
- const soloLectura = !!(inspeccionHoy?._soloLectura);
   const debounceRef = useRef(null);
 
   // Carga datos del lugar y lotes, luego restaura progreso si existe
@@ -614,7 +612,6 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
   // Autoguardado con debounce de 2 segundos cada vez que cambia algo
   useEffect(() => {
     if (!inspeccionHoy?.id || Object.keys(inspeccionLotes).length === 0) return;
-    if (modoLectura) return;
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -776,7 +773,6 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
         <div style={{ paddingLeft: 16 }}>
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1B5E20" }}>
             Formulario de inspección · {infoLugar.lugar}
-            {soloLectura && <span style={{ marginLeft: 10, fontSize: 13, background: COLORES.azulPastel, color: COLORES.azul, padding: "2px 10px", borderRadius: 20, fontWeight: 600 }}>Solo lectura</span>}
           </h2>
         </div>
         {/* Indicador de autoguardado */}
@@ -855,16 +851,15 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
                     <div>
                       <label style={labelStyle}>Observaciones (opcional)</label>
                       <textarea
-                        readOnly={soloLectura}
                         value={datosLote.observaciones}
-                        onChange={e => !soloLectura && setObsLote(lote.id, e.target.value)}
+                        onChange={e => setObsLote(lote.id, e.target.value)}
                         placeholder="Escriba observaciones para este lote..."
                         style={{
                           width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
                           padding: "10px 12px", fontSize: 14, color: COLORES.texto,
                           minHeight: 80, resize: "vertical", fontFamily: "inherit",
                           boxSizing: "border-box", outline: "none",
-                          background: soloLectura ? "#F5F5F5" : COLORES.blanco,
+                          background: COLORES.blanco,
                         }}
                       />
                     </div>
@@ -875,25 +870,24 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
                         {datosLote.plagas.map((plaga, pIdx) => (
                           <div key={pIdx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                             <select
-                              disabled={soloLectura}
+                              
                               value={plaga}
                               onChange={e => setPlagaLote(lote.id, pIdx, e.target.value)}
                               style={{
                                 flex: 1, border: `1px solid ${COLORES.borde}`, borderRadius: 8,
                                 padding: "8px 12px", fontSize: 14, outline: "none",
-                                background: soloLectura ? "#F5F5F5" : COLORES.blanco,
-                                boxSizing: "border-box",
+                                 background: COLORES.blanco,                                boxSizing: "border-box",
                               }}
                             >
                               <option value="">Seleccione una plaga...</option>
                               {PLAGAS_LISTA.map(p => <option key={p} value={p}>{p}</option>)}
                             </select>
-                            {!soloLectura && datosLote.plagas.length > 1 && (
+                            {datosLote.plagas.length > 1 && (
                               <button onClick={() => eliminarPlagaLote(lote.id, pIdx)} style={{ background: COLORES.rojoPastel, color: COLORES.rojo, border: "none", borderRadius: 7, width: 32, height: 36, cursor: "pointer", fontWeight: 700, fontSize: 16, flexShrink: 0 }}>×</button>
                             )}
                           </div>
                         ))}
-                        {!soloLectura && datosLote.plagas.length < 5 && (
+                        {datosLote.plagas.length < 5 && (
                           <button onClick={() => agregarPlagaLote(lote.id)} style={{ background: COLORES.azulPastel, color: COLORES.azul, border: `1px dashed ${COLORES.azul}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "fit-content" }}>
                             + Agregar plaga
                           </button>
@@ -906,9 +900,9 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
                       <input
                         type="number"
                         min="0"
-                        readOnly={soloLectura}
+                         
                         value={datosLote.cantidadPlantas || ""}
-                        onChange={e => !soloLectura && setInspeccionLotes(prev => ({
+                        onChange={e => setInspeccionLotes(prev => ({
                           ...prev,
                           [lote.id]: { ...prev[lote.id], cantidadPlantas: e.target.value }
                         }))}
@@ -917,7 +911,7 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
                           width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
                           padding: "8px 12px", fontSize: 14, outline: "none",
                           boxSizing: "border-box",
-                          background: soloLectura ? "#F5F5F5" : COLORES.blanco,
+                          background: COLORES.blanco,
                         }}
                       />
                     </div>
@@ -939,11 +933,11 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
                 {["Bajo","Medio","Alto"].map(nivel => (
                   <button
                     key={nivel}
-                    disabled={soloLectura}
-                    onClick={() => !soloLectura && setNivelRiesgo(nivel)}
+                     
+                    onClick={() => setNivelRiesgo(nivel)}
                     style={{
                       flex: 1, padding: "9px", borderRadius: 8, fontWeight: 700, fontSize: 15,
-                      cursor: soloLectura ? "default" : "pointer",
+                      cursor: "pointer",
                       border: `2px solid ${nivelRiesgo === nivel ? (nivel === "Bajo" ? COLORES.verde : nivel === "Medio" ? COLORES.amarillo : COLORES.rojo) : COLORES.borde}`,
                       background: nivelRiesgo === nivel ? (nivel === "Bajo" ? "#C8E6C9" : nivel === "Medio" ? COLORES.amarilloPastel : COLORES.rojoPastel) : COLORES.blanco,
                       color: nivelRiesgo === nivel ? (nivel === "Bajo" ? "#1B5E20" : nivel === "Medio" ? "#B7770D" : COLORES.rojo) : COLORES.textoMuted,
@@ -958,13 +952,13 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
             <div>
               <label style={labelStyle}>Estado fitosanitario</label>
               <select
-                disabled={soloLectura}
+                 
                 value={estadoFitosanitario}
                 onChange={e => setEstadoFitosanitario(e.target.value)}
                 style={{
                   width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
                   padding: "9px 12px", fontSize: 15, outline: "none",
-                  background: soloLectura ? "#F5F5F5" : COLORES.blanco,
+                   background: COLORES.blanco,
                   boxSizing: "border-box",
                 }}
               >
@@ -979,7 +973,7 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
         </div>
 
         {/* BOTÓN GUARDAR — solo si no es solo lectura */}
-        {!soloLectura && (
+        
           <button
             onClick={guardar}
             disabled={guardando}
@@ -987,7 +981,7 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
           >
             {guardando ? "Guardando..." : "✓ Guardar inspección"}
           </button>
-        )}
+      
       </div>
     </div>
   );
@@ -1140,7 +1134,7 @@ const handleVerFormulario = (insp) => {
     onVerDetalle={setItemDetalle} 
     onVerFormulario={handleVerFormulario}
 onVerProgreso={(insp) => {
-  setInspeccionSeleccionada({ ...insp, _soloLectura: true });
+  setInspeccionSeleccionada(insp);
   setPaginaActual("formulario");
 }}
   />
@@ -1148,20 +1142,19 @@ onVerProgreso={(insp) => {
           {paginaActual === "historial" && <PaginaHistorial onVerDetalle={setItemDetalle} onVerFormulario={handleVerFormulario} />}
      
 {paginaActual === "formulario" && (
-  <PaginaFormulario 
-  key={`${inspeccionSeleccionada?.id}-${inspeccionSeleccionada?._soloLectura ? 'lectura' : 'edicion'}`}
-    inspecciones={
-      inspeccionSeleccionada 
-        ? [inspeccionSeleccionada] 
-        : inspecciones.filter(i => i.resultado !== 'Completada')
-    }
-    modoLectura={inspeccionSeleccionada?._soloLectura === true}  // ya está bien
-    onGuardado={() => { 
-      cargarInspecciones(); 
-      setInspeccionSeleccionada(null);
-      setPaginaActual("inicio"); 
-    }}
-  />
+<PaginaFormulario 
+  key={inspeccionSeleccionada?.id ?? 'default'}
+  inspecciones={
+    inspeccionSeleccionada 
+      ? [inspeccionSeleccionada] 
+      : inspecciones.filter(i => i.resultado !== 'Completada')
+  }
+  onGuardado={() => { 
+    cargarInspecciones(); 
+    setInspeccionSeleccionada(null);
+    setPaginaActual("inicio"); 
+  }}
+/>
 )}
         </main>
       </div>
