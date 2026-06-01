@@ -99,14 +99,14 @@ const predioToFront = (p, lugares = []) => {
 };
 
 // Convierte un predio frontend al cuerpo que espera el backend (POST/PUT)
+// Reemplaza predioToBack:
 const predioToBack = (f) => ({
     nombre:             f.nombre,
-    numRegistroICA:     f.matricula,
+    numRegistroICA:     f.matricula || undefined,  // si está vacío, el backend la genera
     vereda:             f.vereda,
     lugarProduccion_id: f.lugarId,
     propietario_id:     JSON.parse(localStorage.getItem("usuario") || "{}").id || null,
     area:               f.areaHa,
-    // se envían solo los IDs
     cultivos:           f.cultivos.map(c => typeof c === "object" ? c.id : c),
 });
 
@@ -1311,11 +1311,11 @@ const handleCambioLugar = (nuevoId) => {
                             {lugares.map(l => <option key={l.id} value={l.id}>{l.nombre}</option>)}
                         </select>
                     </CampoForm>
-
-                    <CampoForm label="Matrícula ICA">
+<CampoForm label="Matrícula ICA">
     <input 
-        value={form.matricula} 
+        value={form.matricula || ""} 
         readOnly 
+        placeholder="Se asigna automáticamente al guardar"
         style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} 
     />
 </CampoForm>
