@@ -131,6 +131,7 @@ const createLugar = asyncHandler(async (req, res) => {
     }
     res.status(201).json({ mensaje: "Lugar creado", id: lugarId });
 });
+
 const updateLugar = asyncHandler(async (req, res) => {
     const { nombre, municipio_id, vereda, departamento, municipio, cultivos } = req.body;
 
