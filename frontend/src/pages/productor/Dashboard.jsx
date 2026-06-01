@@ -69,11 +69,11 @@ const lugarToFront = (l) => {
 // Convierte un objeto frontend de lugar al cuerpo que espera el backend (POST/PUT)
 const lugarToBack = (f, municipioId) => ({
     nombre:       f.nombre,
-    municipio_id: municipioId || f.municipioId || null,
+    municipio_id: Number(municipioId || f.municipioId) || null,
     vereda:       f.vereda,
     departamento: f.departamento,
     municipio:    f.municipio,
-    productor_id: JSON.parse(localStorage.getItem("usuario") || "{}").id || null, // ← cambiado
+    productor_id: JSON.parse(localStorage.getItem("usuario") || "{}").id || null,
     cultivos:     f.cultivos.map(c => typeof c === "object" ? c.id : c),
 });
 
