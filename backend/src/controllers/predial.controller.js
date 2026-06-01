@@ -32,7 +32,7 @@ const getLugares = asyncHandler(async (req, res) => {
              LEFT JOIN predio p ON p.lugarproduccion_id = lp.id
              GROUP BY lp.id`
           );
-
+          console.log("lugar raw:", JSON.stringify(lugares[0]));
     for (const lugar of lugares) {
         lugar.cultivos = await query(
             `SELECT c.id, c.nombre FROM cultivo c
