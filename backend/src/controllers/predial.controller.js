@@ -98,10 +98,26 @@ const getLugarById = asyncHandler(async (req, res) => {
 const createLugar = asyncHandler(async (req, res) => {
     const { nombre, municipio_id, vereda, departamento, municipio, cultivos, productor_id } = req.body;
 
+    // Genera numRegistroICA único para el lugar
+    const anio = new Date().getFullYear();
+    const rows = await query(
+        `SELECT numRegistroICA FROM lugarproduccion 
+         WHERE numRegistroICA LIKE ? 
+         ORDER BY numRegistroICA DESC LIMIT 1`,
+        [`LP-${anio}-%`]
+    );
+    let siguiente = 1;
+    if (rows.length > 0) {
+        const ultimo = rows[0].numRegistroICA;
+        const partes = ultimo.split("-");
+        siguiente = parseInt(partes[2]) + 1;
+    }
+    const numRegistroICA = `LP-${anio}-${String(siguiente).padStart(4, "0")}`;
+
     const result = await query(
-        `INSERT INTO lugarproduccion (nombre, municipio_id, vereda, departamento, municipio, productor_id)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [nombre, municipio_id, vereda, departamento, municipio, productor_id]
+        `INSERT INTO lugarproduccion (nombre, municipio_id, vereda, departamento, municipio, productor_id, numRegistroICA)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [nombre, municipio_id, vereda, departamento, municipio, productor_id, numRegistroICA]
     );
     const lugarId = result.insertId;
 
@@ -115,7 +131,6 @@ const createLugar = asyncHandler(async (req, res) => {
     }
     res.status(201).json({ mensaje: "Lugar creado", id: lugarId });
 });
-
 const updateLugar = asyncHandler(async (req, res) => {
     const { nombre, municipio_id, vereda, departamento, municipio, cultivos } = req.body;
 
