@@ -18,7 +18,16 @@ const C = {
 // Apunta al backend del proyecto. Cambiar aquí para dev / producción.
 // ══════════════════════════════════════════════════════════════════════════════
 const BASE_URL = "https://proyectointegrador5.onrender.com/api";
-
+// ── Detecta si estamos en móvil (< 768px) ──────────────────────────────────
+function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    useEffect(() => {
+        const handler = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener("resize", handler);
+        return () => window.removeEventListener("resize", handler);
+    }, []);
+    return isMobile;
+}
 // ══════════════════════════════════════════════════════════════════════════════
 // HELPER: fetch centralizado con manejo de errores
 // Lanza un Error con el mensaje del servidor si la respuesta no es 2xx.
@@ -237,144 +246,160 @@ function Badge({ estado, children }) {
 // "Inspecciones" también cierra el submenú.
 // ══════════════════════════════════════════════════════════════════════════════
 function Sidebar({ activa, setActiva, menuAbierto, setMenuAbierto }) {
-    // desplegado controla si el acordeón de subItems está visible
     const [desplegado, setDesplegado] = useState(false);
+    const isMobile = useIsMobile();
 
     const handleClick = (key, tieneSubItems) => {
         if (tieneSubItems) {
-            // Alterna el acordeón al hacer clic repetido en el mismo ítem padre
             setDesplegado(d => !d);
             setActiva(key);
         } else {
-            // Al navegar a otra sección, cierra siempre el acordeón
             setActiva(key);
             setDesplegado(false);
         }
+        // En móvil cierra el drawer al navegar
+        if (isMobile) setMenuAbierto(false);
     };
 
+    // En móvil: drawer superpuesto. En desktop: sidebar fijo colapsable.
+    const sidebarStyle = isMobile ? {
+        position: "fixed", top: 0, left: 0, zIndex: 300,
+        width: 240, height: "100vh",
+        background: C.verde, display: "flex", flexDirection: "column",
+        transform: menuAbierto ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 0.25s ease",
+        boxShadow: menuAbierto ? "4px 0 24px rgba(0,0,0,0.25)" : "none",
+    } : {
+        width: menuAbierto ? 230 : 62, background: C.verde, flexShrink: 0,
+        transition: "width 0.25s ease", overflow: "hidden", display: "flex",
+        flexDirection: "column", height: "100vh", position: "sticky", top: 0,
+    };
+
+    const mostrarTexto = isMobile ? true : menuAbierto;
+
     return (
-        <aside style={{
-            width: menuAbierto ? 230 : 62, background: C.verde, flexShrink: 0,
-            transition: "width 0.25s ease", overflow: "hidden", display: "flex",
-            flexDirection: "column", height: "100vh", position: "sticky", top: 0,
-        }}>
-            {/* Logo e identificador del módulo */}
-            <div style={{
-                padding: "0 16px", height: 56, display: "flex", alignItems: "center",
-                gap: 10, borderBottom: `1px solid rgba(255,255,255,0.15)`, flexShrink: 0,
-            }}>
-                <img src="/LogoICA.png" alt="Logo ICA"
-                    style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-                <span style={{
-                    color: C.blanco, fontSize: 15, fontWeight: 700, whiteSpace: "nowrap",
-                    opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s",
-                }}>
-                    Productor
-                </span>
-            </div>
-
-            {/* Etiqueta de rol — se abrevia cuando el menú está colapsado */}
-            <div style={{
-                padding: "10px 20px", background: "rgba(0,0,0,0.12)",
-                borderBottom: `1px solid rgba(255,255,255,0.1)`, whiteSpace: "nowrap",
-            }}>
-                <div style={{
-                    fontSize: 10, fontWeight: 700, color: C.verdeMedio,
-                    textTransform: "uppercase", letterSpacing: 1.2,
-                }}>
-                    {menuAbierto ? "PRODUCTOR" : "PRD"}
-                </div>
-            </div>
-
-            {/* Ítems de navegación */}
-            <nav style={{ flex: 1, padding: "10px 0", overflowY: "auto" }}>
-                {NAV.map(({ key, label, icono, subItems }) => (
-                    <div key={key}>
-                        {/* Ítem principal */}
-                        <button
-                            onClick={() => handleClick(key, !!subItems)}
-                            style={{
-                                display: "flex", alignItems: "center", gap: 12, width: "100%",
-                                padding: "12px 20px", border: "none", textAlign: "left",
-                                whiteSpace: "nowrap", cursor: "pointer",
-                                background: activa === key || (subItems && subItems.some(s => s.key === activa))
-                                    ? "rgba(255,255,255,0.18)" : "transparent",
-                                color: activa === key || (subItems && subItems.some(s => s.key === activa))
-                                    ? C.blanco : C.verdeMedio,
-                                fontWeight: activa === key || (subItems && subItems.some(s => s.key === activa))
-                                    ? 700 : 400,
-                                fontSize: 15,
-                                borderLeft: activa === key || (subItems && subItems.some(s => s.key === activa))
-                                    ? `3px solid ${C.blanco}` : "3px solid transparent",
-                                transition: "all 0.15s",
-                            }}
-                        >
-                            <span style={{ fontSize: 17, flexShrink: 0 }}>{icono}</span>
-                            <span style={{ opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s", flex: 1 }}>
-                                {label}
-                            </span>
-                            {/* Flecha de acordeón: solo visible con menú abierto */}
-                            {subItems && menuAbierto && (
-                                <span style={{ fontSize: 11, opacity: 0.8 }}>
-                                    {desplegado ? "▲" : "▼"}
-                                </span>
-                            )}
-                        </button>
-
-                        {/* Subítems del acordeón (solo si está desplegado y menú abierto) */}
-                        {subItems && desplegado && menuAbierto && (
-                            <div style={{ background: "rgba(0,0,0,0.15)" }}>
-                                {subItems.map(sub => (
-                                    <button
-                                        key={sub.key}
-                                        onClick={() => setActiva(sub.key)}
-                                        style={{
-                                            display: "flex", alignItems: "center", gap: 12,
-                                            width: "100%", padding: "10px 20px 10px 40px",
-                                            border: "none", textAlign: "left", whiteSpace: "nowrap",
-                                            cursor: "pointer",
-                                            background: activa === sub.key
-                                                ? "rgba(255,255,255,0.15)" : "transparent",
-                                            color: activa === sub.key ? C.blanco : C.verdeMedio,
-                                            fontWeight: activa === sub.key ? 700 : 400,
-                                            fontSize: 14,
-                                            borderLeft: activa === sub.key
-                                                ? `3px solid ${C.blanco}` : "3px solid transparent",
-                                            transition: "all 0.15s",
-                                        }}
-                                    >
-                                        <span style={{ fontSize: 15, flexShrink: 0 }}>{sub.icono}</span>
-                                        <span>{sub.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </nav>
-
-            {/* Botón de cerrar sesión — limpia localStorage y redirige */}
-            <div style={{ borderTop: `1px solid rgba(255,255,255,0.12)`, flexShrink: 0 }}>
-                <button
-                    onClick={() => {
-                        localStorage.removeItem("token");
-                        localStorage.removeItem("usuario");
-                        window.location.href = "/login";
-                    }}
+        <>
+            {/* Overlay oscuro en móvil para cerrar el drawer tocando fuera */}
+            {isMobile && menuAbierto && (
+                <div
+                    onClick={() => setMenuAbierto(false)}
                     style={{
-                        display: "flex", alignItems: "center", gap: 12, width: "100%",
-                        padding: "14px 20px", border: "none", background: "transparent",
-                        color: "#FFCDD2", cursor: "pointer", fontWeight: 600, fontSize: 15,
-                        whiteSpace: "nowrap",
+                        position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)",
+                        zIndex: 299,
                     }}
-                >
-                    <span style={{ fontSize: 17, flexShrink: 0 }}>🚪</span>
-                    <span style={{ opacity: menuAbierto ? 1 : 0, transition: "opacity 0.2s" }}>
-                        Cerrar sesión
+                />
+            )}
+
+            <aside style={sidebarStyle}>
+                {/* Logo */}
+                <div style={{
+                    padding: "0 16px", height: 56, display: "flex", alignItems: "center",
+                    gap: 10, borderBottom: `1px solid rgba(255,255,255,0.15)`, flexShrink: 0,
+                }}>
+                    <img src="/LogoICA.png" alt="Logo ICA"
+                        style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                    <span style={{
+                        color: C.blanco, fontSize: 15, fontWeight: 700, whiteSpace: "nowrap",
+                        opacity: mostrarTexto ? 1 : 0, transition: "opacity 0.2s",
+                    }}>
+                        Productor
                     </span>
-                </button>
-            </div>
-        </aside>
+                </div>
+
+                {/* Etiqueta de rol */}
+                <div style={{
+                    padding: "10px 20px", background: "rgba(0,0,0,0.12)",
+                    borderBottom: `1px solid rgba(255,255,255,0.1)`, whiteSpace: "nowrap",
+                }}>
+                    <div style={{
+                        fontSize: 10, fontWeight: 700, color: C.verdeMedio,
+                        textTransform: "uppercase", letterSpacing: 1.2,
+                    }}>
+                        {mostrarTexto ? "PRODUCTOR" : "PRD"}
+                    </div>
+                </div>
+
+                {/* Ítems de navegación */}
+                <nav style={{ flex: 1, padding: "10px 0", overflowY: "auto" }}>
+                    {NAV.map(({ key, label, icono, subItems }) => (
+                        <div key={key}>
+                            <button
+                                onClick={() => handleClick(key, !!subItems)}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 12, width: "100%",
+                                    padding: "12px 20px", border: "none", textAlign: "left",
+                                    whiteSpace: "nowrap", cursor: "pointer",
+                                    background: activa === key || (subItems?.some(s => s.key === activa))
+                                        ? "rgba(255,255,255,0.18)" : "transparent",
+                                    color: activa === key || (subItems?.some(s => s.key === activa))
+                                        ? C.blanco : C.verdeMedio,
+                                    fontWeight: activa === key || (subItems?.some(s => s.key === activa))
+                                        ? 700 : 400,
+                                    fontSize: 15,
+                                    borderLeft: activa === key || (subItems?.some(s => s.key === activa))
+                                        ? `3px solid ${C.blanco}` : "3px solid transparent",
+                                    transition: "all 0.15s",
+                                }}
+                            >
+                                <span style={{ fontSize: 17, flexShrink: 0 }}>{icono}</span>
+                                <span style={{ opacity: mostrarTexto ? 1 : 0, transition: "opacity 0.2s", flex: 1 }}>
+                                    {label}
+                                </span>
+                                {subItems && mostrarTexto && (
+                                    <span style={{ fontSize: 11, opacity: 0.8 }}>
+                                        {desplegado ? "▲" : "▼"}
+                                    </span>
+                                )}
+                            </button>
+
+                            {subItems && desplegado && mostrarTexto && (
+                                <div style={{ background: "rgba(0,0,0,0.15)" }}>
+                                    {subItems.map(sub => (
+                                        <button
+                                            key={sub.key}
+                                            onClick={() => { setActiva(sub.key); if (isMobile) setMenuAbierto(false); }}
+                                            style={{
+                                                display: "flex", alignItems: "center", gap: 12,
+                                                width: "100%", padding: "10px 20px 10px 40px",
+                                                border: "none", textAlign: "left", whiteSpace: "nowrap",
+                                                cursor: "pointer",
+                                                background: activa === sub.key ? "rgba(255,255,255,0.15)" : "transparent",
+                                                color: activa === sub.key ? C.blanco : C.verdeMedio,
+                                                fontWeight: activa === sub.key ? 700 : 400,
+                                                fontSize: 14,
+                                                borderLeft: activa === sub.key ? `3px solid ${C.blanco}` : "3px solid transparent",
+                                                transition: "all 0.15s",
+                                            }}
+                                        >
+                                            <span style={{ fontSize: 15, flexShrink: 0 }}>{sub.icono}</span>
+                                            <span>{sub.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </nav>
+
+                {/* Cerrar sesión */}
+                <div style={{ borderTop: `1px solid rgba(255,255,255,0.12)`, flexShrink: 0 }}>
+                    <button
+                        onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("usuario"); window.location.href = "/login"; }}
+                        style={{
+                            display: "flex", alignItems: "center", gap: 12, width: "100%",
+                            padding: "14px 20px", border: "none", background: "transparent",
+                            color: "#FFCDD2", cursor: "pointer", fontWeight: 600, fontSize: 15,
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        <span style={{ fontSize: 17, flexShrink: 0 }}>🚪</span>
+                        <span style={{ opacity: mostrarTexto ? 1 : 0, transition: "opacity 0.2s" }}>
+                            Cerrar sesión
+                        </span>
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 }
 
@@ -382,21 +407,22 @@ function Sidebar({ activa, setActiva, menuAbierto, setMenuAbierto }) {
 // HEADER — Barra superior fija con título, toggle de menú y datos del usuario
 // ══════════════════════════════════════════════════════════════════════════════
 function Header({ titulo, menuAbierto, setMenuAbierto }) {
-    // Lee el usuario guardado en localStorage (seteado en el login)
+    const isMobile = useIsMobile();
     const usuario   = JSON.parse(localStorage.getItem("usuario") || "{}");
     const nombre    = usuario.nombre || "Usuario";
-    // Toma las iniciales del nombre completo (máx. 2 letras)
     const iniciales = nombre.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 
     return (
         <header style={{
-            background: C.verde, color: C.blanco, padding: "0 24px", height: 56,
-            display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: C.verde, color: C.blanco,
+            padding: isMobile ? "0 14px" : "0 24px",
+            height: 56, display: "flex", alignItems: "center",
+            justifyContent: "space-between",
             position: "sticky", top: 0, zIndex: 10,
             boxShadow: "0 2px 12px rgba(0,0,0,0.18)", flexShrink: 0,
         }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                {/* Botón hamburguesa: colapsa/expande el sidebar */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                {/* Botón hamburguesa */}
                 <button
                     onClick={() => setMenuAbierto(!menuAbierto)}
                     style={{
@@ -410,19 +436,32 @@ function Header({ titulo, menuAbierto, setMenuAbierto }) {
                         <span key={i} style={{ display: "block", width: 18, height: 2, background: C.blanco, borderRadius: 2 }} />
                     ))}
                 </button>
-                <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: -0.3 }}>{titulo}</span>
+
+                {/* Título — se trunca si no hay espacio */}
+                <span style={{
+                    fontWeight: 700, fontSize: isMobile ? 14 : 15,
+                    letterSpacing: -0.3, whiteSpace: "nowrap",
+                    overflow: "hidden", textOverflow: "ellipsis",
+                    maxWidth: isMobile ? "calc(100vw - 160px)" : "unset",
+                }}>
+                    {titulo}
+                </span>
             </div>
 
-            {/* Avatar + nombre del productor autenticado */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 15, fontWeight: 600 }}>{nombre}</div>
-                    <div style={{ fontSize: 13, opacity: 0.75 }}>Productor registrado</div>
-                </div>
+            {/* Avatar + nombre */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                {/* En desktop muestra nombre completo, en móvil solo iniciales */}
+                {!isMobile && (
+                    <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 15, fontWeight: 600 }}>{nombre}</div>
+                        <div style={{ fontSize: 13, opacity: 0.75 }}>Productor registrado</div>
+                    </div>
+                )}
                 <div style={{
                     width: 34, height: 34, borderRadius: "50%",
                     background: "rgba(255,255,255,0.2)", display: "flex",
-                    alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700,
+                    alignItems: "center", justifyContent: "center",
+                    fontSize: 15, fontWeight: 700, flexShrink: 0,
                 }}>
                     {iniciales}
                 </div>
@@ -556,37 +595,50 @@ const inputStyle = (err) => ({
 // ModalShell: contenedor blanco con título, subtítulo y botón ×.
 // ══════════════════════════════════════════════════════════════════════════════
 function Overlay({ onClose, children }) {
+    const isMobile = useIsMobile();
     return (
         <div
             style={{
                 position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200,
-                display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+                display: "flex",
+                alignItems: isMobile ? "flex-end" : "center",
+                justifyContent: "center",
+                padding: isMobile ? 0 : 16,
             }}
             onClick={onClose}
         >
-            {/* stopPropagation evita que el clic dentro del modal cierre el overlay */}
-            <div onClick={e => e.stopPropagation()}>{children}</div>
+            <div
+                onClick={e => e.stopPropagation()}
+                style={{ width: isMobile ? "100%" : "auto", borderRadius: isMobile ? "16px 16px 0 0" : 0 }}
+            >
+                {children}
+            </div>
         </div>
     );
 }
 
 function ModalShell({ titulo, subtitulo, onClose, children, ancho = 480 }) {
+    const isMobile = useIsMobile();
     return (
         <div style={{
-            background: C.blanco, borderRadius: 16, padding: 28,
-            width: ancho, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto",
+            background: C.blanco, borderRadius: isMobile ? 16 : 16,
+            padding: isMobile ? "20px 16px" : 28,
+            width: isMobile ? "100%" : ancho,
+            maxWidth: "100vw",
+            maxHeight: isMobile ? "92vh" : "90vh",
+            overflowY: "auto",
             boxShadow: "0 8px 40px rgba(0,0,0,0.2)",
         }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 22 }}>
-                <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
                     {subtitulo && (
                         <div style={{ fontSize: 11, fontWeight: 700, color: C.verdeClaro, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>
                             {subtitulo}
                         </div>
                     )}
-                    <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700, color: C.texto }}>{titulo}</h2>
+                    <h2 style={{ margin: 0, fontSize: isMobile ? 17 : 19, fontWeight: 700, color: C.texto }}>{titulo}</h2>
                 </div>
-                <button onClick={onClose} style={{ background: C.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: C.gris }}>×</button>
+                <button onClick={onClose} style={{ background: C.grisPastel, border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 18, color: C.gris, flexShrink: 0 }}>×</button>
             </div>
             {children}
         </div>
@@ -981,9 +1033,7 @@ function ModalEliminarPredio({ predio, lotes, predios, onCancelar, onEliminarTod
 // Muestra estado sanitario, datos geográficos, cultivos y predios que lo componen.
 // Botones: Editar | Eliminar (en fila) + Cerrar (abajo)
 function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
-    console.log("lugar.id:", lugar.id);
-    console.log("predios lugarIds:", predios.map(p => ({ id: p.id, lugarId: p.lugarId })));
-    console.log("predios lugarIds:", JSON.stringify(predios.map(p => ({ id: p.id, lugarId: p.lugarId }))));
+    const isMobile = useIsMobile();
     const prediosLugar = predios.filter(p => p.lugarId === lugar.id);
     const areaTotal = prediosLugar.reduce((s, p) => s + (p.areaHa || 0), 0).toFixed(2);
 
@@ -991,14 +1041,15 @@ function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
         <Overlay onClose={onClose}>
             <ModalShell titulo={lugar.nombre} subtitulo="Lugar de producción" onClose={onClose} ancho={500}>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-    <FilaInfo label="Registro ICA"      valor={lugar.ica || "—"} />  {/* ← agrega */}
-    <FilaInfo label="Área total"        valor={`${areaTotal} ha`} />
-    <FilaInfo label="Número de predios" valor={prediosLugar.length} />
-    <FilaInfo label="Departamento"      valor={lugar.departamento || "—"} />
-    <FilaInfo label="Municipio"         valor={lugar.municipio    || "—"} />
-    <FilaInfo label="Vereda"            valor={lugar.vereda       || "—"} />
-</div>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr", gap: 14 }}>
+                    <FilaInfo label="Registro ICA"      valor={lugar.ica || "—"} />
+                    <FilaInfo label="Área total"        valor={`${areaTotal} ha`} />
+                    <FilaInfo label="Número de predios" valor={prediosLugar.length} />
+                    <FilaInfo label="Departamento"      valor={lugar.departamento || "—"} />
+                    <FilaInfo label="Municipio"         valor={lugar.municipio    || "—"} />
+                    <FilaInfo label="Vereda"            valor={lugar.vereda       || "—"} />
+                </div>
+
                 <Divider />
 
                 <div style={{ marginBottom: 16 }}>
@@ -1011,13 +1062,14 @@ function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
                         }) : <span style={{ fontSize: 14, color: C.textoMuted }}>Sin cultivos asignados</span>}
                     </div>
                 </div>
+
                 <Divider />
 
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Predios que lo componen</div>
                 <div style={{ display: "grid", gap: 10, marginBottom: 22 }}>
                     {prediosLugar.map(p => (
                         <div key={p.id} style={{ borderRadius: 10, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", background: C.grisPastel }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: C.grisPastel }}>
                                 <div>
                                     <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
                                     <div style={{ fontSize: 12, color: C.textoMuted }}>{p.areaHa} ha</div>
@@ -1055,6 +1107,7 @@ function ModalVerLugar({ lugar, predios, onClose, onEditar, onEliminar }) {
 // Validaciones: nombre, ICA, ubicación, área (con límites reales), al menos un cultivo.
 function ModalFormLugar({ lugar, onClose, onGuardar, cultivosDisponibles = [] }) {
     const esEdicion     = !!lugar;
+    const isMobile      = useIsMobile();
     const departamentos = useDepartamentos();
 
     const [form, setForm] = useState({
@@ -1064,7 +1117,6 @@ function ModalFormLugar({ lugar, onClose, onGuardar, cultivosDisponibles = [] })
         municipio:      lugar?.municipio    || "",
         municipioId:    "",
         vereda:         lugar?.vereda       || "",
-        // cultivos es array de objetos {id, nombre}
         cultivos:       lugar?.cultivos?.length > 0 ? lugar.cultivos : [null],
     });
     const [errores, setErrores] = useState({});
@@ -1114,7 +1166,7 @@ function ModalFormLugar({ lugar, onClose, onGuardar, cultivosDisponibles = [] })
                 subtitulo={esEdicion ? "Modificar datos" : "Nuevo registro"}
                 onClose={onClose} ancho={490}
             >
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
                     <CampoForm label="Nombre *" error={errores.nombre}>
                         <input value={form.nombre} onChange={e => { set("nombre", e.target.value); setErrores(er => ({ ...er, nombre: "" })); }} style={inputStyle(errores.nombre)} />
                     </CampoForm>
@@ -1167,8 +1219,9 @@ function ModalFormLugar({ lugar, onClose, onGuardar, cultivosDisponibles = [] })
 // Muestra datos del predio, su estado sanitario e historial de inspecciones.
 // Botones: Editar | Eliminar + Cerrar
 function ModalVerPredio({ predio, onClose, onEditar, onEliminar }) {
+    const isMobile = useIsMobile();
     const [historial, setHistorial] = useState([]);
-    const [cargando, setCargando] = useState(true);
+    const [cargando, setCargando]   = useState(true);
 
     useEffect(() => {
         fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/solicitudes/productor/${predio.id}`)
@@ -1181,17 +1234,19 @@ function ModalVerPredio({ predio, onClose, onEditar, onEliminar }) {
     return (
         <Overlay onClose={onClose}>
             <ModalShell titulo={predio.nombre} subtitulo="Predio asociado" onClose={onClose} ancho={520}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
-                    <FilaInfo label="Matrícula"           valor={predio.matricula} />
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14, marginBottom: 16 }}>
+                    <FilaInfo label="Matrícula"           valor={predio.matricula || "—"} />
                     <FilaInfo label="Área"                valor={`${predio.areaHa} ha`} />
                     <FilaInfo label="Lugar de producción" valor={predio.lugarNombre} />
                     <FilaInfo label="Municipio / Vereda"  valor={`${predio.municipio} / ${predio.vereda || "—"}`} />
-                    <FilaInfo label="Cultivos"            valor={predio.cultivos.map(c => c.nombre).join(", ")} />
+                    <FilaInfo label="Cultivos"            valor={predio.cultivos.map(c => c.nombre).join(", ") || "—"} />
                 </div>
+
                 <div style={{ background: C.verdePastel, borderRadius: 10, padding: "12px 14px", marginBottom: 16 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Estado sanitario</div>
                     <Badge estado={predio.estadoSanitario} />
                 </div>
+
                 <Divider />
 
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Historial de inspecciones</div>
@@ -1202,7 +1257,7 @@ function ModalVerPredio({ predio, onClose, onEditar, onEliminar }) {
                     )}
                     {historial.map(ins => (
                         <div key={ins.id} style={{ borderRadius: 10, border: `1px solid ${C.borde}`, padding: "13px 15px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 6 }}>
                                 <span style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>
                                     {new Date(ins.fechaSolicitud).toLocaleDateString('es-CO')}
                                 </span>
@@ -1233,37 +1288,32 @@ function ModalVerPredio({ predio, onClose, onEditar, onEliminar }) {
 // Al cambiar el lugar, cultivos se reinician para evitar valores inválidos.
 function ModalFormPredio({ predio, lugares, onClose, onGuardar }) {
     const esEdicion = !!predio;
+    const isMobile  = useIsMobile();
 
     const [form, setForm] = useState({
-    nombre:    predio?.nombre    || "",
-    lugarId:   predio?.lugarId   || "",
-    matricula: predio?.matricula || "",
-    areaHa:    predio?.areaHa    || "",
-    vereda:    predio?.vereda    || "",  // ← ya está, no hay que cambiar nada
-    cultivos:  predio?.cultivos?.length > 0 ? predio.cultivos : [null],
-});
+        nombre:    predio?.nombre    || "",
+        lugarId:   predio?.lugarId   || "",
+        matricula: predio?.matricula || "",
+        areaHa:    predio?.areaHa    || "",
+        vereda:    predio?.vereda    || "",
+        cultivos:  predio?.cultivos?.length > 0 ? predio.cultivos : [null],
+    });
     const [errores, setErrores] = useState({});
     const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
     const lugarSeleccionado   = lugares.find(l => l.id === Number(form.lugarId));
-    // cultivos disponibles para este predio = cultivos del lugar seleccionado
     const cultivosDisponibles = lugarSeleccionado?.cultivos || [];
 
-const handleCambioLugar = (nuevoId) => {
-    const lugarSel = lugares.find(l => l.id === Number(nuevoId));
-    setForm(f => ({ 
-        ...f, 
-        lugarId: nuevoId, 
-        cultivos: [null],
-        vereda: lugarSel?.vereda || "",
-    }));
-    setErrores(er => ({ ...er, lugarId: "" }));
-};
+    const handleCambioLugar = (nuevoId) => {
+        const lugarSel = lugares.find(l => l.id === Number(nuevoId));
+        setForm(f => ({ ...f, lugarId: nuevoId, cultivos: [null], vereda: lugarSel?.vereda || "" }));
+        setErrores(er => ({ ...er, lugarId: "" }));
+    };
 
     const validar = () => {
         const e = {};
-        if (!form.nombre.trim())    e.nombre    = "Nombre requerido";
-        if (!form.lugarId)          e.lugarId   = "Seleccione un lugar";
+        if (!form.nombre.trim()) e.nombre  = "Nombre requerido";
+        if (!form.lugarId)       e.lugarId = "Seleccione un lugar";
         if (!form.areaHa) {
             e.areaHa = "Área requerida";
         } else {
@@ -1282,8 +1332,8 @@ const handleCambioLugar = (nuevoId) => {
             ...predio,
             nombre:       form.nombre.trim(),
             lugarId:      Number(form.lugarId),
-            lugarNombre:  lugarSel?.nombre      || "",
-            municipio:    lugarSel?.municipio   || "",
+            lugarNombre:  lugarSel?.nombre       || "",
+            municipio:    lugarSel?.municipio    || "",
             departamento: lugarSel?.departamento || "",
             matricula:    form.matricula.trim(),
             areaHa:       parseFloat(form.areaHa),
@@ -1300,7 +1350,7 @@ const handleCambioLugar = (nuevoId) => {
                 subtitulo={esEdicion ? "Modificar datos" : "Nuevo registro"}
                 onClose={onClose} ancho={500}
             >
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
                     <CampoForm label="Nombre *" error={errores.nombre}>
                         <input value={form.nombre} onChange={e => { set("nombre", e.target.value); setErrores(er => ({ ...er, nombre: "" })); }} style={inputStyle(errores.nombre)} />
                     </CampoForm>
@@ -1311,20 +1361,18 @@ const handleCambioLugar = (nuevoId) => {
                             {lugares.map(l => <option key={l.id} value={l.id}>{l.nombre}</option>)}
                         </select>
                     </CampoForm>
-<CampoForm label="Matrícula ICA">
-    <input 
-        value={form.matricula || ""} 
-        readOnly 
-        placeholder="Se asigna automáticamente al guardar"
-        style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} 
-    />
-</CampoForm>
 
-                    <CampoForm label="Área (ha) * (máx. 5000)" error={errores.areaHa}>
-                        <input type="number" min="0.01" max="5000" step="0.01" value={form.areaHa} onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }} style={inputStyle(errores.areaHa)} />
+                    <CampoForm label="Matrícula ICA">
+                        <input value={form.matricula || ""} readOnly placeholder="Se asigna automáticamente"
+                            style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} />
                     </CampoForm>
 
-                    {/* Municipio y departamento readonly desde el lugar */}
+                    <CampoForm label="Área (ha) *" error={errores.areaHa}>
+                        <input type="number" min="0.01" max="5000" step="0.01" value={form.areaHa}
+                            onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }}
+                            style={inputStyle(errores.areaHa)} />
+                    </CampoForm>
+
                     <CampoForm label="Departamento">
                         <input value={lugarSeleccionado?.departamento || "—"} readOnly style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} />
                     </CampoForm>
@@ -1334,12 +1382,8 @@ const handleCambioLugar = (nuevoId) => {
                     </CampoForm>
 
                     <CampoForm label="Vereda">
-    <input 
-        value={form.vereda} 
-        readOnly 
-        style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} 
-    />
-</CampoForm>
+                        <input value={form.vereda} readOnly style={{ ...inputStyle(false), background: "#f5f5f5", color: C.textoMuted }} />
+                    </CampoForm>
 
                     <div style={{ gridColumn: "1 / -1" }}>
                         <CampoForm label="Cultivos">
@@ -1351,7 +1395,7 @@ const handleCambioLugar = (nuevoId) => {
                                 />
                             ) : (
                                 <div style={{ background: C.amarilloPastel, border: `1px solid ${C.amarillo}`, borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#B7770D", fontWeight: 600 }}>
-                                    ⚠️ Seleccione un lugar de producción para ver los cultivos disponibles.
+                                    ⚠️ Seleccione un lugar para ver los cultivos disponibles.
                                 </div>
                             )}
                         </CampoForm>
@@ -1376,28 +1420,36 @@ const handleCambioLugar = (nuevoId) => {
 // Muestra predio, lugar, área, cultivos y estado.
 // Botones: Editar | Eliminar + Cerrar
 function ModalVerLote({ lote, onClose, onEditar, onEliminar }) {
+    const isMobile = useIsMobile();
     return (
         <Overlay onClose={onClose}>
             <ModalShell titulo={lote.nombre} subtitulo="Detalle del lote" onClose={onClose} ancho={460}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr", gap: 14, marginBottom: 16 }}>
                     <FilaInfo label="Predio"              valor={lote.predioNombre} />
                     <FilaInfo label="Lugar de producción" valor={lote.lugarNombre} />
                     <FilaInfo label="Área"                valor={`${lote.areaHa} ha`} />
                     <FilaInfo label="Estado"              valor={lote.estadoLote} />
                 </div>
+
                 <Divider />
+
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Cultivos del lote</div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
-    {lote.cultivos.map((c, i) => {
-        const cols = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
-        const [bg, col] = cols[i % 4];
-        return <span key={i} style={{ background: bg, color: col, fontSize: 13, fontWeight: 700, padding: "4px 12px", borderRadius: 20 }}>{c.nombre || c}</span>;
-    })}
-</div>
+                    {lote.cultivos.map((c, i) => {
+                        const cols = [["#F3E5F5","#6A1B9A"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#E8F5E9","#2E7D32"]];
+                        const [bg, col] = cols[i % 4];
+                        return <span key={i} style={{ background: bg, color: col, fontSize: 13, fontWeight: 700, padding: "4px 12px", borderRadius: 20 }}>{c.nombre || c}</span>;
+                    })}
+                    {lote.cultivos.length === 0 && (
+                        <span style={{ fontSize: 14, color: C.textoMuted }}>Sin cultivos asignados</span>
+                    )}
+                </div>
+
                 <div style={{ background: C.verdePastel, borderRadius: 10, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>Estado del lote</span>
                     <Badge estado={lote.estadoLote} />
                 </div>
+
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     <div style={{ display: "flex", gap: 10 }}>
                         <BtnEditar onClick={() => onEditar(lote)}   style={{ flex: 1, justifyContent: "center" }}>✏️ Editar</BtnEditar>
@@ -1416,6 +1468,8 @@ function ModalVerLote({ lote, onClose, onEditar, onEliminar }) {
 // Al cambiar el predio, cultivos se reinician.
 function ModalFormLote({ lote, predios, onClose, onGuardar }) {
     const esEdicion = !!lote;
+    const isMobile  = useIsMobile();
+
     const [form, setForm] = useState({
         nombre:     lote?.nombre     || "",
         predioId:   lote?.predioId   || "",
@@ -1427,7 +1481,6 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
     const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
     const predioSeleccionado  = predios.find(p => p.id === Number(form.predioId));
-    // cultivos disponibles para el lote = cultivos del predio seleccionado
     const cultivosDisponibles = predioSeleccionado?.cultivos || [];
 
     const handleCambioPredio = (nuevoId) => {
@@ -1445,7 +1498,7 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
             const ha      = parseFloat(form.areaHa);
             const maxLote = predioSeleccionado ? predioSeleccionado.areaHa : 5000;
             if (isNaN(ha) || ha < 0.01) e.areaHa = "El área mínima es 0.01 ha";
-            else if (ha > maxLote)      e.areaHa = `El lote no puede superar el área del predio (${maxLote} ha)`;
+            else if (ha > maxLote)      e.areaHa = `No puede superar el área del predio (${maxLote} ha)`;
         }
         setErrores(e);
         return Object.keys(e).length === 0;
@@ -1473,7 +1526,7 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
                 subtitulo={esEdicion ? "Modificar datos" : "Nuevo registro"}
                 onClose={onClose} ancho={460}
             >
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
                     <CampoForm label="Nombre del lote *" error={errores.nombre}>
                         <input value={form.nombre} onChange={e => { set("nombre", e.target.value); setErrores(er => ({ ...er, nombre: "" })); }} placeholder="Ej: Lote A" style={inputStyle(errores.nombre)} />
                     </CampoForm>
@@ -1485,8 +1538,11 @@ function ModalFormLote({ lote, predios, onClose, onGuardar }) {
                         </select>
                     </CampoForm>
 
-                    <CampoForm label={`Área (ha) *${predioSeleccionado ? ` (máx. ${predioSeleccionado.areaHa} ha)` : ""}`} error={errores.areaHa}>
-                        <input type="number" min="0.01" max={predioSeleccionado?.areaHa || 5000} step="0.01" value={form.areaHa} onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }} style={inputStyle(errores.areaHa)} />
+                    <CampoForm label={`Área (ha) *${predioSeleccionado ? ` (máx. ${predioSeleccionado.areaHa})` : ""}`} error={errores.areaHa}>
+                        <input type="number" min="0.01" max={predioSeleccionado?.areaHa || 5000} step="0.01"
+                            value={form.areaHa}
+                            onChange={e => { set("areaHa", e.target.value); setErrores(er => ({ ...er, areaHa: "" })); }}
+                            style={inputStyle(errores.areaHa)} />
                     </CampoForm>
 
                     <CampoForm label="Estado del lote">
@@ -1660,7 +1716,8 @@ function ModalSolicitar({ onClose, onSolicitudEnviada, prediosApi }) {
 
 // Modal de detalle de una solicitud de inspección (solo lectura)
 function ModalInspeccion({ ins, onClose }) {
-    const [lotesDetalle, setLotesDetalle] = useState([]);
+    const isMobile = useIsMobile();
+    const [lotesDetalle,  setLotesDetalle]  = useState([]);
     const [cargandoLotes, setCargandoLotes] = useState(false);
 
     useEffect(() => {
@@ -1681,32 +1738,26 @@ function ModalInspeccion({ ins, onClose }) {
                     <FilaInfo label="Lugar de producción" valor={ins.lugarproduccion} />
                     <FilaInfo label="Predio"              valor={ins.nombrePredio} />
                     <FilaInfo label="Fecha de solicitud"  valor={new Date(ins.fechaSolicitud).toLocaleDateString("es-CO")} />
-                    <FilaInfo label="Observaciones de solicitud" valor={ins.observaciones || "Sin observaciones"} />
+                    <FilaInfo label="Observaciones"       valor={ins.observaciones || "Sin observaciones"} />
 
                     {ins.inspeccion_id && <>
                         <Divider />
                         <div style={{ fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>Resultado de la inspección</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                            <FilaInfo label="Fecha de inspección" valor={ins.fechaInspeccion ? new Date(ins.fechaInspeccion).toLocaleDateString("es-CO") : "—"} />
+                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr", gap: 14 }}>
+                            <FilaInfo label="Fecha"               valor={ins.fechaInspeccion ? new Date(ins.fechaInspeccion).toLocaleDateString("es-CO") : "—"} />
                             <FilaInfo label="Nivel de riesgo"     valor={ins.nivelRiesgo || "—"} />
                             <FilaInfo label="Estado fitosanitario" valor={ins.estadoFitosanitario || "—"} />
                             <FilaInfo label="Resultado"           valor={ins.resultado || "—"} />
                         </div>
 
                         <Divider />
-                        <div style={{ fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
-                            Detalle por lote
-                        </div>
-                        {cargandoLotes && (
-                            <p style={{ fontSize: 14, color: C.textoMuted, margin: 0 }}>Cargando lotes...</p>
-                        )}
+                        <div style={{ fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Detalle por lote</div>
+                        {cargandoLotes && <p style={{ fontSize: 14, color: C.textoMuted, margin: 0 }}>Cargando lotes...</p>}
                         {!cargandoLotes && lotesDetalle.length === 0 && (
                             <p style={{ fontSize: 14, color: C.textoMuted, margin: 0 }}>Sin detalle por lote registrado.</p>
                         )}
-                        {lotesDetalle.map((lote, i) => (
-                            <div key={lote.id} style={{
-                                borderRadius: 10, border: `1px solid ${C.borde}`, overflow: "hidden", marginBottom: 8
-                            }}>
+                        {lotesDetalle.map(lote => (
+                            <div key={lote.id} style={{ borderRadius: 10, border: `1px solid ${C.borde}`, overflow: "hidden", marginBottom: 8 }}>
                                 <div style={{ background: "#A5D6A7", padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
                                     <span style={{ fontSize: 16 }}>🌿</span>
                                     <span style={{ fontWeight: 700, fontSize: 14, color: "#1B5E20" }}>{lote.nombreLote || `Lote #${lote.lote_id}`}</span>
@@ -1714,20 +1765,14 @@ function ModalInspeccion({ ins, onClose }) {
                                 <div style={{ padding: "12px 14px", display: "grid", gap: 10 }}>
                                     <div>
                                         <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Observaciones</div>
-                                        <div style={{ fontSize: 14, color: C.texto }}>
-                                            {lote.observaciones || "Sin observaciones"}
-                                        </div>
+                                        <div style={{ fontSize: 14, color: C.texto }}>{lote.observaciones || "Sin observaciones"}</div>
                                     </div>
                                     <div>
                                         <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>🦗 Plagas detectadas</div>
                                         {lote.plagasDetectadas ? (
                                             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                                                 {lote.plagasDetectadas.split(",").map((p, pi) => (
-                                                    <span key={pi} style={{
-                                                        background: C.rojoPastel, color: C.rojo,
-                                                        fontSize: 13, fontWeight: 600,
-                                                        padding: "3px 10px", borderRadius: 20
-                                                    }}>{p.trim()}</span>
+                                                    <span key={pi} style={{ background: C.rojoPastel, color: C.rojo, fontSize: 13, fontWeight: 600, padding: "3px 10px", borderRadius: 20 }}>{p.trim()}</span>
                                                 ))}
                                             </div>
                                         ) : (
@@ -1767,6 +1812,7 @@ function ModalInspeccion({ ins, onClose }) {
 // tabla resumida de lugares y leyenda de estados sanitarios.
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 function PaginaDashboard({ setActiva, lugares, setLugares, predios, setPredios, lotes, setLotes, mostrarToast }) {
+    const isMobile = useIsMobile();
     const [lugarVer,   setLugarVer]   = useState(null);
     const [modalForm,  setModalForm]  = useState(null);
     const [modalElim,  setModalElim]  = useState(null);
@@ -1790,7 +1836,6 @@ function PaginaDashboard({ setActiva, lugares, setLugares, predios, setPredios, 
             .catch(() => {});
     }, []);
 
-    /* Guardar (editar) lugar desde el dashboard */
     const handleGuardar = async (datos) => {
         try {
             await apiFetch(`/predial/lugares/${datos.id}`, { method: "PUT", body: JSON.stringify(lugarToBack(datos, datos.municipioId)) });
@@ -1801,7 +1846,6 @@ function PaginaDashboard({ setActiva, lugares, setLugares, predios, setPredios, 
         } catch (err) { mostrarToast(`❌ ${err.message}`); }
     };
 
-    /* Eliminar lugar + cascada desde el dashboard */
     const handleEliminarTodo = async (lugar) => {
         try {
             await apiFetch(`/predial/lugares/${lugar.id}`, { method: "DELETE" });
@@ -1815,7 +1859,6 @@ function PaginaDashboard({ setActiva, lugares, setLugares, predios, setPredios, 
         } catch (err) { mostrarToast(`❌ ${err.message}`); }
     };
 
-    /* Mover predios a otro lugar y luego eliminar */
     const handleMoverPredios = async (lugar, destinoId) => {
         try {
             const destino = lugares.find(l => l.id === destinoId);
@@ -1838,48 +1881,110 @@ function PaginaDashboard({ setActiva, lugares, setLugares, predios, setPredios, 
     };
 
     return (
-        <div style={{ padding: "24px 28px" }}>
+        <div style={{ padding: isMobile ? "16px 14px" : "24px 28px" }}>
+
+            {/* Banner de alerta */}
             {alertas > 0 && (
-                <div style={{ background: C.rojoPastel, border: `1px solid ${C.rojo}`, borderRadius: 10, padding: "12px 18px", marginBottom: 22, display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 18 }}>⚠️</span>
-                    <span style={{ fontSize: 14, color: C.rojo, fontWeight: 600, flex: 1 }}>
-                        Tienes {alertas} predio{alertas > 1 ? "s" : ""} con inspección próxima en menos de 30 días.
-                    </span>
-                    <button onClick={() => setActiva("inspecciones")} style={{ background: C.rojo, color: C.blanco, border: "none", borderRadius: 7, padding: "6px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                <div style={{
+                    background: C.rojoPastel, border: `1px solid ${C.rojo}`, borderRadius: 10,
+                    padding: "12px 16px", marginBottom: 20,
+                    display: "flex", alignItems: "flex-start", gap: 10,
+                    flexDirection: isMobile ? "column" : "row",
+                }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
+                        <span style={{ fontSize: 18 }}>⚠️</span>
+                        <span style={{ fontSize: 14, color: C.rojo, fontWeight: 600 }}>
+                            Tienes {alertas} predio{alertas > 1 ? "s" : ""} con inspección próxima en menos de 30 días.
+                        </span>
+                    </div>
+                    <button
+                        onClick={() => setActiva("inspecciones")}
+                        style={{
+                            background: C.rojo, color: C.blanco, border: "none", borderRadius: 7,
+                            padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                            whiteSpace: "nowrap", alignSelf: isMobile ? "flex-start" : "center",
+                        }}
+                    >
                         Ver inspecciones
                     </button>
                 </div>
             )}
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginBottom: 26 }}>
-                <StatCard icono="🗺️" label="Lugares registrados"     value={lugares.length}        colorTexto={C.azul}    colorFondo={C.azulPastel} />
-                <StatCard icono="🏡" label="Predios asociados"       value={predios.length}        colorTexto={C.verde}   colorFondo={C.verdePastel} />
-                <StatCard icono="✅" label="Inspecciones realizadas" value={totalInspecciones}     colorTexto={C.naranja} colorFondo={C.naranjaPastel} />
-                <StatCard icono="⚠️" label="Alertas de plazo"        value={alertas}               colorTexto={alertas > 0 ? C.rojo : C.texto} colorFondo={alertas > 0 ? C.rojoPastel : C.grisPastel} />
+            {/* Tarjetas de estadísticas */}
+            <div style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(auto-fit, minmax(160px, 1fr))",
+                gap: isMobile ? 10 : 14,
+                marginBottom: 26,
+            }}>
+                <StatCard icono="🗺️" label="Lugares"      value={lugares.length}    colorTexto={C.azul}    colorFondo={C.azulPastel} />
+                <StatCard icono="🏡" label="Predios"       value={predios.length}    colorTexto={C.verde}   colorFondo={C.verdePastel} />
+                <StatCard icono="✅" label="Inspecciones"  value={totalInspecciones} colorTexto={C.naranja} colorFondo={C.naranjaPastel} />
+                <StatCard icono="⚠️" label="Alertas"       value={alertas}           colorTexto={alertas > 0 ? C.rojo : C.texto} colorFondo={alertas > 0 ? C.rojoPastel : C.grisPastel} />
             </div>
 
+            {/* Sección lugares */}
             <SectionTitle>Mis lugares de producción</SectionTitle>
             <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-                <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.borde}`, display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.borde}`, display: "flex", justifyContent: "flex-end" }}>
                     <BtnVerde onClick={() => setActiva("lugares")} style={{ fontSize: 13, padding: "6px 14px" }}>Ver todos</BtnVerde>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 0.6fr 1.4fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    <span>Nombre</span><span>Registro ICA</span><span>Predios</span><span>Estado sanitario</span><span>Detalle</span>
-                </div>
-                {lugares.map((l, i) => (
-                    <div key={l.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 0.6fr 1.4fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</span>
-                        <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: C.texto }}>{predios.filter(p => p.lugarId === l.id).length}</span>
-                        <Badge estado={l.estado} />
-                        <BtnOutline onClick={() => setLugarVer(l)}>Ver</BtnOutline>
+
+                {/* Desktop: tabla con grid */}
+                {!isMobile && (
+                    <div>
+                        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 0.6fr 1.4fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                            <span>Nombre</span><span>Registro ICA</span><span>Predios</span><span>Estado sanitario</span><span>Detalle</span>
+                        </div>
+                        {lugares.map((l, i) => (
+                            <div key={l.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 0.6fr 1.4fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</span>
+                                <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
+                                <span style={{ fontSize: 14, fontWeight: 600, color: C.texto }}>{predios.filter(p => p.lugarId === l.id).length}</span>
+                                <Badge estado={l.estado} />
+                                <BtnOutline onClick={() => setLugarVer(l)}>Ver</BtnOutline>
+                            </div>
+                        ))}
                     </div>
-                ))}
+                )}
+
+                {/* Móvil: tarjetas apiladas */}
+                {isMobile && (
+                    <div style={{ display: "grid", gap: 1 }}>
+                        {lugares.map((l, i) => (
+                            <div key={l.id} style={{
+                                padding: "14px 16px",
+                                borderTop: i === 0 ? "none" : `1px solid ${C.borde}`,
+                                background: i % 2 === 0 ? C.blanco : "#FAFAFA",
+                            }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                    <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
+                                        <div style={{ fontSize: 14, fontWeight: 700, color: C.texto, marginBottom: 2 }}>{l.nombre}</div>
+                                        <div style={{ fontSize: 12, color: C.textoMuted }}>{l.ica || "Sin matrícula"}</div>
+                                    </div>
+                                    <BtnOutline onClick={() => setLugarVer(l)}>Ver</BtnOutline>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                    <span style={{ fontSize: 12, color: C.textoMuted }}>
+                                        {predios.filter(p => p.lugarId === l.id).length} predio(s)
+                                    </span>
+                                    <Badge estado={l.estado} />
+                                </div>
+                            </div>
+                        ))}
+                        {lugares.length === 0 && (
+                            <div style={{ padding: 24, textAlign: "center", color: C.textoMuted, fontSize: 14 }}>
+                                No hay lugares registrados.
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
+            {/* Leyenda de estados */}
             <div style={{ marginTop: 20 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>¿Qué significa cada estado?</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
                     {[
                         { estado: "Sin alertas",  bg: C.verdePastel,    color: C.verde,   icono: "✅", desc: "Cultivos en buen estado. Sin novedades fitosanitarias." },
                         { estado: "Alerta media", bg: C.amarilloPastel, color: "#B7770D", icono: "⚠️", desc: "Observaciones detectadas. Se requiere seguimiento." },
@@ -1896,29 +2001,19 @@ function PaginaDashboard({ setActiva, lugares, setLugares, predios, setPredios, 
                 </div>
             </div>
 
-            {/* Modales con datos y funciones reales */}
             {lugarVer && !modalForm && !modalElim && (
-                <ModalVerLugar
-                    lugar={lugarVer}
-                    predios={predios}                          // ✅ predios reales
-                    onClose={() => setLugarVer(null)}
-                    onEditar={l => { setLugarVer(null); setModalForm(l); }}   // ✅ abre form
-                    onEliminar={l => { setLugarVer(null); setModalElim(l); }} // ✅ abre elim
+                <ModalVerLugar lugar={lugarVer} predios={predios} onClose={() => setLugarVer(null)}
+                    onEditar={l => { setLugarVer(null); setModalForm(l); }}
+                    onEliminar={l => { setLugarVer(null); setModalElim(l); }}
                 />
             )}
             {modalForm && (
-                <ModalFormLugar
-                    lugar={modalForm}
-                    onClose={() => setModalForm(null)}
-                    onGuardar={handleGuardar}
-                    cultivosDisponibles={todosLosCultivos}
+                <ModalFormLugar lugar={modalForm} onClose={() => setModalForm(null)}
+                    onGuardar={handleGuardar} cultivosDisponibles={todosLosCultivos}
                 />
             )}
             {modalElim && (
-                <ModalEliminarLugar
-                    lugar={modalElim}
-                    predios={predios}
-                    lugares={lugares}
+                <ModalEliminarLugar lugar={modalElim} predios={predios} lugares={lugares}
                     onCancelar={() => setModalElim(null)}
                     onEliminarTodo={handleEliminarTodo}
                     onMover={handleMoverPredios}
@@ -1933,6 +2028,7 @@ function PaginaDashboard({ setActiva, lugares, setLugares, predios, setPredios, 
 // Llama a la API real (POST/PUT/DELETE) y actualiza el estado local en caso de éxito.
 // Si la API falla, muestra un toast de error sin modificar el estado.
 function PaginaLugares({ lugares, setLugares, predios, setPredios, lotes, setLotes, mostrarToast }) {
+    const isMobile = useIsMobile();
     const [filtro,     setFiltro]     = useState("Todos");
     const [busqueda,   setBusqueda]   = useState("");
     const [modalVer,   setModalVer]   = useState(null);
@@ -1940,17 +2036,12 @@ function PaginaLugares({ lugares, setLugares, predios, setPredios, lotes, setLot
     const [modalElim,  setModalElim]  = useState(null);
     const [todosLosCultivos, setTodosLosCultivos] = useState([]);
 
-    // Al inicio del componente PaginaLugares, agrega:
-console.log("lugares:", lugares);
-console.log("cultivos del primer lugar:", lugares[0]?.cultivos);
-
-        useEffect(() => {
+    useEffect(() => {
         apiFetch("/predial/cultivos")
             .then(data => setTodosLosCultivos(Array.isArray(data) ? data : []))
             .catch(() => {});
     }, []);
 
-    /* Filtra por tipo de alerta Y por texto de búsqueda */
     const filtrados = lugares.filter(l => {
         const pasa    = filtro === "Sin alerta" ? l.estadoType === "success" : filtro === "Con alerta" ? l.estadoType !== "success" : true;
         const buscado = l.nombre.toLowerCase().includes(busqueda.toLowerCase())
@@ -1959,7 +2050,6 @@ console.log("cultivos del primer lugar:", lugares[0]?.cultivos);
         return pasa && buscado;
     });
 
-    /* Crear (POST) o actualizar (PUT) un lugar */
     const handleGuardar = async (datos) => {
         try {
             if (datos.id) {
@@ -1976,7 +2066,6 @@ console.log("cultivos del primer lugar:", lugares[0]?.cultivos);
         } catch (err) { mostrarToast(`❌ ${err.message}`); }
     };
 
-    /* Eliminar lugar + predios + lotes en cascada (backend + estado local) */
     const handleEliminarTodo = async (lugar) => {
         try {
             await apiFetch(`/predial/lugares/${lugar.id}`, { method: "DELETE" });
@@ -1990,18 +2079,15 @@ console.log("cultivos del primer lugar:", lugares[0]?.cultivos);
         } catch (err) { mostrarToast(`❌ ${err.message}`); }
     };
 
-    /* Reasignar predios (y sus lotes) a otro lugar, luego eliminar el original */
     const handleMoverPredios = async (lugar, destinoId) => {
         try {
             const destino = lugares.find(l => l.id === destinoId);
-            // Actualiza cada predio al nuevo lugar en el backend
             await Promise.all(
                 predios
                     .filter(p => p.lugarId === lugar.id)
                     .map(p => apiFetch(`/predial/predios/${p.id}`, { method: "PUT", body: JSON.stringify(predioToBack({ ...p, lugarId: destinoId })) }))
             );
             await apiFetch(`/predial/lugares/${lugar.id}`, { method: "DELETE" });
-            // Actualiza el estado local reflejando el nuevo lugarNombre en predios y lotes
             setPredios(prev => prev.map(p => p.lugarId === lugar.id ? { ...p, lugarId: destinoId, lugarNombre: destino?.nombre || p.lugarNombre } : p));
             setLotes(prev => prev.map(l => {
                 const predioDelLote = predios.find(p => p.id === l.predioId);
@@ -2015,48 +2101,122 @@ console.log("cultivos del primer lugar:", lugares[0]?.cultivos);
     };
 
     return (
-        <div style={{ padding: "24px 28px" }}>
-            {/* Barra de acciones: filtros, búsqueda y botón crear */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
+        <div style={{ padding: isMobile ? "16px 14px" : "24px 28px" }}>
+
+            {/* Barra superior: título + botón crear */}
+            <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                marginBottom: 14, gap: 10,
+            }}>
                 <SectionTitle>Lugares de producción</SectionTitle>
-                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                    <div style={{ display: "flex", gap: 8 }}>
-                        {["Todos", "Sin alerta", "Con alerta"].map(f => (
-                            <button key={f} onClick={() => setFiltro(f)} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1px solid ${filtro === f ? C.verde : C.borde}`, background: filtro === f ? C.verdePastel : C.blanco, color: filtro === f ? C.verde : C.textoMuted, transition: "all 0.15s" }}>
-                                {f}
-                            </button>
-                        ))}
-                    </div>
-                    <input placeholder="Buscar lugar..." value={busqueda} onChange={e => setBusqueda(e.target.value)} style={{ border: `1px solid ${C.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 14, outline: "none", width: 190, color: C.texto }} />
-                    <BtnVerde onClick={() => setModalForm("crear")}>+ Crear lugar</BtnVerde>
-                </div>
+                <BtnVerde onClick={() => setModalForm("crear")}>+ Crear lugar</BtnVerde>
             </div>
 
-            {/* Tabla de lugares */}
-            <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.7fr 1.4fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    <span>Nombre</span><span>Registro ICA</span><span>Municipio</span><span>Predios</span><span>Estado sanitario</span><span>Ver</span>
+            {/* Filtros + búsqueda */}
+            <div style={{
+                display: "flex", gap: 8, marginBottom: 16,
+                flexDirection: isMobile ? "column" : "row",
+                alignItems: isMobile ? "stretch" : "center",
+                flexWrap: "wrap",
+            }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {["Todos", "Sin alerta", "Con alerta"].map(f => (
+                        <button key={f} onClick={() => setFiltro(f)} style={{
+                            padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
+                            cursor: "pointer", border: `1px solid ${filtro === f ? C.verde : C.borde}`,
+                            background: filtro === f ? C.verdePastel : C.blanco,
+                            color: filtro === f ? C.verde : C.textoMuted, transition: "all 0.15s",
+                        }}>
+                            {f}
+                        </button>
+                    ))}
                 </div>
-                {filtrados.map((l, i) => (
-                    <div key={l.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.7fr 1.4fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
-                        <div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
-                            <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
-                        </div>
-                        <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
-                        <span style={{ fontSize: 13, color: C.textoMuted }}>{l.municipio}</span>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: C.texto }}>{predios.filter(p => p.lugarId === l.id).length}</span>
-                        <Badge estado={l.estado} />
-                        <BtnOutline onClick={() => setModalVer(l)}>Ver</BtnOutline>
-                    </div>
-                ))}
-                {filtrados.length === 0 && (
-                    <div style={{ padding: 32, textAlign: "center", color: C.textoMuted, fontSize: 14 }}>No se encontraron lugares.</div>
-                )}
+                <input
+                    placeholder="Buscar lugar..."
+                    value={busqueda}
+                    onChange={e => setBusqueda(e.target.value)}
+                    style={{
+                        border: `1px solid ${C.borde}`, borderRadius: 8,
+                        padding: "7px 14px", fontSize: 14, outline: "none",
+                        width: isMobile ? "100%" : 190,
+                        color: C.texto, boxSizing: "border-box",
+                    }}
+                />
             </div>
+
+            {/* Desktop: tabla con grid */}
+            {!isMobile && (
+                <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.7fr 1.4fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                        <span>Nombre</span><span>Registro ICA</span><span>Municipio</span><span>Predios</span><span>Estado sanitario</span><span>Ver</span>
+                    </div>
+                    {filtrados.map((l, i) => (
+                        <div key={l.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 0.7fr 1.4fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
+                            <div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
+                                <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
+                            </div>
+                            <span style={{ fontSize: 13, color: C.textoMuted }}>{l.ica}</span>
+                            <span style={{ fontSize: 13, color: C.textoMuted }}>{l.municipio}</span>
+                            <span style={{ fontSize: 14, fontWeight: 600, color: C.texto }}>{predios.filter(p => p.lugarId === l.id).length}</span>
+                            <Badge estado={l.estado} />
+                            <BtnOutline onClick={() => setModalVer(l)}>Ver</BtnOutline>
+                        </div>
+                    ))}
+                    {filtrados.length === 0 && (
+                        <div style={{ padding: 32, textAlign: "center", color: C.textoMuted, fontSize: 14 }}>No se encontraron lugares.</div>
+                    )}
+                </div>
+            )}
+
+            {/* Móvil: tarjetas */}
+            {isMobile && (
+                <div style={{ display: "grid", gap: 10 }}>
+                    {filtrados.map(l => (
+                        <div key={l.id} style={{
+                            background: C.blanco, borderRadius: 12,
+                            border: `1px solid ${C.borde}`, padding: "14px 16px",
+                        }}>
+                            {/* Fila 1: nombre + botón ver */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                                <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
+                                    <div style={{ fontSize: 15, fontWeight: 700, color: C.texto, marginBottom: 2 }}>{l.nombre}</div>
+                                    <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
+                                </div>
+                                <BtnOutline onClick={() => setModalVer(l)}>Ver</BtnOutline>
+                            </div>
+
+                            {/* Fila 2: datos secundarios */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                                <div>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Registro ICA</div>
+                                    <div style={{ fontSize: 13, color: C.texto }}>{l.ica || "—"}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Municipio</div>
+                                    <div style={{ fontSize: 13, color: C.texto }}>{l.municipio || "—"}</div>
+                                </div>
+                            </div>
+
+                            {/* Fila 3: predios + estado */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span style={{ fontSize: 12, color: C.textoMuted }}>
+                                    {predios.filter(p => p.lugarId === l.id).length} predio(s)
+                                </span>
+                                <Badge estado={l.estado} />
+                            </div>
+                        </div>
+                    ))}
+                    {filtrados.length === 0 && (
+                        <div style={{ padding: 32, textAlign: "center", color: C.textoMuted, fontSize: 14, background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}` }}>
+                            No se encontraron lugares.
+                        </div>
+                    )}
+                </div>
+            )}
 
             {modalVer  && <ModalVerLugar lugar={modalVer} predios={predios} onClose={() => setModalVer(null)} onEditar={l => { setModalVer(null); setModalForm(l); }} onEliminar={l => { setModalVer(null); setModalElim(l); }} />}
-            {modalForm && <ModalFormLugar lugar={modalForm === "crear" ? null : modalForm} onClose={() => setModalForm(null)} onGuardar={handleGuardar} cultivosDisponibles={todosLosCultivos}  />}
+            {modalForm && <ModalFormLugar lugar={modalForm === "crear" ? null : modalForm} onClose={() => setModalForm(null)} onGuardar={handleGuardar} cultivosDisponibles={todosLosCultivos} />}
             {modalElim && <ModalEliminarLugar lugar={modalElim} predios={predios} lugares={lugares} onCancelar={() => setModalElim(null)} onEliminarTodo={handleEliminarTodo} onMover={handleMoverPredios} />}
         </div>
     );
@@ -2066,17 +2226,17 @@ console.log("cultivos del primer lugar:", lugares[0]?.cultivos);
 // CRUD completo de predios.
 // Misma lógica de API real + fallback de estado local que PaginaLugares.
 function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarToast }) {
+    const isMobile = useIsMobile();
     const [modalVer,   setModalVer]   = useState(null);
     const [modalForm,  setModalForm]  = useState(null);
     const [modalElim,  setModalElim]  = useState(null);
     const [busqueda,   setBusqueda]   = useState("");
 
-    const filtrados = predios.filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()));
+    const filtrados = predios.filter(p =>
+        p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    );
 
-    /* Crear (POST) o actualizar (PUT) un predio */
     const handleGuardar = async (datos) => {
-        console.log("datos a guardar:", datos);          // ← agrega esto
-    console.log("body enviado:", predioToBack(datos)); // ← y esto
         try {
             if (datos.id) {
                 await apiFetch(`/predial/predios/${datos.id}`, { method: "PUT", body: JSON.stringify(predioToBack(datos)) });
@@ -2093,7 +2253,6 @@ function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarT
         } catch (err) { mostrarToast(`❌ ${err.message}`); }
     };
 
-    /* Eliminar predio + todos sus lotes */
     const handleEliminarTodo = async (predio) => {
         try {
             await apiFetch(`/predial/predios/${predio.id}`, { method: "DELETE" });
@@ -2105,7 +2264,6 @@ function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarT
         } catch (err) { mostrarToast(`❌ ${err.message}`); }
     };
 
-    /* Reasignar lotes a otro predio antes de eliminar */
     const handleMoverLotes = async (predio, destinoId) => {
         try {
             const destino = predios.find(p => p.id === destinoId);
@@ -2124,51 +2282,133 @@ function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarT
     };
 
     return (
-        <div style={{ padding: "24px 28px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
+        <div style={{ padding: isMobile ? "16px 14px" : "24px 28px" }}>
+
+            {/* Barra superior */}
+            <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                marginBottom: 14, gap: 10,
+            }}>
                 <SectionTitle>Predios asociados</SectionTitle>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <input placeholder="Buscar predio..." value={busqueda} onChange={e => setBusqueda(e.target.value)} style={{ border: `1px solid ${C.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 14, outline: "none", width: 200, color: C.texto }} />
-                    <BtnVerde onClick={() => setModalForm("crear")}>+ Crear predio</BtnVerde>
-                </div>
+                <BtnVerde onClick={() => setModalForm("crear")}>+ Crear predio</BtnVerde>
             </div>
 
-            <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    <span>Predio</span><span>Lugar</span><span>Área</span><span>Estado</span><span>Próx. inspección</span><span>Ver</span>
-                </div>
-                {filtrados.map((p, i) => {
-                    const dias = p.proximaInspeccion ? diasRestantes(p.proximaInspeccion) : null;
-                    return (
-                        <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
-                            <div>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
-                                <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>                            </div>
-                            <span style={{ fontSize: 13, color: C.textoMuted }}>{p.lugarNombre}</span>
-                            <span style={{ fontSize: 14, color: C.texto }}>{p.areaHa} ha</span>
-                            <Badge estado={p.estadoSanitario} />
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                {dias !== null ? (
-                                    <>
-                                        <span style={{ fontSize: 13, color: dias <= 7 ? C.rojo : C.textoMuted, fontWeight: dias <= 7 ? 700 : 400 }}>{fmt(p.proximaInspeccion)}</span>
-                                        {dias <= 30 && (
-                                            <span style={{ fontSize: 10, background: dias <= 7 ? C.rojoPastel : C.amarilloPastel, color: dias <= 7 ? C.rojo : C.amarillo, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>
-                                                {dias}d
-                                            </span>
-                                        )}
-                                    </>
-                                ) : (
-                                    <span style={{ fontSize: 13, color: C.textoMuted }}>—</span>
-                                )}
-                            </div>
-                            <BtnOutline onClick={() => setModalVer(p)}>Ver</BtnOutline>
-                        </div>
-                    );
-                })}
-                {filtrados.length === 0 && (
-                    <div style={{ padding: 32, textAlign: "center", color: C.textoMuted, fontSize: 14 }}>No se encontraron predios.</div>
-                )}
+            {/* Búsqueda */}
+            <div style={{ marginBottom: 16 }}>
+                <input
+                    placeholder="Buscar predio..."
+                    value={busqueda}
+                    onChange={e => setBusqueda(e.target.value)}
+                    style={{
+                        border: `1px solid ${C.borde}`, borderRadius: 8,
+                        padding: "7px 14px", fontSize: 14, outline: "none",
+                        width: isMobile ? "100%" : 200,
+                        color: C.texto, boxSizing: "border-box",
+                    }}
+                />
             </div>
+
+            {/* Desktop: tabla con grid */}
+            {!isMobile && (
+                <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                        <span>Predio</span><span>Lugar</span><span>Área</span><span>Estado</span><span>Próx. inspección</span><span>Ver</span>
+                    </div>
+                    {filtrados.map((p, i) => {
+                        const dias = p.proximaInspeccion ? diasRestantes(p.proximaInspeccion) : null;
+                        return (
+                            <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 0.8fr 1.3fr 1.3fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
+                                <div>
+                                    <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{p.nombre}</div>
+                                    <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>
+                                </div>
+                                <span style={{ fontSize: 13, color: C.textoMuted }}>{p.lugarNombre}</span>
+                                <span style={{ fontSize: 14, color: C.texto }}>{p.areaHa} ha</span>
+                                <Badge estado={p.estadoSanitario} />
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    {dias !== null ? (
+                                        <>
+                                            <span style={{ fontSize: 13, color: dias <= 7 ? C.rojo : C.textoMuted, fontWeight: dias <= 7 ? 700 : 400 }}>{fmt(p.proximaInspeccion)}</span>
+                                            {dias <= 30 && (
+                                                <span style={{ fontSize: 10, background: dias <= 7 ? C.rojoPastel : C.amarilloPastel, color: dias <= 7 ? C.rojo : C.amarillo, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>
+                                                    {dias}d
+                                                </span>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <span style={{ fontSize: 13, color: C.textoMuted }}>—</span>
+                                    )}
+                                </div>
+                                <BtnOutline onClick={() => setModalVer(p)}>Ver</BtnOutline>
+                            </div>
+                        );
+                    })}
+                    {filtrados.length === 0 && (
+                        <div style={{ padding: 32, textAlign: "center", color: C.textoMuted, fontSize: 14 }}>No se encontraron predios.</div>
+                    )}
+                </div>
+            )}
+
+            {/* Móvil: tarjetas */}
+            {isMobile && (
+                <div style={{ display: "grid", gap: 10 }}>
+                    {filtrados.map(p => {
+                        const dias = p.proximaInspeccion ? diasRestantes(p.proximaInspeccion) : null;
+                        return (
+                            <div key={p.id} style={{
+                                background: C.blanco, borderRadius: 12,
+                                border: `1px solid ${C.borde}`, padding: "14px 16px",
+                            }}>
+                                {/* Fila 1: nombre + botón ver */}
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                                    <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
+                                        <div style={{ fontSize: 15, fontWeight: 700, color: C.texto, marginBottom: 2 }}>{p.nombre}</div>
+                                        <div style={{ fontSize: 12, color: C.textoMuted }}>{p.cultivos.map(c => c.nombre).join(", ")}</div>
+                                    </div>
+                                    <BtnOutline onClick={() => setModalVer(p)}>Ver</BtnOutline>
+                                </div>
+
+                                {/* Fila 2: datos en grid 2 columnas */}
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                                    <div>
+                                        <div style={{ fontSize: 10, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Lugar</div>
+                                        <div style={{ fontSize: 13, color: C.texto }}>{p.lugarNombre || "—"}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: 10, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Área</div>
+                                        <div style={{ fontSize: 13, color: C.texto }}>{p.areaHa} ha</div>
+                                    </div>
+                                    {dias !== null && (
+                                        <div>
+                                            <div style={{ fontSize: 10, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Próx. inspección</div>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                                <span style={{ fontSize: 13, color: dias <= 7 ? C.rojo : C.texto, fontWeight: dias <= 7 ? 700 : 400 }}>
+                                                    {fmt(p.proximaInspeccion)}
+                                                </span>
+                                                {dias <= 30 && (
+                                                    <span style={{ fontSize: 10, background: dias <= 7 ? C.rojoPastel : C.amarilloPastel, color: dias <= 7 ? C.rojo : C.amarillo, padding: "1px 6px", borderRadius: 8, fontWeight: 700 }}>
+                                                        {dias}d
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Fila 3: estado */}
+                                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                    <Badge estado={p.estadoSanitario} />
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {filtrados.length === 0 && (
+                        <div style={{ padding: 32, textAlign: "center", color: C.textoMuted, fontSize: 14, background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}` }}>
+                            No se encontraron predios.
+                        </div>
+                    )}
+                </div>
+            )}
 
             {modalVer  && <ModalVerPredio predio={modalVer} onClose={() => setModalVer(null)} onEditar={p => { setModalVer(null); setModalForm(p); }} onEliminar={p => { setModalVer(null); setModalElim(p); }} />}
             {modalForm && <ModalFormPredio predio={modalForm === "crear" ? null : modalForm} lugares={lugares} onClose={() => setModalForm(null)} onGuardar={handleGuardar} />}
@@ -2180,6 +2420,7 @@ function PaginaPredios({ predios, setPredios, lugares, lotes, setLotes, mostrarT
 // ── Página Lotes ──────────────────────────────────────────────────────────────
 // CRUD completo de lotes. La eliminación es simple (sin cascada).
 function PaginaLotes({ lotes, setLotes, predios, mostrarToast }) {
+    const isMobile = useIsMobile();
     const [modalVer,   setModalVer]   = useState(null);
     const [modalForm,  setModalForm]  = useState(null);
     const [modalElim,  setModalElim]  = useState(null);
@@ -2190,7 +2431,6 @@ function PaginaLotes({ lotes, setLotes, predios, mostrarToast }) {
         l.predioNombre.toLowerCase().includes(busqueda.toLowerCase())
     );
 
-    /* Crear (POST) o actualizar (PUT) un lote */
     const handleGuardar = async (datos) => {
         try {
             if (datos.id) {
@@ -2207,7 +2447,6 @@ function PaginaLotes({ lotes, setLotes, predios, mostrarToast }) {
         } catch (err) { mostrarToast(`❌ ${err.message}`); }
     };
 
-    /* Eliminar un lote individual (sin cascada, no tiene hijos) */
     const handleEliminar = async () => {
         try {
             await apiFetch(`/predial/lotes/${modalElim.id}`, { method: "DELETE" });
@@ -2219,36 +2458,103 @@ function PaginaLotes({ lotes, setLotes, predios, mostrarToast }) {
     };
 
     return (
-        <div style={{ padding: "24px 28px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
+        <div style={{ padding: isMobile ? "16px 14px" : "24px 28px" }}>
+
+            {/* Barra superior */}
+            <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                marginBottom: 14, gap: 10,
+            }}>
                 <SectionTitle>Lotes</SectionTitle>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <input placeholder="Buscar lote o predio..." value={busqueda} onChange={e => setBusqueda(e.target.value)} style={{ border: `1px solid ${C.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 14, outline: "none", width: 210, color: C.texto }} />
-                    <BtnVerde onClick={() => setModalForm("crear")}>+ Crear lote</BtnVerde>
-                </div>
+                <BtnVerde onClick={() => setModalForm("crear")}>+ Crear lote</BtnVerde>
             </div>
 
-            <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1fr 1fr 1fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    <span>Lote</span><span>Predio</span><span>Lugar</span><span>Área</span><span>Estado</span><span>Ver</span>
-                </div>
-                {filtrados.map((l, i) => (
-                    <div key={l.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1fr 1fr 1fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
-                        <div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
-                            <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
-                        </div>
-                        <span style={{ fontSize: 13, color: C.textoMuted }}>{l.predioNombre}</span>
-                        <span style={{ fontSize: 13, color: C.textoMuted }}>{l.lugarNombre}</span>
-                        <span style={{ fontSize: 14, color: C.texto }}>{l.areaHa} ha</span>
-                        <Badge estado={l.estadoLote} />
-                        <BtnOutline onClick={() => setModalVer(l)}>Ver</BtnOutline>
-                    </div>
-                ))}
-                {filtrados.length === 0 && (
-                    <div style={{ padding: 32, textAlign: "center", color: C.textoMuted, fontSize: 14 }}>No se encontraron lotes.</div>
-                )}
+            {/* Búsqueda */}
+            <div style={{ marginBottom: 16 }}>
+                <input
+                    placeholder="Buscar lote o predio..."
+                    value={busqueda}
+                    onChange={e => setBusqueda(e.target.value)}
+                    style={{
+                        border: `1px solid ${C.borde}`, borderRadius: 8,
+                        padding: "7px 14px", fontSize: 14, outline: "none",
+                        width: isMobile ? "100%" : 210,
+                        color: C.texto, boxSizing: "border-box",
+                    }}
+                />
             </div>
+
+            {/* Desktop: tabla con grid */}
+            {!isMobile && (
+                <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1fr 1fr 1fr auto", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                        <span>Lote</span><span>Predio</span><span>Lugar</span><span>Área</span><span>Estado</span><span>Ver</span>
+                    </div>
+                    {filtrados.map((l, i) => (
+                        <div key={l.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1fr 1fr 1fr auto", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
+                            <div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{l.nombre}</div>
+                                <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
+                            </div>
+                            <span style={{ fontSize: 13, color: C.textoMuted }}>{l.predioNombre}</span>
+                            <span style={{ fontSize: 13, color: C.textoMuted }}>{l.lugarNombre}</span>
+                            <span style={{ fontSize: 14, color: C.texto }}>{l.areaHa} ha</span>
+                            <Badge estado={l.estadoLote} />
+                            <BtnOutline onClick={() => setModalVer(l)}>Ver</BtnOutline>
+                        </div>
+                    ))}
+                    {filtrados.length === 0 && (
+                        <div style={{ padding: 32, textAlign: "center", color: C.textoMuted, fontSize: 14 }}>No se encontraron lotes.</div>
+                    )}
+                </div>
+            )}
+
+            {/* Móvil: tarjetas */}
+            {isMobile && (
+                <div style={{ display: "grid", gap: 10 }}>
+                    {filtrados.map(l => (
+                        <div key={l.id} style={{
+                            background: C.blanco, borderRadius: 12,
+                            border: `1px solid ${C.borde}`, padding: "14px 16px",
+                        }}>
+                            {/* Fila 1: nombre + botón ver */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                                <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
+                                    <div style={{ fontSize: 15, fontWeight: 700, color: C.texto, marginBottom: 2 }}>{l.nombre}</div>
+                                    <div style={{ fontSize: 12, color: C.textoMuted }}>{l.cultivos.map(c => c.nombre).join(", ")}</div>
+                                </div>
+                                <BtnOutline onClick={() => setModalVer(l)}>Ver</BtnOutline>
+                            </div>
+
+                            {/* Fila 2: datos en grid 2 columnas */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                                <div>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Predio</div>
+                                    <div style={{ fontSize: 13, color: C.texto }}>{l.predioNombre || "—"}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Lugar</div>
+                                    <div style={{ fontSize: 13, color: C.texto }}>{l.lugarNombre || "—"}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textoMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Área</div>
+                                    <div style={{ fontSize: 13, color: C.texto }}>{l.areaHa} ha</div>
+                                </div>
+                            </div>
+
+                            {/* Fila 3: estado */}
+                            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                <Badge estado={l.estadoLote} />
+                            </div>
+                        </div>
+                    ))}
+                    {filtrados.length === 0 && (
+                        <div style={{ padding: 32, textAlign: "center", color: C.textoMuted, fontSize: 14, background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}` }}>
+                            No se encontraron lotes.
+                        </div>
+                    )}
+                </div>
+            )}
 
             {modalVer  && <ModalVerLote lote={modalVer} onClose={() => setModalVer(null)} onEditar={l => { setModalVer(null); setModalForm(l); }} onEliminar={l => { setModalVer(null); setModalElim(l); }} />}
             {modalForm && <ModalFormLote lote={modalForm === "crear" ? null : modalForm} predios={predios} onClose={() => setModalForm(null)} onGuardar={handleGuardar} />}
@@ -2263,6 +2569,7 @@ function PaginaLotes({ lotes, setLotes, predios, mostrarToast }) {
 //   "Por vencer"  — predios cuya próxima inspección está en los próximos 30 días
 // Incluye botón para abrir el modal de nueva solicitud.
 function PaginaInspecciones({ predios }) {
+    const isMobile = useIsMobile();
     const [tab,             setTab]             = useState("realizadas");
     const [modalSolicitar,  setModalSolicitar]  = useState(false);
     const [insVer,          setInsVer]          = useState(null);
@@ -2271,7 +2578,6 @@ function PaginaInspecciones({ predios }) {
     const [cargando,        setCargando]        = useState(true);
     const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
 
-    /* Carga las solicitudes del productor autenticado */
     const cargarInspecciones = useCallback(() => {
         setCargando(true);
         fetch(`${BASE_URL}/inspecciones/solicitudes/productor/${usuario.id}`)
@@ -2283,37 +2589,58 @@ function PaginaInspecciones({ predios }) {
 
     useEffect(() => {
         cargarInspecciones();
-        // Carga también la lista de predios para el modal de nueva solicitud
         fetch(`${BASE_URL}/inspecciones/predios/productor/${usuario.id}`)
             .then(r => r.json())
             .then(data => setPrediosApi(Array.isArray(data) ? data : []))
             .catch(() => {});
     }, [cargarInspecciones]);
 
-    /* Predios con inspección próxima (<= 30 días), ordenados por urgencia */
     const porVencer = predios
         .filter(p => p.proximaInspeccion && diasRestantes(p.proximaInspeccion) <= 30)
         .sort((a, b) => diasRestantes(a.proximaInspeccion) - diasRestantes(b.proximaInspeccion));
 
     return (
-        <div style={{ padding: "24px 28px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ padding: isMobile ? "16px 14px" : "24px 28px" }}>
+
+            {/* Barra superior */}
+            <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                marginBottom: 20, gap: 10,
+            }}>
                 <SectionTitle>Inspecciones</SectionTitle>
-                <BtnVerde onClick={() => setModalSolicitar(true)}>+ Solicitar inspección</BtnVerde>
+                <BtnVerde onClick={() => setModalSolicitar(true)}>
+                    {isMobile ? "+ Solicitar" : "+ Solicitar inspección"}
+                </BtnVerde>
             </div>
 
-            {/* Pestañas de navegación */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 20, background: C.grisPastel, padding: 6, borderRadius: 10, width: "fit-content" }}>
-                <TabBtn activa={tab} id="realizadas" label={`Solicitudes (${inspecciones.length})`} setActiva={setTab} />
-                <TabBtn activa={tab} id="porVencer"  label={`Por vencer (${porVencer.length})`}     setActiva={setTab} />
+            {/* Pestañas */}
+            <div style={{
+                display: "flex", gap: 8, marginBottom: 20,
+                background: C.grisPastel, padding: 6, borderRadius: 10,
+                width: isMobile ? "100%" : "fit-content",
+                boxSizing: "border-box",
+            }}>
+                <TabBtn activa={tab} id="realizadas"
+                    label={isMobile ? `Solicitudes (${inspecciones.length})` : `Solicitudes (${inspecciones.length})`}
+                    setActiva={setTab}
+                />
+                <TabBtn activa={tab} id="porVencer"
+                    label={`Por vencer (${porVencer.length})`}
+                    setActiva={setTab}
+                />
             </div>
 
-            {/* Pestaña: lista de solicitudes */}
+            {/* Pestaña: solicitudes */}
             {tab === "realizadas" && (
                 <div style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${C.borde}`, overflow: "hidden" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "2fr 0.8fr 0.8fr 80px", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                        <span>Predio</span><span>Fecha Solicitud</span><span>Estado</span><span>Detalle</span>
-                    </div>
+
+                    {/* Desktop: tabla */}
+                    {!isMobile && (
+                        <div style={{ display: "grid", gridTemplateColumns: "2fr 0.8fr 0.8fr 80px", gap: 8, padding: "10px 18px", background: C.verdePastel, fontSize: 11, fontWeight: 700, color: C.verde, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                            <span>Predio</span><span>Fecha Solicitud</span><span>Estado</span><span>Detalle</span>
+                        </div>
+                    )}
+
                     {cargando ? (
                         <div style={{ padding: 40, textAlign: "center", color: C.textoMuted }}>Cargando...</div>
                     ) : inspecciones.length === 0 ? (
@@ -2321,18 +2648,61 @@ function PaginaInspecciones({ predios }) {
                             <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
                             <p style={{ margin: 0, fontWeight: 600 }}>No tienes solicitudes de inspección</p>
                         </div>
-                    ) : inspecciones.map((ins, i) => (
-                        <div key={ins.id} style={{ display: "grid", gridTemplateColumns: "2fr 0.8fr 0.8fr 80px", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{ins.nombrePredio}</span>
-                            <span style={{ fontSize: 13, color: C.textoMuted }}>{new Date(ins.fechaSolicitud).toLocaleDateString("es-CO")}</span>
-                            <Badge estado={ins.estado === "pendiente" ? "Pendiente" : ins.estado === "asignada" ? "En revisión" : ins.estado} />
-                            <BtnOutline onClick={() => setInsVer(ins)}>Ver</BtnOutline>
-                        </div>
-                    ))}
+                    ) : (
+                        <>
+                            {/* Desktop: filas */}
+                            {!isMobile && inspecciones.map((ins, i) => (
+                                <div key={ins.id} style={{ display: "grid", gridTemplateColumns: "2fr 0.8fr 0.8fr 80px", gap: 8, alignItems: "center", padding: "13px 18px", borderTop: i === 0 ? "none" : `1px solid ${C.borde}`, background: i % 2 === 0 ? C.blanco : "#FAFAFA" }}>
+                                    <span style={{ fontSize: 14, fontWeight: 700, color: C.texto }}>{ins.nombrePredio}</span>
+                                    <span style={{ fontSize: 13, color: C.textoMuted }}>{new Date(ins.fechaSolicitud).toLocaleDateString("es-CO")}</span>
+                                    <Badge estado={ins.estado === "pendiente" ? "Pendiente" : ins.estado === "asignada" ? "En revisión" : ins.estado} />
+                                    <BtnOutline onClick={() => setInsVer(ins)}>Ver</BtnOutline>
+                                </div>
+                            ))}
+
+                            {/* Móvil: tarjetas */}
+                            {isMobile && (
+                                <div style={{ display: "grid", gap: 1 }}>
+                                    {inspecciones.map((ins, i) => (
+                                        <div key={ins.id} style={{
+                                            padding: "14px 16px",
+                                            borderTop: i === 0 ? "none" : `1px solid ${C.borde}`,
+                                            background: i % 2 === 0 ? C.blanco : "#FAFAFA",
+                                        }}>
+                                            {/* Fila 1: nombre + botón ver */}
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                                <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
+                                                    <div style={{ fontSize: 14, fontWeight: 700, color: C.texto, marginBottom: 2 }}>
+                                                        {ins.nombrePredio}
+                                                    </div>
+                                                    <div style={{ fontSize: 12, color: C.textoMuted }}>
+                                                        {ins.lugarproduccion || "—"}
+                                                    </div>
+                                                </div>
+                                                <BtnOutline onClick={() => setInsVer(ins)}>Ver</BtnOutline>
+                                            </div>
+
+                                            {/* Fila 2: fecha + estado */}
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                <span style={{ fontSize: 12, color: C.textoMuted }}>
+                                                    {new Date(ins.fechaSolicitud).toLocaleDateString("es-CO")}
+                                                </span>
+                                                <Badge estado={
+                                                    ins.estado === "pendiente"  ? "Pendiente"   :
+                                                    ins.estado === "asignada"   ? "En revisión" :
+                                                    ins.estado
+                                                } />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
 
-            {/* Pestaña: predios con inspección por vencer */}
+            {/* Pestaña: por vencer */}
             {tab === "porVencer" && (
                 porVencer.length === 0 ? (
                     <div style={{ textAlign: "center", padding: 48, color: C.textoMuted }}>
@@ -2344,14 +2714,24 @@ function PaginaInspecciones({ predios }) {
                         {porVencer.map(p => {
                             const dias = diasRestantes(p.proximaInspeccion);
                             return (
-                                <div key={p.id} style={{ background: C.blanco, borderRadius: 12, border: `1px solid ${dias <= 7 ? C.rojo : C.amarillo}`, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <div key={p.id} style={{
+                                    background: C.blanco, borderRadius: 12,
+                                    border: `1px solid ${dias <= 7 ? C.rojo : C.amarillo}`,
+                                    padding: isMobile ? "14px 16px" : "16px 20px",
+                                    display: "flex",
+                                    flexDirection: isMobile ? "column" : "row",
+                                    alignItems: isMobile ? "flex-start" : "center",
+                                    justifyContent: "space-between",
+                                    gap: isMobile ? 10 : 0,
+                                }}>
                                     <div>
                                         <div style={{ fontSize: 13, fontWeight: 700, color: C.texto, marginBottom: 3 }}>{p.nombre}</div>
                                         <div style={{ fontSize: 13, color: C.textoMuted }}>{p.lugarNombre} · {p.cultivos.map(c => c.nombre).join(", ")}</div>
                                     </div>
-                                    <div style={{ textAlign: "right" }}>
-                                        {/* Días restantes: rojo si queda ≤ 7 días, amarillo si ≤ 30 */}
-                                        <div style={{ fontSize: 24, fontWeight: 800, color: dias <= 7 ? C.rojo : C.amarillo }}>{dias}d</div>
+                                    <div style={{ textAlign: isMobile ? "left" : "right" }}>
+                                        <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: dias <= 7 ? C.rojo : C.amarillo }}>
+                                            {dias}d
+                                        </div>
                                         <div style={{ fontSize: 12, color: C.textoMuted }}>para {fmt(p.proximaInspeccion)}</div>
                                     </div>
                                 </div>
@@ -2361,7 +2741,7 @@ function PaginaInspecciones({ predios }) {
                 )
             )}
 
-            {insVer        && <ModalInspeccion ins={insVer} onClose={() => setInsVer(null)} />}
+            {insVer         && <ModalInspeccion ins={insVer} onClose={() => setInsVer(null)} />}
             {modalSolicitar && (
                 <ModalSolicitar
                     prediosApi={prediosApi}
@@ -2385,7 +2765,7 @@ function PaginaInspecciones({ predios }) {
 // ══════════════════════════════════════════════════════════════════════════════
 export default function DashboardProductor() {
     const [activa,      setActiva]      = useState("dashboard");
-    const [menuAbierto, setMenuAbierto] = useState(true);
+    const [menuAbierto, setMenuAbierto] = useState(window.innerWidth >= 768);
     const [cargando,    setCargando]    = useState(true);
 
     // Estado global: se inicia vacío y se rellena al montar (API o datos de prueba)
