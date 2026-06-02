@@ -41,36 +41,32 @@ const getLugares = asyncHandler(async (req, res) => {
             [lugar.id]
         );
 
-        // Paso 1: trae los predio_ids del lugar
         const prediosLugar = await query(
             `SELECT id FROM predio WHERE lugarproduccion_id = ?`,
             [lugar.id]
         );
         const predioIds = prediosLugar.map(p => p.id);
 
-        // Paso 2: consulta inspecciones en dbInspecciones
         if (predioIds.length > 0) {
             lugar.nivelesRiesgo = await new Promise((resolve, reject) =>
-    dbInspecciones.query(
-        `SELECT i.nivelRiesgo
-         FROM inspeccionsanitaria i
-         JOIN solicitudinspeccion s ON i.solicitud_id = s.id
-         WHERE s.predio_id IN (?)
-         AND i.nivelRiesgo IS NOT NULL 
-         AND i.nivelRiesgo != ''
-         ORDER BY i.fechaInspeccion DESC`,
-        [predioIds],
-        (err, results) => err ? reject(err) : resolve(results)
-    )
-);
+                dbInspecciones.query(
+                    `SELECT i.nivelRiesgo
+                     FROM inspeccionsanitaria i
+                     JOIN solicitudinspeccion s ON i.solicitud_id = s.id
+                     WHERE s.predio_id IN (?)
+                     AND i.nivelRiesgo IS NOT NULL 
+                     AND i.nivelRiesgo != ''
+                     ORDER BY i.fechaInspeccion DESC`,
+                    [predioIds],
+                    (err, results) => err ? reject(err) : resolve(results)
+                )
+            );
         } else {
             lugar.nivelesRiesgo = [];
         }
     }
     res.json(lugares);
 });
-
-
 
 const getLugarById = asyncHandler(async (req, res) => {
     const rows = await query("SELECT * FROM lugarproduccion WHERE id = ?", [req.params.id]);
@@ -98,26 +94,11 @@ const getLugarById = asyncHandler(async (req, res) => {
 const createLugar = asyncHandler(async (req, res) => {
     const { nombre, municipio_id, vereda, departamento, municipio, cultivos, productor_id } = req.body;
 
-    // Genera numRegistroICA único para el lugar
-    const anio = new Date().getFullYear();
-    const rows = await query(
-        `SELECT numRegistroICA FROM lugarproduccion 
-         WHERE numRegistroICA LIKE ? 
-         ORDER BY numRegistroICA DESC LIMIT 1`,
-        [`LP-${anio}-%`]
-    );
-    let siguiente = 1;
-    if (rows.length > 0) {
-        const ultimo = rows[0].numRegistroICA;
-        const partes = ultimo.split("-");
-        siguiente = parseInt(partes[2]) + 1;
-    }
-    const numRegistroICA = `LP-${anio}-${String(siguiente).padStart(4, "0")}`;
-
+    // numRegistroICA lo genera el disparador trg_matricula_lugar en MySQL
     const result = await query(
-        `INSERT INTO lugarproduccion (nombre, municipio_id, vereda, departamento, municipio, productor_id, numRegistroICA)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [nombre, municipio_id, vereda, departamento, municipio, productor_id, numRegistroICA]
+        `INSERT INTO lugarproduccion (nombre, municipio_id, vereda, departamento, municipio, productor_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [nombre, municipio_id, vereda, departamento, municipio, productor_id]
     );
     const lugarId = result.insertId;
 
@@ -217,7 +198,7 @@ const getPredioById = asyncHandler(async (req, res) => {
 });
 
 const createPredio = asyncHandler(async (req, res) => {
-    let {
+    const {
         nombre, numRegistroICA, vereda,
         lugarProduccion_id, lugarproduccion_id,
         propietario_id, area, cultivos,
@@ -225,28 +206,12 @@ const createPredio = asyncHandler(async (req, res) => {
 
     const lugarId = lugarProduccion_id || lugarproduccion_id;
 
-    // ← NUEVO: genera matrícula automática si no viene
-    if (!numRegistroICA) {
-        const anio = new Date().getFullYear();
-        const rows = await query(
-            `SELECT numRegistroICA FROM predio 
-             WHERE numRegistroICA LIKE ? 
-             ORDER BY numRegistroICA DESC LIMIT 1`,
-            [`ICA-${anio}-%`]
-        );
-        let siguiente = 1;
-        if (rows.length > 0) {
-            const ultimo = rows[0].numRegistroICA; // "ICA-2026-0007"
-            const partes = ultimo.split("-");
-            siguiente = parseInt(partes[2]) + 1;
-        }
-        numRegistroICA = `ICA-${anio}-${String(siguiente).padStart(4, "0")}`;
-    }
-
+    // numRegistroICA lo genera el disparador trg_matricula_predio en MySQL
+    // si se envía desde el frontend, el disparador lo respeta (no lo sobreescribe)
     const result = await query(
         `INSERT INTO predio (nombre, numRegistroICA, vereda, lugarproduccion_id, propietario_id, area)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [nombre, numRegistroICA, vereda, lugarId, propietario_id, area]
+        [nombre, numRegistroICA || null, vereda, lugarId, propietario_id, area]
     );
 
     const predioId = result.insertId;
@@ -271,8 +236,8 @@ const updatePredio = asyncHandler(async (req, res) => {
     } = req.body;
 
     const lugarId = lugarProduccion_id || lugarproduccion_id;
-    console.log("updatePredio - lugarId:", lugarId); // ← agrega esto
-    console.log("updatePredio - body:", req.body);   // ← y esto
+    console.log("updatePredio - lugarId:", lugarId);
+    console.log("updatePredio - body:", req.body);
 
     const result = await query(
         `UPDATE predio
@@ -415,7 +380,6 @@ const getCultivos = asyncHandler(async (req, res) => {
     res.json(await query("SELECT * FROM cultivo"));
 });
 
-// Cultivos disponibles para un lugar específico
 const getCultivosByLugar = asyncHandler(async (req, res) => {
     const results = await query(
         `SELECT c.id, c.nombre FROM cultivo c
@@ -426,7 +390,6 @@ const getCultivosByLugar = asyncHandler(async (req, res) => {
     res.json(results);
 });
 
-// Cultivos disponibles para un predio específico
 const getCultivosByPredio = asyncHandler(async (req, res) => {
     const results = await query(
         `SELECT c.id, c.nombre FROM cultivo c
@@ -466,7 +429,6 @@ const getPrediosConRiesgo = asyncHandler(async (req, res) => {
         )
     );
 
-    // Capitaliza la primera letra para que coincida con el frontend
     const capitalizar = (str) => str
         ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
         : null;
