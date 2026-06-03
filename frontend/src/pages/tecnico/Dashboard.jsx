@@ -436,48 +436,104 @@ function CampoForm({ label, value, onChange, placeholder, tipo = "text", error }
 }
 
 function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario, onVerProgreso }) {
+  const [esMobil, setEsMobil] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setEsMobil(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const pendientes = inspecciones.filter(i => i.resultado !== 'Completada');
+
   return (
-    <div style={{ padding: "24px 28px" }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 40 }}>
-        {/* FIX: fondo más oscuro en el header del calendario */}
-        <div style={{ width: "100%", background: "#A5D6A7", padding: "18px 0", marginBottom: 24, borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, width: 4, height: "100%", background: COLORES.verde, borderTopRightRadius: 4, borderBottomRightRadius: 4 }} />
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1B5E20" }}>Calendario</h2>
-        </div>
-        <Calendario inspecciones={inspecciones} />
-        {/* FIX: fondo más oscuro en el label debajo del calendario */}
-    <div style={{ marginTop: 16, background: "#A5D6A7", borderRadius: 10, padding: "12px 20px", textAlign: "center", width: "100%", maxWidth: 1100 }}>
-  <div style={{ fontSize: 13, fontWeight: 700, color: "#1B5E20", marginBottom: 4 }}>HOY</div>
-  <div style={{ fontSize: 15, fontWeight: 700, color: "#1B5E20" }}>
-    {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-  </div>
-  <div style={{ fontSize: 14, color: "#2E7D32", marginTop: 4 }}>{inspecciones.filter(i => i.resultado !== 'Completada').length} inspecciones programadas</div>
-</div>
+    <div style={{ padding: esMobil ? "14px" : "24px 28px" }}>
+
+      {/* Calendario */}
+      <div style={{ width: "100%", background: "#A5D6A7", padding: "14px 0", marginBottom: 16, borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+        <div style={{ position: "absolute", left: 0, top: 0, width: 4, height: "100%", background: COLORES.verde, borderTopRightRadius: 4, borderBottomRightRadius: 4 }} />
+        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1B5E20" }}>Calendario</h2>
       </div>
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18 }}>
-          <div style={{ width: 4, height: 22, background: COLORES.verde, borderRadius: 2 }} />
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: COLORES.texto }}>Lista de inspecciones por realizar</h2>
+
+      <Calendario inspecciones={inspecciones} />
+
+      {/* Fecha de hoy */}
+      <div style={{ marginTop: 14, marginBottom: 28, background: "#A5D6A7", borderRadius: 10, padding: "12px 16px", textAlign: "center" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#1B5E20", marginBottom: 3 }}>HOY</div>
+        <div style={{ fontSize: esMobil ? 13 : 15, fontWeight: 700, color: "#1B5E20" }}>
+          {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </div>
+        <div style={{ fontSize: 13, color: "#2E7D32", marginTop: 4 }}>
+          {pendientes.length} inspecciones programadas
+        </div>
+      </div>
+
+      {/* Lista de inspecciones */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <div style={{ width: 4, height: 22, background: COLORES.verde, borderRadius: 2 }} />
+        <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: COLORES.texto }}>Lista de inspecciones por realizar</h2>
+      </div>
+
+      {esMobil ? (
+        /* TARJETAS en móvil */
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {pendientes.length === 0 ? (
+            <div style={{ padding: "28px 0", textAlign: "center", color: COLORES.textoMuted, fontSize: 14 }}>
+              No hay inspecciones pendientes
+            </div>
+          ) : pendientes.map(insp => (
+            <div key={insp.id} style={{ background: COLORES.blanco, border: `1px solid ${COLORES.borde}`, borderRadius: 12, padding: "13px 14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto, flex: 1, marginRight: 8 }}>
+                  {insp.lugarproduccion}
+                </div>
+                <Badge estado={insp.estado} />
+              </div>
+              <div style={{ fontSize: 12, color: COLORES.textoMuted, marginBottom: 12 }}>
+                📅 {insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => onVerProgreso(insp)}
+                  style={{ flex: 1, background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 8, padding: "8px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Ver progreso
+                </button>
+                <button onClick={() => onVerFormulario(insp)}
+                  style={{ flex: 1, background: insp.disponible ? COLORES.verde : COLORES.grisPastel, color: insp.disponible ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 8, padding: "8px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Formulario
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* TABLA en escritorio */
         <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
-  <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 140px 90px 110px", gap: 8, padding: "10px 18px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
-    <span>Lugar de producción</span><span>Fecha de inspección</span><span>Estado</span><span>Detalles</span><span>Formulario</span>
-  </div>
-  {inspecciones.filter(insp => insp.resultado !== 'Completada').map(insp => (
-    <div key={insp.id} style={{ display: "grid", gridTemplateColumns: "2fr 2fr 140px 90px 110px", gap: 8, alignItems: "center", padding: "12px 18px", borderTop: `1px solid ${COLORES.borde}`, background: COLORES.blanco }}>
-      <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{insp.lugarproduccion}</span>
-      <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}</span>
-      <Badge estado={insp.estado} />
-<button 
-  onClick={() => onVerProgreso(insp)} 
-  style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-  VER
-</button>
-      <button onClick={() => onVerFormulario(insp)} style={{ background: insp.disponible ? COLORES.verde : COLORES.grisPastel, color: insp.disponible ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
-    </div>
-  ))}
-</div>
-      </div>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 140px 90px 110px", gap: 8, padding: "10px 18px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <span>Lugar de producción</span>
+            <span>Fecha de inspección</span>
+            <span>Estado</span>
+            <span>Detalles</span>
+            <span>Formulario</span>
+          </div>
+          {pendientes.length === 0 ? (
+            <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted, fontSize: 14 }}>No hay inspecciones pendientes</div>
+          ) : pendientes.map(insp => (
+            <div key={insp.id} style={{ display: "grid", gridTemplateColumns: "2fr 2fr 140px 90px 110px", gap: 8, alignItems: "center", padding: "12px 18px", borderTop: `1px solid ${COLORES.borde}`, background: COLORES.blanco }}>
+              <span style={{ fontWeight: 600, fontSize: 14, color: COLORES.texto }}>{insp.lugarproduccion}</span>
+              <span style={{ fontSize: 13, color: COLORES.textoMuted }}>{insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}</span>
+              <Badge estado={insp.estado} />
+              <button onClick={() => onVerProgreso(insp)}
+                style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                VER
+              </button>
+              <button onClick={() => onVerFormulario(insp)}
+                style={{ background: insp.disponible ? COLORES.verde : COLORES.grisPastel, color: insp.disponible ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                VER
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -485,7 +541,14 @@ function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario, onVerProgre
 function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
   const [busqueda, setBusqueda] = useState("");
   const [historialReal, setHistorialReal] = useState([]);
+  const [esMobil, setEsMobil] = useState(window.innerWidth < 768);
   const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+  useEffect(() => {
+    const handleResize = () => setEsMobil(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/tecnico/${usuario.id}`)
@@ -494,54 +557,129 @@ function PaginaHistorial({ onVerDetalle, onVerFormulario }) {
       .catch(err => console.error(err));
   }, []);
 
-  const filtrados = historialReal.filter(h => 
+  const filtrados = historialReal.filter(h =>
     h.lugar?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
-    <div style={{ padding: "24px 28px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+    <div style={{ padding: esMobil ? "14px" : "24px 28px" }}>
+
+      {/* Título + buscador */}
+      <div style={{ display: "flex", flexDirection: esMobil ? "column" : "row", justifyContent: "space-between", alignItems: esMobil ? "stretch" : "center", gap: 12, marginBottom: 18 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 4, height: 22, background: COLORES.verde, borderRadius: 2 }} />
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: COLORES.texto }}>Historial de inspecciones</h2>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: COLORES.texto }}>Historial de inspecciones</h2>
         </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8 }}>
           <input placeholder="Buscar lugar..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
-            style={{ border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "7px 14px", fontSize: 15, outline: "none", width: 180 }} />
-          <button style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>FILTRAR</button>
+            style={{ border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "7px 12px", fontSize: 14, outline: "none", flex: 1, minWidth: 0 }} />
+          <button style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+            Filtrar
+          </button>
         </div>
       </div>
-      <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1.4fr auto auto", gap: 8, padding: "10px 16px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
-          <span>Lugar de producción</span><span>Fecha inspección</span><span>Fecha finalización</span><span>Detalle</span><span>Formulario</span>
+
+      {/* TARJETAS en móvil */}
+      {esMobil ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {filtrados.length === 0 ? (
+            <div style={{ padding: "28px 0", textAlign: "center", color: COLORES.textoMuted, fontSize: 14 }}>
+              No hay inspecciones completadas
+            </div>
+          ) : filtrados.map(h => (
+            <div key={h.id} style={{ background: COLORES.blanco, border: `1px solid ${COLORES.borde}`, borderRadius: 12, padding: "13px 14px" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: COLORES.texto, marginBottom: 8 }}>
+                {h.lugar}
+              </div>
+              <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORES.textoMuted, fontWeight: 600, textTransform: "uppercase", marginBottom: 2 }}>Inicio</div>
+                  <div style={{ fontSize: 13, color: COLORES.texto, fontWeight: 500 }}>
+                    {h.fechaInspeccion ? new Date(h.fechaInspeccion).toLocaleDateString('es-CO') : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORES.textoMuted, fontWeight: 600, textTransform: "uppercase", marginBottom: 2 }}>Finalización</div>
+                  <div style={{ fontSize: 13, color: COLORES.texto, fontWeight: 500 }}>
+                    {h.fechaFin ? new Date(h.fechaFin).toLocaleDateString('es-CO') : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORES.textoMuted, fontWeight: 600, textTransform: "uppercase", marginBottom: 2 }}>Estado</div>
+                  <span style={{ background: "#C8E6C9", color: "#1B5E20", fontSize: 12, fontWeight: 700, padding: "2px 10px", borderRadius: 20 }}>
+                    Completada
+                  </span>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => onVerDetalle(h)}
+                  style={{ flex: 1, background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 8, padding: "8px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Detalles
+                </button>
+                <button onClick={() => onVerFormulario(h)}
+                  style={{ flex: 1, background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 8, padding: "8px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Ver resultado
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-        {filtrados.length === 0 ? (
-          <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted, fontSize: 15 }}>No hay inspecciones completadas</div>
-        ) : filtrados.map((h, i) => (
-          <div key={h.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1.4fr auto auto", gap: 8, alignItems: "center", padding: "12px 16px", borderTop: i === 0 ? "none" : `1px solid ${COLORES.borde}` }}>
-            <span style={{ fontWeight: 600, fontSize: 15, color: COLORES.texto }}>{h.lugar}</span>
-            <span style={{ fontSize: 14, color: COLORES.textoMuted }}>
-              {h.fechaInspeccion ? new Date(h.fechaInspeccion).toLocaleDateString('es-CO') : '-'}
-            </span>
-            <span style={{ fontSize: 14, color: COLORES.textoMuted }}>{h.fechaFin ? new Date(h.fechaFin).toLocaleDateString('es-CO') : '-'}</span>
-            <button onClick={() => onVerDetalle(h)} style={{ background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>DETALLES</button>
-            <button onClick={() => onVerFormulario(h)} style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
+      ) : (
+        /* TABLA en escritorio */
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1.4fr auto auto", gap: 8, padding: "10px 16px", background: "#A5D6A7", fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <span>Lugar de producción</span>
+            <span>Fecha inspección</span>
+            <span>Fecha finalización</span>
+            <span>Detalle</span>
+            <span>Formulario</span>
           </div>
-        ))}
+          {filtrados.length === 0 ? (
+            <div style={{ padding: 40, textAlign: "center", color: COLORES.textoMuted, fontSize: 14 }}>
+              No hay inspecciones completadas
+            </div>
+          ) : filtrados.map((h, i) => (
+            <div key={h.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1.4fr auto auto", gap: 8, alignItems: "center", padding: "12px 16px", borderTop: i === 0 ? "none" : `1px solid ${COLORES.borde}` }}>
+              <span style={{ fontWeight: 600, fontSize: 14, color: COLORES.texto }}>{h.lugar}</span>
+              <span style={{ fontSize: 13, color: COLORES.textoMuted }}>
+                {h.fechaInspeccion ? new Date(h.fechaInspeccion).toLocaleDateString('es-CO') : '—'}
+              </span>
+              <span style={{ fontSize: 13, color: COLORES.textoMuted }}>
+                {h.fechaFin ? new Date(h.fechaFin).toLocaleDateString('es-CO') : '—'}
+              </span>
+              <button onClick={() => onVerDetalle(h)}
+                style={{ background: COLORES.grisPastel, color: COLORES.gris, border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                DETALLES
+              </button>
+              <button onClick={() => onVerFormulario(h)}
+                style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                VER
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ marginTop: 10, fontSize: 13, color: COLORES.textoMuted, textAlign: "right" }}>
+        {filtrados.length} registros encontrados
       </div>
-      <div style={{ marginTop: 10, fontSize: 14, color: COLORES.textoMuted, textAlign: "right" }}>{filtrados.length} registros encontrados</div>
     </div>
   );
 }
 
-function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
+function PaginaFormulario({ inspecciones, onGuardado }) {
   const inspeccionHoy = inspecciones?.[0] || null;
+  const [esMobil, setEsMobil] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setEsMobil(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const PLAGAS_LISTA = ["Broca","Roya","Gusano Cogollero","Mosca Blanca","Pulgón","Trips","Ácaros","Sin plagas"];
 
-  const [infoLugar, setInfoLugar] = useState({
-    lugar: "", departamento: "", municipio: "", vereda: "", cultivos: [],
-  });
+  const [infoLugar, setInfoLugar] = useState({ lugar: "", departamento: "", municipio: "", vereda: "", cultivos: [] });
   const [lotes, setLotes] = useState([]);
   const [inspeccionLotes, setInspeccionLotes] = useState({});
   const [fechaInicio, setFechaInicio] = useState("");
@@ -550,84 +688,59 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
   const [errores, setErrores] = useState({});
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
-  const [autoGuardado, setAutoGuardado] = useState(null); // null | "guardando" | "guardado"
+  const [autoGuardado, setAutoGuardado] = useState(null);
   const debounceRef = useRef(null);
 
-  // Carga datos del lugar y lotes, luego restaura progreso si existe
   useEffect(() => {
     if (!inspeccionHoy) return;
-
     setInfoLugar({
       lugar:        inspeccionHoy.lugar        || inspeccionHoy.lugarproduccion || "",
       departamento: inspeccionHoy.departamento || "",
       municipio:    inspeccionHoy.municipio    || "",
       vereda:       inspeccionHoy.vereda       || "",
-      cultivos:     inspeccionHoy.cultivos
-                      ? inspeccionHoy.cultivos.split(",").map(c => c.trim())
-                      : [],
+      cultivos:     inspeccionHoy.cultivos ? inspeccionHoy.cultivos.split(",").map(c => c.trim()) : [],
     });
-
-    setFechaInicio(
-      inspeccionHoy.fechaInspeccion
-        ? new Date(inspeccionHoy.fechaInspeccion).toISOString().split('T')[0]
-        : ""
-    );
+    setFechaInicio(inspeccionHoy.fechaInspeccion ? new Date(inspeccionHoy.fechaInspeccion).toISOString().split('T')[0] : "");
 
     fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/lotes/predio/${inspeccionHoy.predio_id}`)
       .then(res => res.json())
       .then(lotesData => {
         const lotesArr = Array.isArray(lotesData) ? lotesData : [];
         setLotes(lotesArr);
-
-        // Intenta restaurar progreso guardado
         fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}/progreso`)
           .then(res => res.json())
           .then(progreso => {
             if (progreso?.datos) {
-              // Restaura estado desde progreso
               const d = progreso.datos;
-              if (d.inspeccionLotes) setInspeccionLotes(d.inspeccionLotes);
-              if (d.nivelRiesgo)     setNivelRiesgo(d.nivelRiesgo);
+              if (d.inspeccionLotes)     setInspeccionLotes(d.inspeccionLotes);
+              if (d.nivelRiesgo)         setNivelRiesgo(d.nivelRiesgo);
               if (d.estadoFitosanitario) setEstadoFitosanitario(d.estadoFitosanitario);
             } else {
-              // Sin progreso, inicializa lotes vacíos
               const init = {};
-              lotesArr.forEach(l => {
-                init[l.id] = { observaciones: "", plagas: [""], cantidadPlantas: "" };
-              });
+              lotesArr.forEach(l => { init[l.id] = { observaciones: "", plagas: [""], cantidadPlantas: "" }; });
               setInspeccionLotes(init);
             }
           })
           .catch(() => {
             const init = {};
-            lotesArr.forEach(l => {
-              init[l.id] = { observaciones: "", plagas: [""], cantidadPlantas: "" };
-            });
+            lotesArr.forEach(l => { init[l.id] = { observaciones: "", plagas: [""], cantidadPlantas: "" }; });
             setInspeccionLotes(init);
           });
       })
       .catch(err => console.error(err));
- }, [inspeccionHoy?.id, inspeccionHoy?._soloLectura]);
+  }, [inspeccionHoy?.id]);
 
-  // Autoguardado con debounce de 2 segundos cada vez que cambia algo
   useEffect(() => {
     if (!inspeccionHoy?.id || Object.keys(inspeccionLotes).length === 0) return;
-
     if (debounceRef.current) clearTimeout(debounceRef.current);
-
     setAutoGuardado("guardando");
     debounceRef.current = setTimeout(async () => {
       try {
-        await fetch(
-          `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}/progreso`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              datos: { inspeccionLotes, nivelRiesgo, estadoFitosanitario }
-            }),
-          }
-        );
+        await fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}/progreso`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ datos: { inspeccionLotes, nivelRiesgo, estadoFitosanitario } }),
+        });
         setAutoGuardado("guardado");
         setTimeout(() => setAutoGuardado(null), 2000);
       } catch (err) {
@@ -635,12 +748,9 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
         setAutoGuardado(null);
       }
     }, 2000);
-
     return () => clearTimeout(debounceRef.current);
-  }, [inspeccionLotes, nivelRiesgo, estadoFitosanitario, inspeccionHoy?.id, inspeccionHoy?._soloLectura]);
+  }, [inspeccionLotes, nivelRiesgo, estadoFitosanitario, inspeccionHoy?.id]);
 
-
-  // Helpers lotes
   const setObsLote = (loteId, valor) =>
     setInspeccionLotes(prev => ({ ...prev, [loteId]: { ...prev[loteId], observaciones: valor } }));
 
@@ -665,70 +775,48 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
     });
 
   if (!inspeccionHoy) return (
-    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
+    <div style={{ padding: "28px 16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
       <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
-      <h2 style={{ color: COLORES.texto, fontWeight: 700, margin: 0 }}>No hay inspecciones pendientes</h2>
-      <p style={{ color: COLORES.textoMuted, marginTop: 8 }}>Cuando tengas una inspección asignada aparecerá aquí.</p>
+      <h2 style={{ color: COLORES.texto, fontWeight: 700, margin: 0, textAlign: "center" }}>No hay inspecciones pendientes</h2>
+      <p style={{ color: COLORES.textoMuted, marginTop: 8, textAlign: "center" }}>Cuando tengas una inspección asignada aparecerá aquí.</p>
     </div>
   );
 
-  const validar = () => {
-    const e = {};
-    setErrores(e);
-    return Object.keys(e).length === 0;
-  };
-
   const guardar = async () => {
-    if (!validar()) return;
     setGuardando(true);
     const hoy = new Date().toISOString().split('T')[0];
     try {
-      // 1. Actualiza inspección principal
-      const res = await fetch(
-        `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fechaInspeccion:     fechaInicio,
-            fechaFin:            hoy,
-            observaciones:       "Inspección por lotes completada",
-            resultado:           "Completada",
-            estado:              "completada",
-            plagaDetectada:      "Ver detalle por lote",
-            nivelRiesgo,
-            estadoFitosanitario,
-          }),
-        }
-      );
+      const res = await fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fechaInspeccion: fechaInicio, fechaFin: hoy,
+          observaciones: "Inspección por lotes completada",
+          resultado: "Completada", estado: "completada",
+          plagaDetectada: "Ver detalle por lote",
+          nivelRiesgo, estadoFitosanitario,
+        }),
+      });
       if (!res.ok) throw new Error("Error al guardar inspección");
 
-      // 2. Guarda detalle por lote
       const lotesPayload = lotes.map(lote => {
-        const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""], cantidadPlantas: "" };
+        const d = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""], cantidadPlantas: "" };
         return {
-          lote_id:          lote.id,
-          observaciones:    datosLote.observaciones || "",
-          plagasDetectadas: datosLote.plagas.filter(Boolean).join(", ") || "Sin plagas",
-          cantidadPlantas:  datosLote.cantidadPlantas || null,
+          lote_id: lote.id,
+          observaciones: d.observaciones || "",
+          plagasDetectadas: d.plagas.filter(Boolean).join(", ") || "Sin plagas",
+          cantidadPlantas: d.cantidadPlantas || null,
         };
       });
 
-      const res2 = await fetch(
-        `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/lotes`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ inspeccion_id: inspeccionHoy.id, lotes: lotesPayload }),
-        }
-      );
+      const res2 = await fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/lotes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inspeccion_id: inspeccionHoy.id, lotes: lotesPayload }),
+      });
       if (!res2.ok) throw new Error("Error al guardar lotes");
 
-      // 3. Elimina el progreso guardado
-      await fetch(
-        `https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}/progreso`,
-        { method: "DELETE" }
-      );
+      await fetch(`https://proyectointegrador5.onrender.com/api/inspecciones/inspecciones/${inspeccionHoy.id}/progreso`, { method: "DELETE" });
 
       setGuardado(true);
       setTimeout(() => onGuardado(), 2000);
@@ -740,63 +828,48 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
   };
 
   if (guardado) return (
-    <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
+    <div style={{ padding: "28px 16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
       <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
       <h2 style={{ color: COLORES.verde, fontWeight: 700, margin: 0 }}>Inspección guardada</h2>
       <p style={{ color: COLORES.textoMuted, marginTop: 8 }}>La inspección ha sido registrada exitosamente.</p>
     </div>
   );
 
-  const inputReadonly = {
-    width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
-    padding: "8px 12px", fontSize: 15, color: COLORES.textoMuted,
-    background: "#F5F5F5", boxSizing: "border-box", outline: "none",
-  };
-
-  const labelStyle = {
-    fontSize: 13, color: COLORES.textoMuted, fontWeight: 600,
-    textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6,
-  };
-
+  const inputReadonly = { width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 14, color: COLORES.textoMuted, background: "#F5F5F5", boxSizing: "border-box", outline: "none" };
+  const labelStyle   = { fontSize: 12, color: COLORES.textoMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 };
   const seccionHeader = (texto) => (
-    <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.verde, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
+    <div style={{ fontSize: 11, fontWeight: 700, color: COLORES.verde, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
       <div style={{ width: 3, height: 14, background: COLORES.verde, borderRadius: 2 }} />
       {texto}
     </div>
   );
 
   return (
-    <div style={{ padding: "24px 28px" }}>
-      {/* HEADER */}
-      <div style={{ width: "100%", background: "#A5D6A7", padding: "14px 0", marginBottom: 24, borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative" }}>
-        <div style={{ position: "absolute", left: 0, top: 0, width: 4, height: "100%", background: COLORES.verde, borderTopRightRadius: 4, borderBottomRightRadius: 4 }} />
-        <div style={{ paddingLeft: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1B5E20" }}>
-            Formulario de inspección · {infoLugar.lugar}
-          </h2>
-        </div>
-        {/* Indicador de autoguardado */}
-        <div style={{ paddingRight: 16 }}>
-          {autoGuardado === "guardando" && (
-            <span style={{ fontSize: 13, color: "#2E7D32", fontWeight: 600 }}>💾 Guardando...</span>
-          )}
-          {autoGuardado === "guardado" && (
-            <span style={{ fontSize: 13, color: "#2E7D32", fontWeight: 600 }}>✅ Progreso guardado</span>
-          )}
+    <div style={{ padding: esMobil ? "14px" : "24px 28px" }}>
+
+      {/* Header formulario */}
+      <div style={{ background: "#A5D6A7", padding: "12px 16px", marginBottom: 20, borderRadius: esMobil ? 10 : 0, display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative" }}>
+        {!esMobil && <div style={{ position: "absolute", left: 0, top: 0, width: 4, height: "100%", background: COLORES.verde, borderTopRightRadius: 4, borderBottomRightRadius: 4 }} />}
+        <h2 style={{ margin: 0, fontSize: esMobil ? 14 : 16, fontWeight: 700, color: "#1B5E20", paddingLeft: esMobil ? 0 : 12 }}>
+          Formulario · {infoLugar.lugar}
+        </h2>
+        <div>
+          {autoGuardado === "guardando" && <span style={{ fontSize: 12, color: "#2E7D32", fontWeight: 600 }}>💾 Guardando...</span>}
+          {autoGuardado === "guardado"  && <span style={{ fontSize: 12, color: "#2E7D32", fontWeight: 600 }}>✅ Guardado</span>}
         </div>
       </div>
 
-      <div style={{ maxWidth: 720, margin: "0 auto", display: "grid", gap: 20 }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", display: "grid", gap: 16 }}>
 
-        {/* SECCIÓN 1: INFO GENERAL */}
-        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
+        {/* SECCIÓN 1: Info general */}
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: esMobil ? 16 : 24 }}>
           {seccionHeader("Información general")}
-          <div style={{ display: "grid", gap: 14 }}>
+          <div style={{ display: "grid", gap: 12 }}>
             <div>
               <label style={labelStyle}>Lugar de producción</label>
               <input readOnly value={infoLugar.lugar} style={inputReadonly} />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div>
                 <label style={labelStyle}>Departamento</label>
                 <input readOnly value={infoLugar.departamento} style={inputReadonly} />
@@ -813,55 +886,46 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
             <div>
               <label style={labelStyle}>Fecha de inspección</label>
               <input type="date" readOnly value={fechaInicio} style={inputReadonly} />
-              <span style={{ fontSize: 12, color: COLORES.textoMuted, marginTop: 4, display: "block" }}>
+              <span style={{ fontSize: 11, color: COLORES.textoMuted, marginTop: 4, display: "block" }}>
                 📅 La fecha de finalización se registra automáticamente al guardar.
               </span>
             </div>
           </div>
         </div>
 
-        {/* SECCIÓN 2: CULTIVOS */}
-        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
+        {/* SECCIÓN 2: Cultivos */}
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: esMobil ? 16 : 24 }}>
           {seccionHeader("Cultivos del predio")}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {infoLugar.cultivos.length > 0 ? infoLugar.cultivos.map((c, i) => {
               const cols = [["#C8E6C9","#1B5E20"],["#E3F2FD","#1565C0"],["#FFF3E0","#E65100"],["#F3E5F5","#6A1B9A"]];
               const [bg, col] = cols[i % 4];
-              return <span key={i} style={{ background: bg, color: col, fontSize: 14, fontWeight: 700, padding: "6px 16px", borderRadius: 20 }}>🌱 {c}</span>;
+              return <span key={i} style={{ background: bg, color: col, fontSize: 13, fontWeight: 700, padding: "5px 14px", borderRadius: 20 }}>🌱 {c}</span>;
             }) : <span style={{ fontSize: 14, color: COLORES.textoMuted }}>Sin cultivos registrados</span>}
           </div>
         </div>
 
-        {/* SECCIÓN 3: INSPECCIÓN POR LOTE */}
-        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
+        {/* SECCIÓN 3: Inspección por lote */}
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: esMobil ? 16 : 24 }}>
           {seccionHeader(`Inspección por lote (${lotes.length} lotes)`)}
           {lotes.length === 0 && <p style={{ color: COLORES.textoMuted, fontSize: 14 }}>No se encontraron lotes.</p>}
-          <div style={{ display: "grid", gap: 16 }}>
+          <div style={{ display: "grid", gap: 14 }}>
             {lotes.map(lote => {
               const datosLote = inspeccionLotes[lote.id] || { observaciones: "", plagas: [""], cantidadPlantas: "" };
               return (
                 <div key={lote.id} style={{ borderRadius: 10, border: `1px solid ${COLORES.borde}`, overflow: "hidden" }}>
-                  <div style={{ background: "#A5D6A7", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 18 }}>🌿</span>
-                    <span style={{ fontWeight: 700, fontSize: 15, color: "#1B5E20" }}>{lote.nombre}</span>
-                    {lote.cultivos && <span style={{ fontSize: 13, color: "#2E7D32" }}>· {lote.cultivos}</span>}
+                  <div style={{ background: "#A5D6A7", padding: "9px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>🌿</span>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: "#1B5E20" }}>{lote.nombre}</span>
+                    {lote.cultivos && <span style={{ fontSize: 12, color: "#2E7D32" }}>· {lote.cultivos}</span>}
                   </div>
-                  <div style={{ padding: 16, display: "grid", gap: 14 }}>
+                  <div style={{ padding: esMobil ? 12 : 16, display: "grid", gap: 12 }}>
                     {/* Observaciones */}
                     <div>
                       <label style={labelStyle}>Observaciones (opcional)</label>
-                      <textarea
-                        value={datosLote.observaciones}
-                        onChange={e => setObsLote(lote.id, e.target.value)}
+                      <textarea value={datosLote.observaciones} onChange={e => setObsLote(lote.id, e.target.value)}
                         placeholder="Escriba observaciones para este lote..."
-                        style={{
-                          width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
-                          padding: "10px 12px", fontSize: 14, color: COLORES.texto,
-                          minHeight: 80, resize: "vertical", fontFamily: "inherit",
-                          boxSizing: "border-box", outline: "none",
-                          background: COLORES.blanco,
-                        }}
-                      />
+                        style={{ width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 14, color: COLORES.texto, minHeight: 70, resize: "vertical", fontFamily: "inherit", boxSizing: "border-box", outline: "none", background: COLORES.blanco }} />
                     </div>
                     {/* Plagas */}
                     <div>
@@ -869,51 +933,32 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
                       <div style={{ display: "grid", gap: 8 }}>
                         {datosLote.plagas.map((plaga, pIdx) => (
                           <div key={pIdx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                            <select
-                              
-                              value={plaga}
-                              onChange={e => setPlagaLote(lote.id, pIdx, e.target.value)}
-                              style={{
-                                flex: 1, border: `1px solid ${COLORES.borde}`, borderRadius: 8,
-                                padding: "8px 12px", fontSize: 14, outline: "none",
-                                 background: COLORES.blanco,                                boxSizing: "border-box",
-                              }}
-                            >
+                            <select value={plaga} onChange={e => setPlagaLote(lote.id, pIdx, e.target.value)}
+                              style={{ flex: 1, border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "8px 10px", fontSize: 14, outline: "none", background: COLORES.blanco, boxSizing: "border-box" }}>
                               <option value="">Seleccione una plaga...</option>
                               {PLAGAS_LISTA.map(p => <option key={p} value={p}>{p}</option>)}
                             </select>
                             {datosLote.plagas.length > 1 && (
-                              <button onClick={() => eliminarPlagaLote(lote.id, pIdx)} style={{ background: COLORES.rojoPastel, color: COLORES.rojo, border: "none", borderRadius: 7, width: 32, height: 36, cursor: "pointer", fontWeight: 700, fontSize: 16, flexShrink: 0 }}>×</button>
+                              <button onClick={() => eliminarPlagaLote(lote.id, pIdx)}
+                                style={{ background: COLORES.rojoPastel, color: COLORES.rojo, border: "none", borderRadius: 7, width: 32, height: 36, cursor: "pointer", fontWeight: 700, fontSize: 16, flexShrink: 0 }}>×</button>
                             )}
                           </div>
                         ))}
                         {datosLote.plagas.length < 5 && (
-                          <button onClick={() => agregarPlagaLote(lote.id)} style={{ background: COLORES.azulPastel, color: COLORES.azul, border: `1px dashed ${COLORES.azul}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "fit-content" }}>
+                          <button onClick={() => agregarPlagaLote(lote.id)}
+                            style={{ background: COLORES.azulPastel, color: COLORES.azul, border: `1px dashed ${COLORES.azul}`, borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "fit-content" }}>
                             + Agregar plaga
                           </button>
                         )}
                       </div>
                     </div>
-                    {/* Cantidad de plantas */}
+                    {/* Cantidad plantas */}
                     <div>
                       <label style={labelStyle}>🌱 Cantidad de plantas</label>
-                      <input
-                        type="number"
-                        min="0"
-                         
-                        value={datosLote.cantidadPlantas || ""}
-                        onChange={e => setInspeccionLotes(prev => ({
-                          ...prev,
-                          [lote.id]: { ...prev[lote.id], cantidadPlantas: e.target.value }
-                        }))}
+                      <input type="number" min="0" value={datosLote.cantidadPlantas || ""}
+                        onChange={e => setInspeccionLotes(prev => ({ ...prev, [lote.id]: { ...prev[lote.id], cantidadPlantas: e.target.value } }))}
                         placeholder="Ej: 120"
-                        style={{
-                          width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
-                          padding: "8px 12px", fontSize: 14, outline: "none",
-                          boxSizing: "border-box",
-                          background: COLORES.blanco,
-                        }}
-                      />
+                        style={{ width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "8px 12px", fontSize: 14, outline: "none", boxSizing: "border-box", background: COLORES.blanco }} />
                     </div>
                   </div>
                 </div>
@@ -922,46 +967,28 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
           </div>
         </div>
 
-        {/* SECCIÓN 4: RESULTADO FINAL */}
-        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: 24 }}>
+        {/* SECCIÓN 4: Resultado final */}
+        <div style={{ background: COLORES.blanco, borderRadius: 12, border: `1px solid ${COLORES.borde}`, padding: esMobil ? 16 : 24 }}>
           {seccionHeader("Resultado de la inspección")}
-          <div style={{ display: "grid", gap: 16 }}>
-            {/* Nivel de riesgo */}
+          <div style={{ display: "grid", gap: 14 }}>
             <div>
               <label style={labelStyle}>⚠️ Nivel de riesgo</label>
-              <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ display: "flex", gap: 8 }}>
                 {["Bajo","Medio","Alto"].map(nivel => (
-                  <button
-                    key={nivel}
-                     
-                    onClick={() => setNivelRiesgo(nivel)}
-                    style={{
-                      flex: 1, padding: "9px", borderRadius: 8, fontWeight: 700, fontSize: 15,
-                      cursor: "pointer",
+                  <button key={nivel} onClick={() => setNivelRiesgo(nivel)}
+                    style={{ flex: 1, padding: esMobil ? "8px 4px" : "9px", borderRadius: 8, fontWeight: 700, fontSize: esMobil ? 13 : 15, cursor: "pointer",
                       border: `2px solid ${nivelRiesgo === nivel ? (nivel === "Bajo" ? COLORES.verde : nivel === "Medio" ? COLORES.amarillo : COLORES.rojo) : COLORES.borde}`,
                       background: nivelRiesgo === nivel ? (nivel === "Bajo" ? "#C8E6C9" : nivel === "Medio" ? COLORES.amarilloPastel : COLORES.rojoPastel) : COLORES.blanco,
-                      color: nivelRiesgo === nivel ? (nivel === "Bajo" ? "#1B5E20" : nivel === "Medio" ? "#B7770D" : COLORES.rojo) : COLORES.textoMuted,
-                    }}
-                  >
+                      color: nivelRiesgo === nivel ? (nivel === "Bajo" ? "#1B5E20" : nivel === "Medio" ? "#B7770D" : COLORES.rojo) : COLORES.textoMuted }}>
                     {nivel === "Bajo" ? "✅" : nivel === "Medio" ? "⚠️" : "🚨"} {nivel}
                   </button>
                 ))}
               </div>
             </div>
-            {/* Estado fitosanitario */}
             <div>
               <label style={labelStyle}>Estado fitosanitario</label>
-              <select
-                 
-                value={estadoFitosanitario}
-                onChange={e => setEstadoFitosanitario(e.target.value)}
-                style={{
-                  width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8,
-                  padding: "9px 12px", fontSize: 15, outline: "none",
-                   background: COLORES.blanco,
-                  boxSizing: "border-box",
-                }}
-              >
+              <select value={estadoFitosanitario} onChange={e => setEstadoFitosanitario(e.target.value)}
+                style={{ width: "100%", border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: "9px 12px", fontSize: 14, outline: "none", background: COLORES.blanco, boxSizing: "border-box" }}>
                 <option value="">Seleccione un estado</option>
                 <option>Aprobado</option>
                 <option>Con observaciones</option>
@@ -972,20 +999,18 @@ function PaginaFormulario({ inspecciones, onGuardado, modoLectura = false }) {
           </div>
         </div>
 
-        {/* BOTÓN GUARDAR — solo si no es solo lectura */}
-        
-          <button
-            onClick={guardar}
-            disabled={guardando}
-            style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: "14px", fontSize: 16, fontWeight: 700, cursor: "pointer", opacity: guardando ? 0.7 : 1 }}
-          >
-            {guardando ? "Guardando..." : "✓ Guardar inspección"}
-          </button>
-      
+        {/* Botón guardar */}
+        <button onClick={guardar} disabled={guardando}
+          style={{ background: COLORES.verde, color: COLORES.blanco, border: "none", borderRadius: 8, padding: esMobil ? "13px" : "14px", fontSize: esMobil ? 15 : 16, fontWeight: 700, cursor: "pointer", opacity: guardando ? 0.7 : 1 }}>
+          {guardando ? "Guardando..." : "✓ Guardar inspección"}
+        </button>
+
       </div>
     </div>
   );
 }
+
+
 export default function App() {
   const [paginaActual, setPaginaActual] = useState("inicio");
   const [itemDetalle, setItemDetalle] = useState(null);
@@ -993,12 +1018,17 @@ export default function App() {
   const [lotesReales, setLotesReales] = useState([]);
   const [formularioLote, setFormularioLote] = useState({ inspeccion: null, lote: null });
   const [mostrarAviso, setMostrarAviso] = useState(false);
-  const [menuAbierto, setMenuAbierto] = useState(true);
-const navigate = useNavigate()
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const navigate = useNavigate()
   const [inspecciones, setInspecciones] = useState([]);
   const [inspeccionSeleccionada, setInspeccionSeleccionada] = useState(null);
-const [soloLecturaSeleccionada, setSoloLecturaSeleccionada] = useState(false); 
+  const [esMobil, setEsMobil] = useState(window.innerWidth < 768);
 
+useEffect(() => {
+  const handleResize = () => setEsMobil(window.innerWidth < 768);
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
   const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
 const cargarInspecciones = () => {
@@ -1045,31 +1075,99 @@ const handleVerFormulario = (insp) => {
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", minHeight: "100vh", background: COLORES.grisPastel }}>
 
 {/* Header */}
-<header style={{ background: COLORES.verde, color: COLORES.blanco, padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
-  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-    <button
-      onClick={() => setMenuAbierto(!menuAbierto)}
+{/* HEADER */}
+<header style={{ background: COLORES.verde, color: COLORES.blanco, padding: "0 16px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+    <button onClick={() => setMenuAbierto(!menuAbierto)}
       style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 36, height: 36, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, flexShrink: 0 }}>
-      {[0, 1, 2].map(i => <span key={i} style={{ display: "block", width: 18, height: 2, background: COLORES.blanco, borderRadius: 2 }} />)}
+      {[0,1,2].map(i => <span key={i} style={{ display: "block", width: 18, height: 2, background: COLORES.blanco, borderRadius: 2 }} />)}
     </button>
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover" }} />
       <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: -0.5 }}>Asistente Técnico</span>
     </div>
   </div>
-  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-    <span style={{ fontSize: 15, opacity: 0.85 }}>
-      {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-    </span>
-    <div style={{ textAlign: "right" }}>
-        <div style={{ fontSize: 15, fontWeight: 600 }}>{usuario.nombre || "Técnico"}</div>
-        <div style={{ fontSize: 13, opacity: 0.75 }}>Técnico inspector</div>
+  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    {!esMobil && (
+      <span style={{ fontSize: 13, opacity: 0.85 }}>
+        {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+      </span>
+    )}
+    {!esMobil && (
+      <div style={{ textAlign: "right" }}>
+        <div style={{ fontSize: 14, fontWeight: 600 }}>{usuario.nombre || "Técnico"}</div>
+        <div style={{ fontSize: 12, opacity: 0.75 }}>Técnico inspector</div>
+      </div>
+    )}
+    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700 }}>
+      {(usuario.nombre || "TÉ").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
     </div>
-    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700 }}>
-        {(usuario.nombre || "TÉ").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
-    </div>
-</div>
+  </div>
 </header>
+
+{/* OVERLAY móvil */}
+{esMobil && menuAbierto && (
+  <div onClick={() => setMenuAbierto(false)}
+    style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 40 }} />
+)}
+
+{/* SIDEBAR */}
+<aside style={{
+  width: esMobil ? 230 : (menuAbierto ? 230 : 56),
+  minWidth: esMobil ? 230 : (menuAbierto ? 230 : 56),
+  background: COLORES.blanco,
+  borderRight: `1px solid ${COLORES.borde}`,
+  flexShrink: 0,
+  display: "flex",
+  flexDirection: "column",
+  height: "calc(100vh - 56px)",
+  position: esMobil ? "fixed" : "sticky",
+  top: 56,
+  left: 0,
+  zIndex: 41,
+  transform: esMobil ? (menuAbierto ? "translateX(0)" : "translateX(-100%)") : "none",
+  transition: esMobil ? "transform 0.25s ease" : "width 0.25s ease, min-width 0.25s ease",
+  overflow: "hidden",
+}}>
+  <div style={{ padding: "12px 16px", background: "#A5D6A7", borderBottom: `1px solid ${COLORES.borde}`, whiteSpace: "nowrap", minWidth: 230 }}>
+    <div style={{ fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 1 }}>
+      {menuAbierto ? "TÉCNICO" : ""}
+    </div>
+  </div>
+  <nav style={{ padding: "12px 0", flex: 1 }}>
+    {navItems.map(item => (
+      <button key={item.id} onClick={() => {
+        if (item.id === "formulario") setInspeccionSeleccionada(null);
+        setPaginaActual(item.id);
+        if (esMobil) setMenuAbierto(false);
+      }} style={{
+        display: "flex", alignItems: "center", gap: 12, width: "100%",
+        padding: menuAbierto ? "13px 16px" : "13px 0",
+        justifyContent: menuAbierto ? "flex-start" : "center",
+        border: "none", background: paginaActual === item.id ? "#C8E6C9" : "transparent",
+        color: paginaActual === item.id ? COLORES.verde : COLORES.gris,
+        cursor: "pointer", fontWeight: paginaActual === item.id ? 700 : 500,
+        fontSize: 14, textAlign: "left", whiteSpace: "nowrap",
+        borderLeft: menuAbierto ? (paginaActual === item.id ? `3px solid ${COLORES.verde}` : "3px solid transparent") : "none",
+        transition: "all 0.15s",
+      }}>
+        <span style={{ fontSize: 17, flexShrink: 0 }}>{item.icono}</span>
+        {menuAbierto && <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</span>}
+      </button>
+    ))}
+  </nav>
+  <div style={{ borderTop: `1px solid ${COLORES.borde}` }}>
+    <button onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('usuario'); navigate('/', { replace: true }); }}
+      style={{ display: "flex", alignItems: "center", gap: 12, width: "100%",
+        padding: menuAbierto ? "14px 20px" : "14px 0",
+        justifyContent: menuAbierto ? "flex-start" : "center",
+        border: "none", background: "transparent", color: COLORES.rojo,
+        cursor: "pointer", fontWeight: 600, fontSize: 14, whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 17, flexShrink: 0 }}>🚪</span>
+      {menuAbierto && <span>Cerrar sesión</span>}
+    </button>
+  </div>
+</aside>
 
       <div style={{ display: "flex", minHeight: "calc(100vh - 56px)" }}>
 
