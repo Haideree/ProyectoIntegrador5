@@ -115,7 +115,6 @@ export default function Login() {
 </button>
             </div>
           </div>
-
           {error && (
             <div style={{ background: '#FFEBEE', color: COLORES.rojo, borderRadius: 8, padding: '10px 14px', fontSize: 13, fontWeight: 500 }}>
               ⚠️ {error}
@@ -137,4 +136,4 @@ export default function Login() {
       </div>
     </div>
   )
-} 
+}
