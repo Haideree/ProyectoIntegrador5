@@ -449,7 +449,7 @@ function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario, onVerProgre
   return (
     <div style={{ padding: esMobil ? "14px" : "24px 28px" }}>
 
-      {/* Calendario */}
+      {/* Calendario — título */}
       <div style={{ width: "100%", background: "#A5D6A7", padding: "14px 0", marginBottom: 16, borderBottom: `1px solid ${COLORES.borde}`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
         <div style={{ position: "absolute", left: 0, top: 0, width: 4, height: "100%", background: COLORES.verde, borderTopRightRadius: 4, borderBottomRightRadius: 4 }} />
         <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1B5E20" }}>Calendario</h2>
