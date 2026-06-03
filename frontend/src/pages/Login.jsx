@@ -17,18 +17,18 @@ export default function Login() {
   const [form, setForm] = useState({ correo: '', contrasena: '' })
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
+  const [verContrasena, setVerContrasena] = useState(false)  // 👈 nuevo
   const navigate = useNavigate()
 
-  // Si ya hay token, redirigir según rol
-useEffect(() => {
-  const token = localStorage.getItem('token')
-  const usuario = JSON.parse(localStorage.getItem('usuario') || '{}')
-  if (token) {
-    if (usuario.rol === 'admin') navigate('/admin', { replace: true })
-    else if (usuario.rol === 'tecnico') navigate('/tecnico', { replace: true })
-    else if (usuario.rol === 'productor') navigate('/productor', { replace: true })
-  }
-}, [])
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}')
+    if (token) {
+      if (usuario.rol === 'admin') navigate('/admin', { replace: true })
+      else if (usuario.rol === 'tecnico') navigate('/tecnico', { replace: true })
+      else if (usuario.rol === 'productor') navigate('/productor', { replace: true })
+    }
+  }, [])
 
   const handleSubmit = async () => {
     setError('')
@@ -47,10 +47,9 @@ useEffect(() => {
       if (!res.ok) throw new Error(data.mensaje || 'Error al iniciar sesión')
       localStorage.setItem('token', data.token)
       localStorage.setItem('usuario', JSON.stringify(data.usuario))
-      // Redirigir según rol
       if (data.usuario.rol === 'tecnico') navigate('/tecnico', { replace: true })
-else if (data.usuario.rol === 'admin') navigate('/admin', { replace: true })
-else if (data.usuario.rol === 'productor') navigate('/productor', { replace: true })
+      else if (data.usuario.rol === 'admin') navigate('/admin', { replace: true })
+      else if (data.usuario.rol === 'productor') navigate('/productor', { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -59,24 +58,22 @@ else if (data.usuario.rol === 'productor') navigate('/productor', { replace: tru
   }
 
   return (
-  <div style={{ 
-    minHeight: '100vh', 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    backgroundImage: 'linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(/fondo-login.jpg)',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  }}>
-    <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 40, width: 380, maxWidth: '90vw', boxShadow: '0 8px 40px rgba(0,0,0,0.12)' }}>
-        {/* Logo */}
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundImage: 'linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(/fondo-login.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }}>
+      <div style={{ background: COLORES.blanco, borderRadius: 16, padding: 40, width: 380, maxWidth: '90vw', boxShadow: '0 8px 40px rgba(0,0,0,0.12)' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img src="/LogoICA.png" alt="Logo ICA" style={{ width: 100, height: 100, borderRadius: 16, objectFit: 'cover', margin: '0 auto 12px', display: 'block' }} />
           <h1 style={{ fontSize: 22, fontWeight: 700, color: COLORES.texto, margin: 0 }}>Bienvenido</h1>
           <p style={{ fontSize: 13, color: COLORES.textoMuted, margin: '6px 0 0' }}>Sistema de Inspecciones Sanitarias</p>
         </div>
 
-        {/* Campos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ fontSize: 11, fontWeight: 600, color: COLORES.textoMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Correo electrónico</label>
@@ -88,15 +85,24 @@ else if (data.usuario.rol === 'productor') navigate('/productor', { replace: tru
               style={{ width: '100%', border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: '10px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
+
+          {/* Contraseña con ojito */}
           <div>
             <label style={{ fontSize: 11, fontWeight: 600, color: COLORES.textoMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Contraseña</label>
-            <input
-              type="password"
-              value={form.contrasena}
-              onChange={e => setForm({ ...form, contrasena: e.target.value })}
-              placeholder="••••••••"
-              style={{ width: '100%', border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: '10px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={verContrasena ? 'text' : 'password'}
+                value={form.contrasena}
+                onChange={e => setForm({ ...form, contrasena: e.target.value })}
+                placeholder="••••••••"
+                style={{ width: '100%', border: `1px solid ${COLORES.borde}`, borderRadius: 8, padding: '10px 44px 10px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+              />
+              <button
+                onClick={() => setVerContrasena(!verContrasena)}
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: COLORES.textoMuted, fontSize: 18, lineHeight: 1 }}>
+                {verContrasena ? '🙈' : '👁️'}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -106,20 +112,18 @@ else if (data.usuario.rol === 'productor') navigate('/productor', { replace: tru
           )}
 
           <button
-  onClick={handleSubmit}
-  disabled={cargando}
-  style={{ background: COLORES.verde, color: COLORES.blanco, border: 'none', borderRadius: 8, padding: '12px', fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cargando ? 0.7 : 1, marginTop: 8 }}>
-  {cargando ? 'Ingresando...' : 'Ingresar'}
-</button>
+            onClick={handleSubmit}
+            disabled={cargando}
+            style={{ background: COLORES.verde, color: COLORES.blanco, border: 'none', borderRadius: 8, padding: '12px', fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cargando ? 0.7 : 1, marginTop: 8 }}>
+            {cargando ? 'Ingresando...' : 'Ingresar'}
+          </button>
 
-<p style={{ textAlign: 'center', fontSize: 13, color: COLORES.textoMuted, marginTop: 14 }}>
-  ¿Aún no estás registrado?{' '}
-  <a href="/registro" style={{ color: COLORES.verde, textDecoration: 'none', fontWeight: 600 }}>
-    Crear cuenta
-  </a>
-</p>
+          <p style={{ textAlign: 'center', fontSize: 13, color: COLORES.textoMuted, marginTop: 14 }}>
+            ¿Aún no estás registrado?{' '}
+            <a href="/registro" style={{ color: COLORES.verde, textDecoration: 'none', fontWeight: 600 }}>Crear cuenta</a>
+          </p>
         </div>
       </div>
     </div>
   )
-}
+} 

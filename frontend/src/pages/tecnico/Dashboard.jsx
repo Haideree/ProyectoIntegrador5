@@ -155,7 +155,7 @@ function ModalDetalle({ item, onClose }) {
           <span style={{ fontSize: 11, color: COLORES.textoMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Ubicación en mapa</span>
           <div style={{ marginTop: 8, borderRadius: 10, overflow: "hidden", border: `1px solid ${COLORES.borde}` }}>
             <iframe title="ubicacion" width="100%" height="200" style={{ border: 0, display: "block" }} loading="lazy" allowFullScreen
-              src={`https://maps.google.com/maps?q=${encodeURIComponent(item.ubicacion + " Colombia")}&output=embed`} />
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(`${item.vereda}, ${item.municipio}, ${item.departamento}, Colombia`)}&output=embed`}/>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: 12, color: COLORES.textoMuted }}>
             <span>📍</span>

@@ -262,9 +262,9 @@ function ModalSolicitud({ sol, tecnicos, onClose, onRechazar, onAsignarTecnico }
     }
   };
 
-  const ubicacionQuery = encodeURIComponent(
-    `${sol.ubicacion?.departamento || ''} ${sol.ubicacion?.municipio || ''} ${sol.vereda || ''} Colombia`
-  );
+ const ubicacionQuery = encodeURIComponent(
+  `${sol.vereda || ''}, ${sol.ubicacion?.municipio || ''}, ${sol.ubicacion?.departamento || ''}, Colombia`
+);
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
