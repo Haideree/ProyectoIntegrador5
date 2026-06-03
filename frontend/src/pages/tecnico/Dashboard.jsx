@@ -1074,7 +1074,7 @@ const handleVerFormulario = (insp) => {
   return (
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", minHeight: "100vh", background: COLORES.grisPastel }}>
 
-{/* Header */}
+
 {/* HEADER */}
 <header style={{ background: COLORES.verde, color: COLORES.blanco, padding: "0 16px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1171,60 +1171,14 @@ const handleVerFormulario = (insp) => {
 
       <div style={{ display: "flex", flex: 1 }}>
 
-
-
-        {/* FIX SIDEBAR: ancho con minWidth fijo, texto no se corta en transición */}
-        <aside style={{
-          width: menuAbierto ? 230 : 56,
-          minWidth: menuAbierto ? 230 : 56,
-          background: COLORES.blanco,
-          borderRight: `1px solid ${COLORES.borde}`,
-          flexShrink: 0,
-          transition: "width 0.25s ease, min-width 0.25s ease",
-          overflow: "hidden",
-        }}>
-          <div style={{ padding: "12px 16px", background: "#A5D6A7", borderBottom: `1px solid ${COLORES.borde}`, whiteSpace: "nowrap", minWidth: 230 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#1B5E20", textTransform: "uppercase", letterSpacing: 1 }}>
-              {menuAbierto ? "TÉCNICO" : "TÉ"}
-            </div>
-          </div>
-          <nav style={{ padding: "12px 0" }}>
-            {navItems.map(item => (
-  <button key={item.id} onClick={() => {
-    if (item.id === "formulario") {
-      setInspeccionSeleccionada(null);
-    }
-    setPaginaActual(item.id);
-  }} style={{
-                display: "flex", alignItems: "center", gap: 12, width: "100%",
-                padding: menuAbierto ? "13px 16px" : "13px 0",
-                justifyContent: menuAbierto ? "flex-start" : "center",
-                border: "none", background: paginaActual === item.id ? "#C8E6C9" : "transparent",
-                color: paginaActual === item.id ? COLORES.verde : COLORES.gris,
-                cursor: "pointer", fontWeight: paginaActual === item.id ? 700 : 500,
-                fontSize: 14, textAlign: "left", whiteSpace: "nowrap",
-                borderLeft: menuAbierto ? (paginaActual === item.id ? `3px solid ${COLORES.verde}` : "3px solid transparent") : "none",
-                transition: "all 0.15s",
-              }}>
-                <span style={{ fontSize: 17, flexShrink: 0 }}>{item.icono}</span>
-                {menuAbierto && <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</span>}
-              </button>
-            ))}
-          </nav>
-
-          <div style={{ borderTop: `1px solid ${COLORES.borde}`, flexShrink: 0 }}>
-  <button
-    onClick={() => {
-      localStorage.removeItem('token')
-      localStorage.removeItem('usuario')
-      navigate('/', { replace: true })
-    }}
-    style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "14px 20px", border: "none", background: "transparent", color: COLORES.rojo, cursor: "pointer", fontWeight: 600, fontSize: 15, whiteSpace: "nowrap" }}>
-    <span style={{ fontSize: 17, flexShrink: 0 }}>🚪</span>
-    {menuAbierto && <span>Cerrar sesión</span>}
-  </button>
-</div>
-        </aside>
+  {!esMobil && (   // <-- PONES ESTO EN SU LUGAR
+    <div style={{
+      width: menuAbierto ? 230 : 56,
+      minWidth: menuAbierto ? 230 : 56,
+      flexShrink: 0,
+      transition: "width 0.25s ease, min-width 0.25s ease",
+    }} />
+  )}
 
         {/* Contenido principal */}
        <main style={{ flex: 1, minWidth: 0 }}>
