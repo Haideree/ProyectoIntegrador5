@@ -1169,7 +1169,8 @@ const handleVerFormulario = (insp) => {
   </div>
 </aside>
 
-      <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+      <div style={{ display: "flex", flex: 1 }}>
+
 
 
         {/* FIX SIDEBAR: ancho con minWidth fijo, texto no se corta en transición */}
@@ -1226,7 +1227,7 @@ const handleVerFormulario = (insp) => {
         </aside>
 
         {/* Contenido principal */}
-       <main style={{ flex: 1, overflow: "auto", minWidth: 0 }}>
+       <main style={{ flex: 1, minWidth: 0 }}>
 
          {paginaActual === "inicio" && (
   <PaginaInicio 
