@@ -390,7 +390,7 @@ function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario, onVerProgre
               <span style={{ fontWeight: 600, fontSize: 14, color: COLORES.texto }}>{insp.lugarproduccion}</span>
               <span style={{ fontSize: 13, color: COLORES.textoMuted }}>{insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}</span>
               <Badge estado={insp.estado} />
-              <button onClick={() => onVerProgreso(insp)} style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
+              <button onClick={() => onVerDetalle(insp)} style={{ background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
               <button onClick={() => onVerFormulario(insp)} style={{ background: insp.disponible ? COLORES.verde : COLORES.grisPastel, color: insp.disponible ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>VER</button>
             </div>
           ))}
