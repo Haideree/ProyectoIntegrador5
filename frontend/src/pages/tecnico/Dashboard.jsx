@@ -372,7 +372,7 @@ function PaginaInicio({ inspecciones, onVerDetalle, onVerFormulario, onVerProgre
                 📅 {insp.fechaInspeccion ? new Date(insp.fechaInspeccion).toLocaleDateString('es-CO') : 'Sin fecha'}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => onVerProgreso(insp)} style={{ flex: 1, background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 8, padding: "8px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Ver progreso</button>
+                <button onClick={() => onVerDetalle(insp)} style={{ flex: 1, background: "#C8E6C9", color: "#1B5E20", border: "none", borderRadius: 8, padding: "8px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Ver detalles</button>
                 <button onClick={() => onVerFormulario(insp)} style={{ flex: 1, background: insp.disponible ? COLORES.verde : COLORES.grisPastel, color: insp.disponible ? COLORES.blanco : COLORES.gris, border: "none", borderRadius: 8, padding: "8px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Formulario</button>
               </div>
             </div>
